@@ -1,0 +1,2708 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedScript</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F5F0;--bg2:#EFECE5;--card:#FFFFFF;--ink:#1C1C2A;--ink2:#4C4C6A;--ink3:#9494AE;--line:#E2DFD8;
+  --teal:#2C7A7B;--teal2:#38A89D;--teal-light:#E6F6F6;--teal-mid:#B2DFDF;
+  --amber:#C97D2E;--amber-light:#FEF3E2;--red:#C0392B;--red-light:#FDECEB;
+  --green:#2D6A4F;--green-light:#E8F5EE;--purple:#6B4FA0;--purple-light:#F0EBFA;
+  --radius:16px;--radius-sm:10px;--sh:0 2px 20px rgba(28,28,42,.06);--sh2:0 4px 32px rgba(28,28,42,.10);--nav-w:228px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color:var(--ink);font-size:15px;}
+.layout{display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:var(--nav-w);background:var(--ink);position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:100;}
+.sb-brand{padding:26px 22px 18px;border-bottom:1px solid rgba(255,255,255,.08);}
+.sb-brand h1{font-family:'Lora',serif;font-size:20px;color:#fff;letter-spacing:-.3px;}
+.sb-brand p{font-size:10.5px;color:rgba(255,255,255,.32);margin-top:2px;letter-spacing:.6px;text-transform:uppercase;}
+.sb-nav{flex:1;padding:12px 10px;overflow-y:auto;}
+.sb-sect{font-size:10px;color:rgba(255,255,255,.25);letter-spacing:1px;text-transform:uppercase;padding:8px 12px 4px;}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;cursor:pointer;color:rgba(255,255,255,.48);font-size:13px;font-weight:400;transition:all .15s;border:none;background:none;width:100%;text-align:left;}
+.sb-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85);}
+.sb-item.active{background:var(--teal);color:#fff;font-weight:500;}
+.sb-item svg{width:16px;height:16px;flex-shrink:0;opacity:.8;}
+.sb-footer{padding:14px 22px;border-top:1px solid rgba(255,255,255,.08);}
+.sb-doctor{display:flex;align-items:center;gap:10px;}
+.sb-av{width:32px;height:32px;background:var(--teal2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;}
+.sb-doc-info p{font-size:12.5px;color:#fff;font-weight:500;}
+.sb-doc-info span{font-size:11px;color:rgba(255,255,255,.36);}
+
+/* MAIN */
+.main{margin-left:var(--nav-w);flex:1;min-height:100vh;}
+.page{display:none;padding:34px 38px;max-width:980px;}
+.page.active{display:block;}
+.page-head{margin-bottom:24px;}
+.page-head h2{font-family:'Lora',serif;font-size:26px;font-weight:600;letter-spacing:-.4px;}
+.page-head p{font-size:13px;color:var(--ink3);margin-top:3px;}
+
+/* CARDS */
+.card{background:var(--card);border-radius:var(--radius);padding:22px;box-shadow:var(--sh);border:1px solid var(--line);margin-bottom:16px;}
+.card-title{font-family:'Lora',serif;font-size:14.5px;font-weight:600;color:var(--ink);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.card-title svg{width:15px;height:15px;color:var(--teal);}
+
+/* FORMS */
+.fg{margin-bottom:12px;}
+.fg label{display:block;font-size:11px;font-weight:600;color:var(--ink2);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase;}
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 13px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;color:var(--ink);background:#fff;outline:none;transition:border-color .15s;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--teal2);}
+.fg textarea{resize:vertical;min-height:80px;line-height:1.6;}
+.fg select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239494AE' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.gr2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.gr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.gr4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 17px;border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;line-height:1;}
+.btn svg{width:14px;height:14px;flex-shrink:0;}
+.btn-primary{background:var(--teal);color:#fff;}
+.btn-primary:hover{background:#23686A;}
+.btn-soft{background:var(--teal-light);color:var(--teal);}
+.btn-soft:hover{background:var(--teal-mid);}
+.btn-outline{background:transparent;border:1.5px solid var(--line);color:var(--ink2);}
+.btn-outline:hover{border-color:var(--teal2);color:var(--teal);}
+.btn-ghost{background:transparent;color:var(--ink3);padding:7px;}
+.btn-ghost:hover{color:var(--red);background:var(--red-light);}
+.btn-amber{background:var(--amber-light);color:var(--amber);}
+.btn-amber:hover{background:#fde8c4;}
+.btn-danger{background:var(--red-light);color:var(--red);}
+.btn-purple{background:var(--purple-light);color:var(--purple);}
+.btn-purple:hover{background:#e4d8f7;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.btn-group{display:flex;gap:9px;margin-top:16px;flex-wrap:wrap;align-items:center;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;}
+.badge-teal{background:var(--teal-light);color:var(--teal);}
+.badge-amber{background:var(--amber-light);color:var(--amber);}
+.badge-red{background:var(--red-light);color:var(--red);}
+.badge-green{background:var(--green-light);color:var(--green);}
+.badge-purple{background:var(--purple-light);color:var(--purple);}
+
+/* ── AUTOCOMPLETE ── */
+.ac-wrap{position:relative;}
+.ac-input{width:100%;padding:9px 13px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;color:var(--ink);background:#fff;outline:none;transition:border-color .15s;}
+.ac-input:focus{border-color:var(--teal2);}
+.ac-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--teal2);border-radius:var(--radius-sm);box-shadow:var(--sh2);z-index:200;max-height:240px;overflow-y:auto;display:none;}
+.ac-dropdown.open{display:block;}
+.ac-item{padding:9px 14px;cursor:pointer;font-size:13.5px;display:flex;align-items:center;justify-content:space-between;gap:8px;transition:background .1s;}
+.ac-item:hover,.ac-item.focused{background:var(--teal-light);}
+.ac-item span{color:var(--ink3);font-size:12px;}
+.ac-add-row{padding:9px 14px;cursor:pointer;font-size:13px;color:var(--teal);font-weight:500;display:flex;align-items:center;gap:7px;border-top:1px solid var(--line);}
+.ac-add-row:hover{background:var(--teal-light);}
+.ac-add-row svg{width:14px;height:14px;}
+
+/* MED ITEMS */
+.med-items{display:flex;flex-direction:column;gap:7px;margin-top:10px;}
+.med-item{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--bg);border-radius:10px;border:1.5px solid var(--line);}
+.med-dot{width:7px;height:7px;background:var(--teal2);border-radius:50%;flex-shrink:0;}
+.med-info{flex:1;}
+.med-info strong{font-size:13.5px;}
+.med-info span{font-size:12px;color:var(--ink3);display:block;margin-top:1px;}
+.med-item-badge{font-size:10.5px;padding:2px 7px;border-radius:20px;font-weight:500;white-space:nowrap;}
+
+/* SAVE TO DB BANNER */
+.save-db-banner{display:none;background:var(--teal-light);border:1.5px solid var(--teal-mid);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--teal);margin-top:6px;align-items:center;gap:10px;}
+.save-db-banner.show{display:flex;}
+
+/* ── PRINT MODAL ── */
+.rx-modal-overlay{position:fixed;inset:0;background:rgba(20,20,35,.65);z-index:600;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s;}
+.rx-modal-overlay.show{opacity:1;pointer-events:all;}
+.rx-modal-box{background:#fff;border-radius:var(--radius);box-shadow:0 24px 64px rgba(0,0,0,.25);width:min(680px,96vw);max-height:92vh;display:flex;flex-direction:column;transform:translateY(12px) scale(.98);transition:transform .22s;}
+.rx-modal-overlay.show .rx-modal-box{transform:translateY(0) scale(1);}
+.rx-modal-toolbar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);flex-shrink:0;}
+.rx-modal-toolbar h3{font-family:'Lora',serif;font-size:15px;font-weight:600;}
+.rx-modal-toolbar .tb-btns{display:flex;gap:8px;}
+.rx-modal-body{overflow-y:auto;padding:24px;flex:1;}
+
+/* ── RX SHEET (new spec layout) ── */
+.rx-sheet{background:#fff;font-family:'Outfit',sans-serif;color:#111;width:100%;}
+
+/* 1. Header: logo + local info side by side */
+.rx-sh-head{display:flex;align-items:center;gap:16px;padding:0 0 16px 0;}
+.rx-sh-logo{max-width:120px;max-height:72px;flex-shrink:0;display:flex;align-items:center;}
+.rx-sh-logo img{max-width:120px;max-height:72px;width:auto;height:auto;object-fit:contain;display:block;}
+.rx-sh-logo-placeholder{font-family:'Lora',serif;font-size:22px;font-weight:700;color:#aaa;}
+.rx-sh-local-info h3{font-size:14.5px;font-weight:600;color:#111;margin:0;}
+.rx-sh-local-info p{font-size:11.5px;color:#555;margin-top:2px;line-height:1.5;}
+
+/* 2. Dividers */
+.rx-divider{border:none;border-top:1.5px solid #111;margin:0;}
+.rx-divider-light{border:none;border-top:1px solid #ddd;margin:0;}
+
+/* 3. Patient row */
+.rx-sh-patient{padding:10px 0;font-size:13.5px;color:#111;}
+.rx-sh-patient strong{font-weight:600;}
+
+/* 4. Title */
+.rx-sh-title{text-align:center;font-family:'Lora',serif;font-size:17px;font-weight:600;color:#111;padding:14px 0 6px;}
+
+/* 5. Med items */
+.rx-sh-meds{padding:4px 0 12px;}
+.rx-sh-med{padding:9px 0;border-bottom:1px dashed #ddd;}
+.rx-sh-med:last-child{border-bottom:none;}
+.rx-sh-med strong{font-size:14px;display:block;}
+.rx-sh-med p{font-size:13px;color:#444;margin-top:3px;}
+
+/* 6. Obs box */
+.rx-sh-obs{background:#f7f5f0;border-radius:8px;padding:10px 14px;font-size:12.5px;color:#444;margin:8px 0 14px;}
+
+/* 7. Footer: centred doctor info */
+.rx-sh-foot{text-align:center;padding:16px 0 0;}
+.rx-sh-foot-name{font-family:'Lora',serif;font-size:15px;font-weight:600;color:#111;}
+.rx-sh-foot-espec{font-size:12px;color:#555;margin-top:3px;}
+.rx-sh-foot-crm{font-size:12px;color:#555;margin-top:1px;}
+.rx-sh-foot-date{font-size:12px;color:#888;margin-top:3px;}
+
+/* Controlado */
+.rx-sheet.controlado .rx-divider{border-top-color:#C0392B;}
+.controlado-header{background:#fdeceb;border:1px solid #C0392B;border-radius:8px;padding:8px 14px;margin-bottom:14px;font-size:11.5px;font-weight:600;color:#C0392B;display:flex;align-items:center;gap:6px;}
+.controlado-box{border:1.5px solid #C0392B;border-radius:8px;padding:12px 14px;margin-top:14px;font-size:12px;color:#444;}
+.controlado-field{display:inline-block;border-bottom:1px solid #aaa;width:150px;height:15px;margin:0 4px;}
+
+/* ── PRINT (from modal) ── */
+@media print{
+  @page{size:A4 portrait;margin:0;}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body>*:not(#rx-print-frame){display:none!important;}
+  #rx-print-frame{display:block!important;position:fixed;inset:0;background:#fff;}
+}
+
+/* DASHBOARD */
+#page-dashboard{padding:0;}
+.dash-hero{background:var(--ink);padding:32px 38px 24px;color:#fff;}
+.dash-hero h2{font-family:'Lora',serif;font-size:24px;font-weight:600;}
+.dash-hero p{font-size:13px;color:rgba(255,255,255,.42);margin-top:3px;}
+.dash-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px;}
+.stat-box{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:16px 18px;}
+.stat-box .sv{font-family:'Lora',serif;font-size:34px;font-weight:600;color:#fff;line-height:1;}
+.stat-box .sl{font-size:10.5px;color:rgba(255,255,255,.38);margin-top:5px;text-transform:uppercase;letter-spacing:.5px;}
+.stat-box .ss{font-size:11.5px;color:var(--teal2);margin-top:5px;}
+.dash-body{padding:24px 38px;}
+.dash-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px;}
+.action-btn{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .2s;text-align:left;}
+.action-btn:hover{border-color:var(--teal2);box-shadow:var(--sh2);transform:translateY(-1px);}
+.action-btn .ab-icon{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.action-btn .ab-icon svg{width:20px;height:20px;}
+.action-btn h4{font-size:13.5px;font-weight:600;}
+.action-btn p{font-size:11.5px;color:var(--ink3);margin-top:2px;}
+.top-meds{display:flex;flex-direction:column;gap:8px;}
+.top-med-item{display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--bg);border-radius:9px;border:1px solid var(--line);}
+.top-med-rank{width:22px;height:22px;background:var(--teal-light);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--teal);flex-shrink:0;}
+.top-med-info{flex:1;}
+.top-med-info strong{font-size:13px;}
+.top-med-info span{font-size:11px;color:var(--ink3);display:block;}
+.top-med-count{font-family:'Lora',serif;font-size:17px;font-weight:600;color:var(--teal);}
+
+/* MODELOS PAGE */
+.modelo-tabs{display:flex;gap:3px;background:var(--bg2);padding:4px;border-radius:10px;width:fit-content;margin-bottom:20px;}
+.modelo-tab{padding:7px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--ink3);transition:all .15s;}
+.modelo-tab.active{background:#fff;color:var(--ink);box-shadow:var(--sh);}
+.modelo-panel{display:none;}
+.modelo-panel.active{display:block;}
+.model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+.model-card{border:1.5px solid var(--line);border-radius:var(--radius);padding:16px;background:var(--card);transition:all .18s;}
+.model-card:hover{border-color:var(--teal2);box-shadow:0 4px 20px rgba(44,122,123,.09);}
+.model-card h4{font-size:13.5px;font-weight:600;margin-bottom:3px;}
+.model-card p{font-size:12px;color:var(--ink3);line-height:1.5;}
+.model-card .mc-foot{display:flex;align-items:center;gap:6px;margin-top:12px;flex-wrap:wrap;}
+.model-empty{text-align:center;padding:40px 20px;color:var(--ink3);font-size:13.5px;}
+
+/* ADMIN TABS */
+.admin-tabs{display:flex;gap:3px;background:var(--bg2);padding:4px;border-radius:10px;width:fit-content;margin-bottom:18px;}
+.admin-tab{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--ink3);transition:all .15s;}
+.admin-tab.active{background:#fff;color:var(--ink);box-shadow:var(--sh);}
+.admin-panel{display:none;}
+.admin-panel.active{display:block;}
+.med-table{width:100%;border-collapse:collapse;font-size:13px;}
+.med-table th{font-size:10.5px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;padding:7px 11px;text-align:left;border-bottom:2px solid var(--line);}
+.med-table td{padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:middle;}
+.med-table tr:last-child td{border-bottom:none;}
+.med-table tr:hover td{background:var(--bg);}
+
+/* PEDIÁTRICO */
+.ped-info-bar{background:var(--teal-light);border:1.5px solid var(--teal-mid);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--teal);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.warn-bar{background:var(--amber-light);border:1.5px solid #f5c27e;border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--amber);margin-bottom:14px;display:none;align-items:center;gap:8px;}
+
+/* EXAMES */
+.exam-group{margin-bottom:16px;}
+.exam-group h4{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;}
+.exam-checks{display:flex;flex-wrap:wrap;gap:6px;}
+.exam-check{display:flex;align-items:center;gap:5px;background:var(--bg2);border:1.5px solid transparent;border-radius:8px;padding:6px 11px;cursor:pointer;font-size:13px;transition:all .15s;user-select:none;}
+.exam-check:hover{border-color:var(--teal2);}
+.exam-check.selected{background:var(--teal-light);border-color:var(--teal);color:var(--teal);}
+.exam-check input{display:none;}
+.exam-selected-list{display:flex;flex-wrap:wrap;gap:5px;min-height:32px;padding:7px;background:var(--bg);border-radius:var(--radius-sm);border:1.5px dashed var(--line);}
+.exam-sel-item{display:flex;align-items:center;gap:5px;background:var(--teal-light);color:var(--teal);padding:3px 9px;border-radius:20px;font-size:12px;font-weight:500;}
+.exam-sel-item button{background:none;border:none;cursor:pointer;color:var(--teal);font-size:14px;line-height:1;padding:0 0 0 2px;}
+
+/* PERFIL */
+.profile-av-big{width:66px;height:66px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-size:24px;font-weight:600;color:#fff;margin-bottom:14px;}
+.local-card{border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:14px;margin-bottom:9px;position:relative;}
+.local-card h4{font-size:13px;font-weight:600;margin-bottom:2px;}
+.local-card p{font-size:12px;color:var(--ink3);}
+.local-remove{position:absolute;top:10px;right:10px;background:none;border:none;cursor:pointer;color:var(--ink3);font-size:17px;transition:color .15s;}
+.local-remove:hover{color:var(--red);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(28,28,42,.5);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.show{opacity:1;pointer-events:all;}
+.modal{background:#fff;border-radius:var(--radius);padding:26px;width:90%;max-width:500px;box-shadow:var(--sh2);transform:scale(.96);transition:transform .2s;}
+.modal-overlay.show .modal{transform:scale(1);}
+.modal h3{font-family:'Lora',serif;font-size:17px;font-weight:600;margin-bottom:16px;}
+.modal-footer{display:flex;justify-content:flex-end;gap:9px;margin-top:16px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 8px 30px rgba(0,0,0,.2);transform:translateY(70px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);z-index:999;display:flex;align-items:center;gap:7px;max-width:300px;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* SEARCH */
+.search-wrap{position:relative;margin-bottom:13px;}
+.search-wrap input{width:100%;padding:9px 13px 9px 38px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-size:13.5px;font-family:'Outfit',sans-serif;outline:none;transition:border-color .15s;}
+.search-wrap input:focus{border-color:var(--teal2);}
+.search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--ink3);width:15px;height:15px;}
+
+/* PRINT */
+@media print{
+  @page{size:A4 portrait;margin:12mm 14mm;}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body,html{background:#fff;}
+  .sidebar,.main,.rx-modal-overlay{display:none!important;}
+  #rx-print-frame{display:block!important;position:fixed;inset:0;background:#fff;padding:12mm 14mm;box-sizing:border-box;}
+}
+
+/* ── LOGIN SCREEN ── */
+#login-screen{position:fixed;inset:0;background:var(--ink);z-index:9000;display:flex;align-items:center;justify-content:center;}
+#login-screen.hidden{display:none;}
+.login-box{background:#fff;border-radius:var(--radius);padding:40px 36px;width:min(420px,92vw);box-shadow:0 32px 80px rgba(0,0,0,.35);}
+.login-logo{font-family:'Lora',serif;font-size:28px;font-weight:600;color:var(--ink);margin-bottom:4px;}
+.login-sub{font-size:13px;color:var(--ink3);margin-bottom:28px;}
+.login-err{background:#fdeceb;color:#C0392B;border:1px solid #C0392B;border-radius:8px;padding:9px 13px;font-size:13px;margin-bottom:14px;display:none;}
+.login-err.show{display:block;}
+.login-field{margin-bottom:14px;}
+.login-field label{display:block;font-size:12.5px;font-weight:500;color:var(--ink2);margin-bottom:5px;}
+.login-field input{width:100%;padding:10px 13px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:14px;outline:none;transition:border-color .15s;box-sizing:border-box;}
+.login-field input:focus{border-color:var(--teal2);}
+.login-btn{width:100%;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;margin-top:4px;}
+.login-btn:hover{background:var(--teal2);}
+
+/* ── ADMIN-ONLY ELEMENTS ── */
+.admin-only{display:none;}
+body.is-admin .admin-only{display:flex;}
+body.is-admin .admin-only-block{display:block;}
+.admin-only-block{display:none;}
+
+/* ── USER MANAGEMENT PAGE ── */
+.user-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 16px;display:flex;align-items:center;gap:12px;}
+.user-av{width:38px;height:38px;border-radius:50%;background:var(--teal-light);color:var(--teal);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:15px;flex-shrink:0;}
+.user-info{flex:1;}
+.user-info strong{font-size:13.5px;display:block;}
+.user-info span{font-size:12px;color:var(--ink3);}
+.user-role-badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;}
+.divider{height:1px;background:var(--line);margin:14px 0;}
+.text-muted{color:var(--ink3);font-size:13px;}
+.mt8{margin-top:8px;}
+.gap-row{display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
+</style>
+</head>
+<body>
+<!-- ====== LOGIN SCREEN ====== -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">MedScript</div>
+    <div class="login-sub">Sistema Médico — Acesso restrito</div>
+    <div class="login-err" id="login-err">Usuário ou senha incorretos.</div>
+    <div class="login-field"><label>E-mail</label><input id="login-user" type="email" placeholder="seu@email.com" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="login-field"><label>Senha</label><input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- ====== SIDEBAR ====== -->
+<aside class="sidebar">
+  <div class="sb-brand">
+    <h1>MedScript</h1>
+    <p>Sistema Médico</p>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sect">Principal</div>
+    <button class="sb-item active" onclick="nav('dashboard',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Painel
+    </button>
+    <button class="sb-item" onclick="nav('rx-adulto',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12h6M9 16h4M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="7" y="2" width="10" height="4" rx="1"/></svg>
+      Receituário Geral
+    </button>
+    <button class="sb-item" onclick="nav('rx-ped',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a7 7 0 0113 0"/></svg>
+      Receituário Pediátrico
+    </button>
+    <button class="sb-item" onclick="nav('injetaveis',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M18 2L22 6M8 16L2 22M15 5L19 9M5 12L12 5M9 15L15 9"/></svg>
+      Drogas Injetáveis Ped.
+    </button>
+    <button class="sb-item" onclick="nav('modelos',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M19 11H5M19 11a2 2 0 010 4H5a2 2 0 010-4M19 11V7a2 2 0 00-2-2H7a2 2 0 00-2 2v4M5 15v4a2 2 0 002 2h10a2 2 0 002-2v-4"/></svg>
+      Modelos
+    </button>
+    <button class="sb-item" onclick="nav('exames',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+      Exames / Encam.
+    </button>
+    <button class="sb-item" onclick="nav('documentos',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+      Documentos
+    </button>
+    <div class="sb-sect" style="margin-top:6px;">Configurações</div>
+    <button class="sb-item admin-only" onclick="nav('usuarios',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      Usuários
+    </button>
+    <button class="sb-item admin-only" onclick="nav('admin',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+      Base de Dados
+    </button>
+    <button class="sb-item" onclick="nav('perfil',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      Perfil
+    </button>
+  </nav>
+  <div class="sb-footer">
+    <div class="sb-doctor">
+      <div class="sb-av" id="sb-av-initials">?</div>
+      <div class="sb-doc-info"><p id="sb-doc-name">Meu Perfil</p><span id="sb-doc-crm">CRM —</span></div>
+    </div>
+    <button onclick="doLogout()" title="Sair" style="background:none;border:none;cursor:pointer;color:var(--ink3);padding:4px;border-radius:6px;transition:color .15s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--ink3)'">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- ====== MAIN ====== -->
+<main class="main">
+
+<!-- ===== DASHBOARD ===== -->
+<div class="page active" id="page-dashboard">
+  <div class="dash-hero">
+    <h2 id="dash-greeting">Bem-vindo ao MedScript</h2>
+    <p id="dash-date"></p>
+    <div class="dash-stats">
+      <div class="stat-box"><div class="sv" id="stat-meds">0</div><div class="sl">Medicamentos na base</div><div class="ss">Adulto + Pediátrico</div></div>
+      <div class="stat-box"><div class="sv" id="stat-modelos">0</div><div class="sl">Modelos salvos</div><div class="ss">Adulto + Pediátrico + Exames</div></div>
+      <div class="stat-box"><div class="sv" id="stat-locais">0</div><div class="sl">Locais de atendimento</div><div class="ss">Cadastrados no perfil</div></div>
+    </div>
+  </div>
+  <div class="dash-body">
+    <div class="dash-actions">
+      <div class="action-btn" onclick="nav('rx-adulto',document.querySelectorAll('.sb-item')[1])">
+        <div class="ab-icon" style="background:var(--teal-light)"><svg fill="none" stroke="var(--teal)" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12h6M9 16h4M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="7" y="2" width="10" height="4" rx="1"/></svg></div>
+        <div><h4>Receituário Geral</h4><p>Prescrição adulto + controlado</p></div>
+      </div>
+      <div class="action-btn" onclick="nav('rx-ped',document.querySelectorAll('.sb-item')[2])">
+        <div class="ab-icon" style="background:var(--amber-light)"><svg fill="none" stroke="var(--amber)" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a7 7 0 0113 0"/></svg></div>
+        <div><h4>Receituário Pediátrico</h4><p>Dose por peso e idade</p></div>
+      </div>
+      <div class="action-btn" onclick="nav('modelos',document.querySelectorAll('.sb-item')[3])">
+        <div class="ab-icon" style="background:var(--purple-light)"><svg fill="none" stroke="var(--purple)" stroke-width="1.8" viewBox="0 0 24 24"><path d="M19 11H5M19 11a2 2 0 010 4H5a2 2 0 010-4M19 11V7a2 2 0 00-2-2H7a2 2 0 00-2 2v4M5 15v4a2 2 0 002 2h10a2 2 0 002-2v-4"/></svg></div>
+        <div><h4>Modelos Salvos</h4><p>Adulto e pediátrico</p></div>
+      </div>
+      <div class="action-btn" onclick="nav('exames',document.querySelectorAll('.sb-item')[4])">
+        <div class="ab-icon" style="background:#EFF6FF"><svg fill="none" stroke="#3B82F6" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg></div>
+        <div><h4>Exames</h4><p>Solicitar e encaminhar</p></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Acesso rápido à base</div>
+      <div id="dash-base-info" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RECEITUÁRIO ADULTO ===== -->
+<div class="page" id="page-rx-adulto">
+  <div class="page-head"><h2>Receituário Geral</h2><p>Prescrição para pacientes adultos</p></div>
+  <div class="card">
+    <div class="card-title">Dados do Paciente</div>
+    <div class="fg"><label>Nome completo</label><input id="a-pac-nome" placeholder="Nome do paciente"></div>
+    <div class="fg"><label>Local de atendimento</label><select id="a-local" onchange="onLocalChange('a-local')"><option value="">— selecionar —</option></select></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Medicamentos</div>
+    <div class="fg">
+      <label>Buscar / digitar medicamento</label>
+      <div class="ac-wrap" id="ac-adulto-wrap">
+        <input class="ac-input" id="ac-adulto" placeholder="Digite o nome do medicamento..." autocomplete="off"
+          oninput="acFilter('adulto')" onfocus="acFilter('adulto')" onkeydown="acKey(event,'adulto')">
+        <div class="ac-dropdown" id="ac-adulto-drop"></div>
+      </div>
+    </div>
+    <div class="fg">
+      <label>Descrição</label>
+      <input id="a-med-posol" placeholder="Ex: 1 comprimido de 8/8h por 7 dias">
+    </div>
+    <div id="a-save-banner" class="save-db-banner">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      <span id="a-save-banner-text">Salvar "<strong id="a-new-med-name"></strong>" na base de dados pessoal?</span>
+      <button class="btn btn-sm btn-soft" onclick="saveNewMedToDb('adulto')">Salvar na base</button>
+      <button class="btn btn-sm btn-outline" onclick="dismissSaveBanner('adulto')">Não</button>
+    </div>
+    <button class="btn btn-soft" style="margin-top:4px;" onclick="addMedRx('adulto')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Adicionar medicamento
+    </button>
+    <div class="med-items" id="a-med-list"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Observações</div>
+    <div class="fg"><textarea id="a-obs" placeholder="Instruções adicionais, retorno, restrições..."></textarea></div>
+    <div class="gap-row" style="margin-top:4px;">
+      <label style="font-size:13px;color:var(--ink2);font-weight:500;">Salvar como modelo:</label>
+      <input id="a-model-name" placeholder="Nome do modelo (opcional)" style="flex:1;padding:8px 12px;border:1.5px solid var(--line);border-radius:8px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;min-width:0;">
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="gerarRx('adulto','normal')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h4M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="7" y="2" width="10" height="4" rx="1"/></svg>
+        Gerar Receita
+      </button>
+      <button class="btn btn-amber" onclick="gerarRx('adulto','controlado')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Receituário Controlado
+      </button>
+      <button class="btn btn-outline" onclick="limparRx('adulto')">Limpar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RECEITUÁRIO PEDIÁTRICO ===== -->
+<div class="page" id="page-rx-ped">
+  <div class="page-head"><h2>Receituário Pediátrico</h2><p>Dose calculada automaticamente por peso e idade</p></div>
+  <div class="card">
+    <div class="card-title">Dados da Criança</div>
+    <div class="gr4">
+      <div class="fg" style="grid-column:span 2"><label>Nome completo</label><input id="p-pac-nome" placeholder="Nome da criança"></div>
+      <div class="fg"><label>Idade (anos)</label><input type="number" id="p-idade" min="0" max="17" placeholder="Ex: 4" oninput="updatePedMedOptions()"></div>
+      <div class="fg"><label>Peso (kg)</label><input type="number" id="p-peso" step="0.1" placeholder="Ex: 18.5" oninput="calcPedDose()"></div>
+    </div>
+    <div class="fg"><label>Local de atendimento</label><select id="p-local" onchange="onLocalChange('p-local')"><option value="">— selecionar —</option></select></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Medicamentos Pediátricos</div>
+    <div id="ped-age-warn" class="ped-info-bar" style="display:none;">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      Informe a idade para filtrar medicamentos pela faixa etária.
+    </div>
+    <div class="fg">
+      <label>Buscar / digitar medicamento pediátrico</label>
+      <div class="ac-wrap" id="ac-ped-wrap">
+        <input class="ac-input" id="ac-ped" placeholder="Digite o medicamento..." autocomplete="off"
+          oninput="acFilter('ped')" onfocus="acFilter('ped')" onkeydown="acKey(event,'ped')">
+        <div class="ac-dropdown" id="ac-ped-drop"></div>
+      </div>
+    </div>
+    <div id="p-restrict-warn" class="warn-bar">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+      <span id="p-restrict-text">Atenção: restrição de idade.</span>
+    </div>
+    <div id="p-dose-box" style="display:none;background:var(--teal-light);border:1.5px solid var(--teal-mid);border-radius:10px;padding:12px 16px;margin-bottom:12px;">
+      <div style="font-size:10.5px;color:var(--teal);text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Dose calculada</div>
+      <div id="p-dose-val" style="font-family:'Lora',serif;font-size:22px;font-weight:600;color:var(--teal);"></div>
+      <div id="p-dose-detail" style="font-size:11px;color:var(--ink2);margin-top:2px;"></div>
+    </div>
+    <!-- Descrição: caixa editável única, preenchida automaticamente ao selecionar medicamento -->
+    <div class="fg">
+      <label>Descrição</label>
+      <input id="p-med-posol" placeholder="Ex: Tomar 5ml de 8/8h por 7 dias" style="width:100%;padding:9px 13px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='var(--teal2)'" onblur="this.style.borderColor='var(--line)'">
+      <p style="font-size:11.5px;color:var(--ink3);margin-top:5px;">Preenchida automaticamente ao selecionar o medicamento. Edite livremente antes de adicionar.</p>
+    </div>
+    <div id="p-save-banner" class="save-db-banner">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      <span>Salvar "<strong id="p-new-med-name"></strong>" na base pediátrica?</span>
+      <button class="btn btn-sm btn-soft" onclick="saveNewMedToDb('ped')">Salvar na base</button>
+      <button class="btn btn-sm btn-outline" onclick="dismissSaveBanner('ped')">Não</button>
+    </div>
+    <button class="btn btn-soft" onclick="addMedRx('ped')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Adicionar medicamento
+    </button>
+    <div class="med-items" id="p-med-list"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Observações</div>
+    <div class="fg"><textarea id="p-obs" placeholder="Retorno, cuidados, restrições..."></textarea></div>
+    <div class="gap-row" style="margin-top:4px;">
+      <label style="font-size:13px;color:var(--ink2);font-weight:500;">Salvar como modelo:</label>
+      <input id="p-model-name" placeholder="Nome do modelo pediátrico (opcional)" style="flex:1;padding:8px 12px;border:1.5px solid var(--line);border-radius:8px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;min-width:0;">
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="gerarRx('ped','normal')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h4M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="7" y="2" width="10" height="4" rx="1"/></svg>
+        Gerar Receita
+      </button>
+      <button class="btn btn-amber" onclick="gerarRx('ped','controlado')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Receituário Controlado
+      </button>
+      <button class="btn btn-outline" onclick="limparRx('ped')">Limpar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DROGAS INJETÁVEIS PEDIÁTRICAS ===== -->
+<div class="page" id="page-injetaveis">
+  <div class="page-head"><h2>Drogas Injetáveis Pediátricas</h2><p>Cálculo de dose por peso para drogas injetáveis</p></div>
+  <div class="card">
+    <div class="card-title">Dados da Criança</div>
+    <div class="gr2">
+      <div class="fg"><label>Nome</label><input id="inj-nome" placeholder="Nome da criança"></div>
+      <div class="fg"><label>Peso (kg)</label><input type="number" id="inj-peso" step="0.1" placeholder="Ex: 12.5" oninput="calcInjetavel()"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Selecionar Droga</div>
+    <div class="fg">
+      <label>Droga injetável</label>
+      <div class="ac-wrap" id="ac-inj-wrap">
+        <input class="ac-input" id="ac-inj" placeholder="Digite 3 letras para buscar..." autocomplete="off"
+          oninput="acFilterInj()" onfocus="acFilterInj()" onkeydown="acKeyInj(event)">
+        <div class="ac-dropdown" id="ac-inj-drop"></div>
+      </div>
+    </div>
+    <div id="inj-result-box" style="display:none;background:var(--teal-light);border:1.5px solid var(--teal-mid);border-radius:var(--radius-sm);padding:16px;margin-top:10px;">
+      <div style="font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px;">Resultado do cálculo</div>
+      <div id="inj-result-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODELOS ===== -->
+<div class="page" id="page-modelos">
+  <div class="page-head"><h2>Modelos de Prescrição</h2><p>Receitas reutilizáveis para condições frequentes</p></div>
+  <div class="search-wrap" style="max-width:400px;">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input id="modelo-busca" placeholder="Buscar modelo..." oninput="renderModelos()">
+  </div>
+  <div class="modelo-tabs">
+    <button class="modelo-tab active" onclick="switchModeloTab('adulto',this)">Adulto</button>
+    <button class="modelo-tab" onclick="switchModeloTab('ped',this)">Pediátrico</button>
+    <button class="modelo-tab" onclick="switchModeloTab('exames',this)">Exames</button>
+  </div>
+  <div id="modelo-panel-adulto" class="modelo-panel active">
+    <div class="model-grid" id="modelos-adulto-grid"></div>
+    <div class="btn-group"><button class="btn btn-soft" onclick="nav('rx-adulto',document.querySelectorAll('.sb-item')[1])">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Criar novo modelo (via receituário)
+    </button></div>
+  </div>
+  <div id="modelo-panel-ped" class="modelo-panel">
+    <div class="model-grid" id="modelos-ped-grid"></div>
+    <div class="btn-group"><button class="btn btn-soft" onclick="nav('rx-ped',document.querySelectorAll('.sb-item')[2])">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Criar novo modelo (via receituário pediátrico)
+    </button></div>
+  </div>
+  <div id="modelo-panel-exames" class="modelo-panel">
+    <div class="model-grid" id="modelos-exames-grid"></div>
+    <div class="btn-group"><button class="btn btn-soft" onclick="nav('exames',document.querySelectorAll('.sb-item')[4])">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Criar novo modelo (via Exames)
+    </button></div>
+  </div>
+</div>
+
+<!-- ===== EXAMES ===== -->
+<div class="page" id="page-exames">
+  <div class="page-head"><h2>Exames / Encaminhamentos</h2><p>Solicitações e encaminhamentos médicos</p></div>
+  <div class="card">
+    <div class="card-title">Dados do Paciente</div>
+    <div class="gr2">
+      <div class="fg"><label>Nome do paciente</label><input id="ex-pac" placeholder="Nome completo"></div>
+      <div class="fg"><label>Data</label><input type="date" id="ex-data"></div>
+    </div>
+    <div class="fg"><label>Local de atendimento</label><select id="ex-local" onchange="onLocalChange('ex-local')"><option value="">— selecionar —</option></select></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Tipo de documento</div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchExTab('solicitacao',this)">Solicitação de Exames</button>
+      <button class="admin-tab" onclick="switchExTab('encaminhamento',this)">Encaminhamento</button>
+    </div>
+    <div id="ex-tab-solicitacao" class="admin-panel active">
+      <div class="fg">
+        <label>Buscar exame</label>
+        <div class="ac-wrap" id="ac-exam-wrap">
+          <input class="ac-input" id="ac-exam" placeholder="Digite 3 letras para buscar..." autocomplete="off"
+            oninput="acFilterExam()" onfocus="acFilterExam()" onkeydown="acKeyExam(event)">
+          <div class="ac-dropdown" id="ac-exam-drop"></div>
+        </div>
+      </div>
+      <div class="fg" style="margin-top:4px;"><label>Exame personalizado</label>
+        <div class="gap-row">
+          <input id="ex-custom-input" placeholder="Nome do exame não listado..." style="flex:1;padding:9px 13px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;outline:none;">
+          <button class="btn btn-soft btn-sm" onclick="addCustomExam()">Adicionar</button>
+        </div>
+      </div>
+      <div class="fg" style="margin-top:10px;"><label>Exames selecionados</label>
+        <div class="exam-selected-list" id="exam-selected-list"><span class="text-muted" style="font-size:12px;">Nenhum selecionado</span></div>
+      </div>
+      <div class="gap-row" style="margin-top:10px;">
+        <label style="font-size:13px;color:var(--ink2);font-weight:500;">Salvar como modelo de exames:</label>
+        <input id="ex-model-name" placeholder="Nome do modelo (opcional)" style="flex:1;padding:7px 12px;border:1.5px solid var(--line);border-radius:8px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;min-width:0;">
+      </div>
+    </div>
+    <div id="ex-tab-encaminhamento" class="admin-panel">
+      <div class="fg"><label>Especialidade / Destino</label><input id="enc-destino" placeholder="Ex: Cardiologista, UPA Central..."></div>
+      <div class="fg"><label>Motivo do encaminhamento (texto livre)</label><textarea id="enc-texto" style="min-height:130px;" placeholder="Descreva o motivo clínico, hipótese diagnóstica, tratamentos já realizados..."></textarea></div>
+      <div class="fg"><label>Urgência</label>
+        <select id="enc-urgencia"><option value="eletivo">Eletivo</option><option value="prioritario">Prioritário</option><option value="urgente">Urgente</option></select>
+      </div>
+    </div>
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="gerarDocExame()">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h4M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="7" y="2" width="10" height="4" rx="1"/></svg>
+      Gerar Documento
+    </button>
+  </div>
+</div>
+
+<!-- ===== DOCUMENTOS ===== -->
+<div class="page" id="page-documentos">
+  <div class="page-head"><h2>Documentos</h2><p>Atestados e declarações médicas</p></div>
+  <div class="card">
+    <div class="card-title">Dados do Paciente</div>
+    <div class="gr2">
+      <div class="fg"><label>Nome do paciente</label><input id="doc-pac" placeholder="Nome completo"></div>
+      <div class="fg"><label>Data</label><input type="date" id="doc-data"></div>
+    </div>
+    <div class="fg"><label>Local de atendimento</label><select id="doc-local" onchange="onLocalChange('doc-local')"><option value="">— selecionar —</option></select></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Tipo de documento</div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchDocTab('atestado',this)">Atestado Médico</button>
+      <button class="admin-tab" onclick="switchDocTab('declaracao',this)">Declaração de Comparecimento</button>
+    </div>
+    <div id="doc-tab-atestado" class="admin-panel active">
+      <div class="gr2">
+        <div class="fg"><label>Dias de afastamento</label><input type="number" id="doc-dias" min="1" value="1"></div>
+        <div class="fg"><label>CID (opcional)</label><input id="doc-cid" placeholder="Ex: J11"></div>
+      </div>
+      <div class="fg"><label>Observações</label><textarea id="doc-obs" placeholder="Recomendações de repouso, restrições..."></textarea></div>
+    </div>
+    <div id="doc-tab-declaracao" class="admin-panel">
+      <div class="gr2">
+        <div class="fg"><label>Horário de entrada</label><input type="time" id="doc-hin"></div>
+        <div class="fg"><label>Horário de saída</label><input type="time" id="doc-hout"></div>
+      </div>
+      <div class="fg"><label>Finalidade</label><input id="doc-finalidade" placeholder="Ex: consulta médica"></div>
+    </div>
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="gerarDocumento()">Gerar Documento</button>
+  </div>
+</div>
+
+<!-- ===== USUÁRIOS (ADMIN ONLY) ===== -->
+<div class="page" id="page-usuarios">
+  <div class="page-head"><h2>Gestão de Usuários</h2><p>Crie e gerencie acessos ao sistema</p></div>
+  <div class="card">
+    <div class="card-title">Usuários cadastrados</div>
+    <div id="users-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+    <div class="btn-group"><button class="btn btn-soft" onclick="openModal('modal-novo-user')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Novo usuário
+    </button></div>
+  </div>
+</div>
+
+<!-- ===== ADMIN ===== -->
+<div class="page" id="page-admin">
+  <div class="page-head"><h2>Base de Dados</h2><p>Medicamentos adultos, pediátricos e tipos de exames</p></div>
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="switchAdminTab('adulto',this)">Medicamentos Adulto</button>
+    <button class="admin-tab" onclick="switchAdminTab('pediatrico',this)">Medicamentos Pediátrico</button>
+    <button class="admin-tab" onclick="switchAdminTab('injetaveis-db',this)">Drogas Injetáveis</button>
+    <button class="admin-tab" onclick="switchAdminTab('exames-db',this)">Tipos de Exame</button>
+  </div>
+  <div id="admin-adulto" class="admin-panel active">
+    <div class="card">
+      <div class="card-title">Medicamentos Adultos</div>
+      <div class="search-wrap"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input id="search-adulto" placeholder="Buscar..." oninput="renderAdultoTable()"></div>
+      <div style="overflow-x:auto;"><table class="med-table"><thead><tr><th>Medicamento</th><th>Posologia padrão</th><th>Categoria</th><th></th></tr></thead><tbody id="adulto-tbody"></tbody></table></div>
+      <div class="btn-group"><button class="btn btn-soft" onclick="openAddModal('adulto')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo medicamento</button></div>
+    </div>
+  </div>
+  <div id="admin-pediatrico" class="admin-panel">
+    <div class="card">
+      <div class="card-title">Medicamentos Pediátricos</div>
+      <div class="search-wrap"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input id="search-ped-db" placeholder="Buscar..." oninput="renderPedTable()"></div>
+      <div style="overflow-x:auto;"><table class="med-table"><thead><tr><th>Medicamento</th><th>Dose (apres./kg)</th><th>Apresentação</th><th>Modo</th><th>Via</th><th>Intervalo</th><th>Duração</th><th>Dose máx.</th><th>Idade</th><th></th></tr></thead><tbody id="ped-tbody"></tbody></table></div>
+      <div class="btn-group"><button class="btn btn-soft" onclick="openAddModal('ped')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo medicamento</button></div>
+    </div>
+  </div>
+  <div id="admin-injetaveis-db" class="admin-panel">
+    <div class="card">
+      <div class="card-title">Drogas Injetáveis Pediátricas</div>
+      <p style="font-size:13px;color:var(--ink3);margin-bottom:14px;">Cadastre a droga, a base de cálculo (mg/kg ou mcg/kg/min) e informações de diluição.</p>
+      <div class="search-wrap"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input id="search-inj-db" placeholder="Buscar droga..." oninput="renderInjTable()"></div>
+      <div style="overflow-x:auto;">
+        <table class="med-table">
+          <thead><tr><th>Droga</th><th>Dose padrão</th><th>Unidade dose</th><th>Diluição</th><th>Via</th><th>Obs.</th><th></th></tr></thead>
+          <tbody id="inj-tbody"></tbody>
+        </table>
+      </div>
+      <div class="btn-group"><button class="btn btn-soft" onclick="openAddModal('inj')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nova droga injetável</button></div>
+    </div>
+  </div>
+  <div id="admin-exames-db" class="admin-panel">
+    <div class="card">
+      <div class="card-title">Tipos de Exame</div>
+      <div id="exam-db-list"></div>
+      <div class="btn-group"><button class="btn btn-soft" onclick="openModal('modal-exame-db')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo exame</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PERFIL ===== -->
+<div class="page" id="page-perfil">
+  <div class="page-head"><h2>Meu Perfil</h2><p>Informações que aparecem nas receitas e documentos</p></div>
+  <div class="card">
+    <div id="prof-av" class="profile-av-big">?</div>
+    <div class="gr2">
+      <div class="fg"><label>Nome completo</label><input id="prof-nome" placeholder="Dr. Nome Sobrenome" oninput="updateProfilePreview()"></div>
+      <div class="fg"><label>Especialidade</label><input id="prof-espec" placeholder="Ex: Clínica Geral, Pediatria"></div>
+    </div>
+    <div class="gr2">
+      <div class="fg"><label>CRM</label><input id="prof-crm" placeholder="Ex: 12345"></div>
+      <div class="fg"><label>Estado (CRM)</label>
+        <select id="prof-estado"><option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select>
+      </div>
+    </div>
+    <div class="fg"><label>Telefone para contato</label><input id="prof-tel" placeholder="Ex: (91) 99999-9999"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Locais de Atendimento</div>
+    <div id="locais-list"></div>
+    <div class="btn-group"><button class="btn btn-soft" onclick="openModal('modal-local')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Adicionar local</button></div>
+  </div>
+  <div class="btn-group"><button class="btn btn-primary" onclick="salvarPerfil()"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Salvar perfil</button></div>
+</div>
+
+</main>
+
+<!-- ── RX PRINT MODAL ── -->
+<div class="rx-modal-overlay" id="rx-modal">
+  <div class="rx-modal-box">
+    <div class="rx-modal-toolbar">
+      <h3 id="rx-modal-title">Prévia da Receita</h3>
+      <div class="tb-btns">
+        <button class="btn btn-primary btn-sm" onclick="printRx()">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimir
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="closeRxModal()">Fechar</button>
+      </div>
+    </div>
+    <div class="rx-modal-body" id="rx-modal-body"></div>
+  </div>
+</div>
+
+<!-- Hidden iframe used only for printing -->
+<div id="rx-print-frame" style="display:none;"></div>
+
+<!-- ====== MODALS ====== -->
+<div class="modal-overlay" id="modal-adulto">
+  <div class="modal">
+    <h3 id="modal-adulto-title">Novo Medicamento Adulto</h3>
+    <input type="hidden" id="ma-edit-id">
+    <div class="fg"><label>Nome + Concentração</label><input id="ma-nome" placeholder="Ex: Amoxicilina 500mg"></div>
+    <div class="fg"><label>Posologia padrão</label><input id="ma-posol" placeholder="Ex: 1 comprimido de 8/8h por 7 dias"></div>
+    <div class="fg"><label>Categoria</label>
+      <select id="ma-cat"><option>Antibiótico</option><option>Analgésico</option><option>Anti-inflamatório</option><option>Anti-hipertensivo</option><option>Antidiabético</option><option>Gastroprotetor</option><option>Broncodilatador</option><option>Antihistamínico</option><option>Outro</option></select>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-adulto')">Cancelar</button><button class="btn btn-primary" onclick="saveMedAdulto()">Salvar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-ped">
+  <div class="modal" style="max-width:580px;">
+    <h3 id="modal-ped-title">Novo Medicamento Pediátrico</h3>
+    <input type="hidden" id="mp-edit-id">
+    <div class="gr2">
+      <div class="fg"><label>Nome + Concentração</label><input id="mp-nome" placeholder="Ex: Amoxicilina 250mg/5ml"></div>
+      <div class="fg"><label>Apresentação</label>
+        <select id="mp-apresentacao" onchange="updateModalDoseLabel();toggleApresOutro()">
+          <option value="">— selecionar —</option>
+          <option value="ml">ml</option>
+          <option value="gotas">gotas</option>
+          <option value="jatos">jatos</option>
+          <option value="comprimido(s)">comprimido(s)</option>
+          <option value="cápsula(s)">cápsula(s)</option>
+          <option value="sachê(s)">sachê(s)</option>
+          <option value="supositório(s)">supositório(s)</option>
+          <option value="mg">mg</option>
+          <option value="outro">outro (escrever)</option>
+        </select>
+        <input type="text" id="mp-apresentacao-outro" placeholder="Descreva a apresentação" style="display:none;margin-top:6px;width:100%;padding:8px 12px;border:1.5px solid var(--line);border-radius:8px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;" oninput="updateModalDoseLabel()">
+      </div>
+    </div>
+    <div class="gr2">
+      <div class="fg"><label>Modo de administração</label>
+        <input id="mp-modo" placeholder="Ex: Tomar, Aplicar, Instilar, Pingar..." style="width:100%;padding:9px 13px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;outline:none;">
+      </div>
+      <div class="fg"><label>Via de administração</label>
+        <input id="mp-via" placeholder="Ex: oral, sublingual, inalatória, tópica..." style="width:100%;padding:9px 13px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;outline:none;">
+      </div>
+    </div>
+    <div class="gr2">
+      <div class="fg">
+        <label id="mp-dose-label">Dose (apresentação/kg)</label>
+        <input type="number" id="mp-dose-apres-kg" step="0.001" placeholder="Ex: 0.27" oninput="updateModalDoseLabel()">
+      </div>
+      <div class="fg">
+        <label id="mp-dosemax-label">Dose máxima (apresentação)</label>
+        <input type="number" id="mp-dose-max-apres" step="0.1" placeholder="Ex: 10">
+      </div>
+    </div>
+    <div class="gr2">
+      <div class="fg"><label>Intervalo entre doses</label>
+        <select id="mp-intervalo"><option value="4/4h">4/4h</option><option value="6/6h">6/6h</option><option value="8/8h" selected>8/8h</option><option value="12/12h">12/12h</option><option value="24h">24h (uma vez ao dia)</option></select>
+      </div>
+      <div class="fg"><label>Duração padrão</label><input id="mp-duracao" placeholder="Ex: 7 dias, 5 dias"></div>
+    </div>
+    <div class="gr2">
+      <div class="fg"><label>Idade mínima (anos)</label><input type="number" id="mp-idade-min" min="0" placeholder="Opcional"></div>
+      <div class="fg"><label>Idade máxima (anos)</label><input type="number" id="mp-idade-max" min="0" placeholder="Opcional"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-ped')">Cancelar</button><button class="btn btn-primary" onclick="saveMedPed()">Salvar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-exame-db">
+  <div class="modal">
+    <h3>Novo Tipo de Exame</h3>
+    <div class="fg"><label>Nome do exame</label><input id="edb-nome" placeholder="Ex: Hemograma completo"></div>
+    <div class="fg"><label>Grupo / Categoria</label><input id="edb-grupo" placeholder="Ex: Hematologia, Bioquímica, Imagem..."></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-exame-db')">Cancelar</button><button class="btn btn-primary" onclick="saveExameDb()">Salvar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-local">
+  <div class="modal">
+    <h3>Local de Atendimento</h3>
+    <div class="fg"><label>Nome da instituição</label><input id="loc-nome" placeholder="Ex: Hospital São Lucas"></div>
+    <div class="fg"><label>Endereço</label><input id="loc-end" placeholder="Rua, número, bairro"></div>
+    <div class="fg"><label>Cidade – Estado</label><input id="loc-cidade" placeholder="Ex: Belém – PA"></div>
+    <div class="fg"><label>Telefone do local</label><input id="loc-tel" placeholder="Ex: (91) 3321-0000"></div>
+    <div class="fg">
+      <label>Logo (imagem)</label>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div id="loc-logo-preview" style="width:56px;height:56px;border-radius:8px;background:var(--bg2);border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+          <svg width="20" height="20" fill="none" stroke="var(--ink3)" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        </div>
+        <div style="flex:1;">
+          <input type="file" id="loc-logo-file" accept="image/*" style="display:none;" onchange="handleLogoUpload(this)">
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('loc-logo-file').click()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            Fazer upload
+          </button>
+          <p style="font-size:11.5px;color:var(--ink3);margin-top:5px;">PNG, JPG ou SVG. Aparecerá no cabeçalho da receita.</p>
+          <input type="hidden" id="loc-logo">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-local')">Cancelar</button><button class="btn btn-primary" onclick="saveLocal()">Salvar</button></div>
+  </div>
+</div>
+
+<!-- Modal Droga Injetável -->
+<div class="modal-overlay" id="modal-inj">
+  <div class="modal" style="max-width:560px;">
+    <h3 id="modal-inj-title">Nova Droga Injetável</h3>
+    <input type="hidden" id="mi-edit-id">
+    <div class="gr2">
+      <div class="fg"><label>Nome da droga</label><input id="mi-nome" placeholder="Ex: Midazolam, Morfina"></div>
+      <div class="fg"><label>Via de administração</label><input id="mi-via" placeholder="Ex: IV, IM, SC"></div>
+    </div>
+    <div class="gr2">
+      <div class="fg"><label>Dose padrão (por kg)</label><input type="number" id="mi-dose" step="0.001" placeholder="Ex: 0.1"></div>
+      <div class="fg"><label>Unidade da dose</label>
+        <select id="mi-unidade">
+          <option value="mg/kg">mg/kg</option>
+          <option value="mcg/kg">mcg/kg</option>
+          <option value="mcg/kg/min">mcg/kg/min</option>
+          <option value="mg/kg/h">mg/kg/h</option>
+          <option value="UI/kg">UI/kg</option>
+          <option value="mEq/kg">mEq/kg</option>
+        </select>
+      </div>
+    </div>
+    <div class="gr2">
+      <div class="fg"><label>Dose mínima</label><input type="number" id="mi-dose-min" step="0.001" placeholder="Opcional"></div>
+      <div class="fg"><label>Dose máxima</label><input type="number" id="mi-dose-max" step="0.001" placeholder="Opcional"></div>
+    </div>
+    <div class="gr2">
+      <div class="fg"><label>Concentração disponível (mg/ml ou mcg/ml)</label><input type="number" id="mi-concentracao" step="0.001" placeholder="Ex: 5 (para 5mg/ml)"></div>
+      <div class="fg"><label>Unidade da concentração</label>
+        <select id="mi-conc-unidade">
+          <option value="mg/ml">mg/ml</option>
+          <option value="mcg/ml">mcg/ml</option>
+          <option value="UI/ml">UI/ml</option>
+          <option value="mEq/ml">mEq/ml</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label>Diluição / Concentração disponível</label><input id="mi-diluicao" placeholder="Ex: 5mg/ml, diluir em SF 0.9%"></div>
+    <div class="fg"><label>Observações clínicas</label><input id="mi-obs" placeholder="Ex: monitorar FC, ter antagonista disponível"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-inj')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveInj()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal editar modelo (expandido com edição de medicamentos) -->
+<div class="modal-overlay" id="modal-edit-modelo">
+  <div class="modal" style="max-width:540px;">
+    <h3>Editar modelo</h3>
+    <input type="hidden" id="em-id"><input type="hidden" id="em-tipo">
+    <div class="fg"><label>Nome do modelo</label><input id="em-nome"></div>
+    <div id="em-meds-section" style="display:none;">
+      <div class="card-title" style="margin-top:14px;margin-bottom:10px;">Medicamentos</div>
+      <div id="em-meds-list" style="display:flex;flex-direction:column;gap:7px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-edit-modelo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEditModelo()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal editar medicamento da lista -->
+<div class="modal-overlay" id="modal-edit-med">
+  <div class="modal">
+    <h3>Editar medicamento</h3>
+    <input type="hidden" id="emed-tipo">
+    <input type="hidden" id="emed-idx">
+    <div class="fg"><label>Medicamento</label><input id="emed-nome" placeholder="Nome do medicamento"></div>
+    <div class="fg"><label>Descrição / Posologia</label><input id="emed-posol" placeholder="Ex: Tomar 5ml de 8/8h por 7 dias"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-edit-med')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEditMed()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal novo/editar usuário -->
+<div class="modal-overlay" id="modal-novo-user">
+  <div class="modal">
+    <h3 id="modal-user-title">Novo Usuário</h3>
+    <input type="hidden" id="nu-edit-id">
+    <div class="gr2">
+      <div class="fg"><label>Nome completo</label><input id="nu-nome" placeholder="Dr. Nome"></div>
+      <div class="fg"><label>E-mail</label><input id="nu-user" type="email" placeholder="medico@clinica.com"></div>
+    </div>
+    <div class="fg"><label>Senha</label><input type="password" id="nu-pass" placeholder="Mínimo 6 caracteres"></div>
+    <div class="fg"><label>Nível de acesso</label>
+      <select id="nu-role">
+        <option value="user">Usuário — prescrições e documentos</option>
+        <option value="admin">Administrador — acesso total</option>
+      </select>
+    </div>
+    <div class="fg"><label>CRM / Especialidade (opcional)</label><input id="nu-crm" placeholder="Ex: CRM-PA 12345 · Pediatria"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-novo-user')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUser()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toast-msg"></span></div>
+
+<!-- ====== SCRIPT ====== -->
+<script>
+// ══════════════════════════════════════════════════════════
+//  SUPABASE CONFIG — substitua pelos valores do seu projeto
+// ══════════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://lgqeommxhdiicqqapflw.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxncWVvbW14aGRpaWNxcWFwZmx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NjcyODYsImV4cCI6MjA5MjA0MzI4Nn0.YSwTBcZedmwel1ongMPltZau_3Ora1A62uXxk8kbG_8';
+
+// SDK carregado via CDN (injetado dinamicamente para não bloquear parse)
+let _sb = null;
+async function getSB(){
+  if(_sb) return _sb;
+  await new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+    s.onload=res; s.onerror=rej;
+    document.head.appendChild(s);
+  });
+  _sb=window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  return _sb;
+}
+
+// ── Cache em memória (evita round-trips para dados globais) ──
+const _cache={};
+function cacheSet(k,v){_cache[k]=v;}
+function cacheGet(k){return _cache[k]??null;}
+
+// ── Funções de acesso ao banco ──────────────────────────────
+
+// Lê tabela global (medicamentos, exames, injetaveis) — sem user_id
+async function dbGet(table){
+  const cached=cacheGet(table);
+  if(cached) return cached;
+  const sb=await getSB();
+  const {data,error}=await sb.from(table).select('*').order('nome');
+  if(error){console.error(table,error);return [];}
+  cacheSet(table,data);
+  return data;
+}
+
+// Lê tabela do usuário corrente
+async function dbGetUser(table){
+  const sb=await getSB();
+  const {data,error}=await sb.from(table).select('*');
+  if(error){console.error(table,error);return [];}
+  return data||[];
+}
+
+// Upsert genérico
+async function dbUpsert(table,row,isGlobal=false){
+  const sb=await getSB();
+  if(!isGlobal){
+    const {data:{user}}=await sb.auth.getUser();
+    if(!row.id) row.id=undefined; // deixa o banco gerar o UUID
+    row.user_id=user.id;
+  }
+  const {error}=await sb.from(table).upsert(row,{onConflict:'id'});
+  if(error) throw error;
+  if(isGlobal) delete _cache[table]; // invalida cache
+}
+
+// Delete genérico
+async function dbDelete(table,id){
+  const sb=await getSB();
+  const {error}=await sb.from(table).delete().eq('id',id);
+  if(error) throw error;
+  delete _cache[table];
+}
+
+// ── Compatibilidade: ls/ss ainda usados para config local ──
+// Apenas para: users (gestão local de auth), sessão de UI
+function ls(k){try{return JSON.parse(localStorage.getItem(k))||null;}catch(e){return null;}}
+function ss(k,val){localStorage.setItem(k,JSON.stringify(val));}
+function v(id){return(document.getElementById(id)||{}).value||'';}
+
+// ── AUTH (Supabase) ──────────────────────────────────────────
+// Role do usuário fica em profiles.role (admin | user)
+let _currentProfile = null;
+
+function currentUser(){return _currentProfile;}
+function isAdmin(){return _currentProfile?.role==='admin';}
+
+async function doLogin(){
+  const email = document.getElementById('login-user').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-err');
+  errEl.classList.remove('show');
+  if(!email||!pass){errEl.textContent='Preencha e-mail e senha.';errEl.classList.add('show');return;}
+  try{
+    const sb=await getSB();
+    const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error) throw error;
+    await loadProfile(data.user.id);
+    applyAuth();
+  }catch(err){
+    errEl.textContent=err.message||'Usuário ou senha incorretos.';
+    errEl.classList.add('show');
+  }
+}
+
+async function doLogout(){
+  const sb=await getSB();
+  await sb.auth.signOut();
+  _currentProfile=null;
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-err').classList.remove('show');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.body.classList.remove('is-admin');
+}
+
+async function loadProfile(userId){
+  const sb=await getSB();
+  const {data,error}=await sb.from('profiles').select('*').eq('id',userId).single();
+  if(error||!data) throw new Error('Perfil não encontrado.');
+  _currentProfile=data;
+}
+
+function applyAuth(){
+  const user=_currentProfile;
+  if(!user){document.getElementById('login-screen').classList.remove('hidden');return;}
+  document.getElementById('login-screen').classList.add('hidden');
+  document.body.classList.toggle('is-admin', user.role==='admin');
+  document.getElementById('sb-doc-name').textContent=user.nome||user.email||'';
+  document.getElementById('sb-doc-crm').textContent=user.role==='admin'?'Administrador':'Usuário';
+  const initStr=(user.nome||user.email||'?').split(' ').slice(0,2).map(w=>w[0].toUpperCase()).join('');
+  document.getElementById('sb-av-initials').textContent=initStr;
+  boot();
+}
+
+// ── USER MANAGEMENT (admin) ──────────────────────────────────
+async function renderUsersList(){
+  const sb=await getSB();
+  const {data,error}=await sb.from('profiles').select('*').order('nome');
+  if(error){toast('Erro ao carregar usuários');return;}
+  const me=_currentProfile;
+  document.getElementById('users-list').innerHTML=(data||[]).map(u=>`
+    <div class="user-card">
+      <div class="user-av">${(u.nome||u.email||'?').slice(0,2).toUpperCase()}</div>
+      <div class="user-info">
+        <strong>${u.nome||'—'}</strong>
+        <span>${u.email||''} ${u.crm?'· '+u.crm:''}</span>
+      </div>
+      <span class="user-role-badge ${u.role==='admin'?'badge-teal':'badge-amber'}">${u.role==='admin'?'Admin':'Usuário'}</span>
+      ${u.id!==me.id?`<div style="display:flex;gap:5px;">
+        <button class="btn btn-sm btn-outline" onclick="editUser('${u.id}','${u.nome||''}','${u.email||''}','${u.role||'user'}','${u.crm||''}')">Editar</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">Excluir</button>
+      </div>`:`<span style="font-size:11px;color:var(--ink3);">(você)</span>`}
+    </div>`).join('');
+}
+
+async function saveUser(){
+  if(!isAdmin()){toast('⚠️ Sem permissão');return;}
+  const nome   = v('nu-nome').trim();
+  const email  = v('nu-user').trim().toLowerCase();
+  const pass   = v('nu-pass').trim();
+  const role   = v('nu-role');
+  const crm    = v('nu-crm').trim();
+  const editId = document.getElementById('nu-edit-id').value||null;
+  if(!nome||!email){toast('⚠️ Preencha nome e e-mail');return;}
+  const sb=await getSB();
+  try{
+    if(editId){
+      // Atualiza perfil
+      const {error}=await sb.from('profiles').update({nome,role,crm}).eq('id',editId);
+      if(error) throw error;
+    } else {
+      // Cria novo usuário via admin (requer service_role key em produção)
+      // Em desenvolvimento: cria via signUp normal
+      if(pass.length<6){toast('⚠️ Senha mínimo 6 caracteres');return;}
+      const {data,error:signErr}=await sb.auth.signUp({email,password:pass,options:{data:{nome,role,crm}}});
+      if(signErr) throw signErr;
+      // profiles é criado automaticamente pelo trigger no banco
+    }
+    closeModal('modal-novo-user');
+    renderUsersList();
+    toast('✓ Usuário salvo!');
+  }catch(err){
+    toast('Erro: '+(err.message||'Tente novamente'));
+  }
+}
+
+function editUser(id,nome,email,role,crm){
+  document.getElementById('nu-edit-id').value=id;
+  document.getElementById('nu-nome').value=nome;
+  document.getElementById('nu-user').value=email;
+  document.getElementById('nu-pass').value='';
+  document.getElementById('nu-role').value=role;
+  document.getElementById('nu-crm').value=crm;
+  document.getElementById('modal-user-title').textContent='Editar Usuário';
+  openModal('modal-novo-user');
+}
+
+async function deleteUser(id){
+  if(!isAdmin())return;
+  if(!confirm('Excluir este usuário permanentemente?'))return;
+  const sb=await getSB();
+  // Deleta o perfil (o auth.users precisa ser deletado via service_role ou painel Supabase)
+  const {error}=await sb.from('profiles').delete().eq('id',id);
+  if(error){toast('Erro ao excluir: '+error.message);return;}
+  renderUsersList();
+  toast('Usuário removido.');
+}
+
+// ── INIT DATA (Supabase) ──────────────────────────────────────
+// Dados globais (meds, exames, injetaveis) — lidos do banco, cacheados em memória
+// Dados do usuário (perfil, locais, modelos) — lidos do banco por user_id via RLS
+
+async function initData(){
+  // Carrega dados globais em paralelo e guarda no cache
+  const [ma,mp,inj,exdb]=await Promise.all([
+    dbGet('meds_adulto'), dbGet('meds_ped'),
+    dbGet('injetaveis'),  dbGet('exames_db'),
+  ]);
+  cacheSet('meds_adulto',ma);
+  cacheSet('meds_ped',mp);
+  cacheSet('injetaveis',inj);
+  cacheSet('exames_db',exdb);
+}
+
+// Shim: funções antigas que usavam ls(KEYS.X) agora usam cacheGet
+// Isso mantém compatibilidade sem reescrever cada função do app
+function ls(k){
+  // Primeiro tenta o cache do Supabase
+  const mapped={
+    ms_meds_adulto:'meds_adulto', ms_meds_ped:'meds_ped',
+    ms_injetaveis:'injetaveis',   ms_exames_db:'exames_db',
+    ms_modelos_adulto:'modelos_adulto', ms_modelos_ped:'modelos_ped',
+    ms_modelos_exames:'modelos_exames',
+    ms_perfil:'perfil',           ms_locais:'locais',
+  };
+  const sbKey=mapped[k];
+  if(sbKey){const c=cacheGet(sbKey);if(c!==null) return c;}
+  // Fallback localStorage (para users e config de UI)
+  try{return JSON.parse(localStorage.getItem(k))||null;}catch(e){return null;}
+}
+function ss(k,val){
+  // Apenas persiste no localStorage para dados de UI/sessão
+  // Dados reais são salvos via dbUpsert
+  localStorage.setItem(k,JSON.stringify(val));
+}
+
+// ── PERFIL via Supabase ──────────────────────────────────────
+async function loadPerfilFromDB(){
+  const sb=await getSB();
+  const {data:{user}}=await sb.auth.getUser();
+  if(!user) return;
+  // Carrega perfil médico
+  const {data:p}=await sb.from('perfil_medico').select('*').eq('user_id',user.id).single();
+  if(p) cacheSet('perfil',{nome:p.nome,crm:p.crm,estado:p.estado,espec:p.espec,tel:p.tel});
+  // Carrega locais
+  const {data:l}=await sb.from('locais').select('*').eq('user_id',user.id).order('nome');
+  if(l) cacheSet('locais',l);
+  // Carrega modelos
+  const {data:ma}=await sb.from('modelos').select('*').eq('user_id',user.id).eq('tipo','adulto');
+  const {data:mp}=await sb.from('modelos').select('*').eq('user_id',user.id).eq('tipo','ped');
+  const {data:me}=await sb.from('modelos').select('*').eq('user_id',user.id).eq('tipo','exames');
+  if(ma) cacheSet('modelos_adulto',ma);
+  if(mp) cacheSet('modelos_ped',mp);
+  if(me) cacheSet('modelos_exames',me);
+}
+
+async function salvarPerfilDB(){
+  const sb=await getSB();
+  const {data:{user}}=await sb.auth.getUser();
+  if(!user) return;
+  const perf={user_id:user.id,nome:v('prof-nome'),espec:v('prof-espec'),crm:v('prof-crm'),estado:v('prof-estado'),tel:v('prof-tel')};
+  const {error}=await sb.from('perfil_medico').upsert(perf,{onConflict:'user_id'});
+  if(error) throw error;
+  cacheSet('perfil',perf);
+  updateSidebarDoctor();
+  toast('✓ Perfil salvo!');
+}
+
+// ── BOOT ──────────────────────────────────────────────────────
+async function boot(){
+  await Promise.all([initData(), loadPerfilFromDB()]);
+  updateSidebarDoctor();
+  updateDash();
+  populateLocalSelects();
+  const td=new Date().toISOString().slice(0,10);
+  ['ex-data','doc-data'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=td;});
+}
+
+// Start: verifica sessão Supabase existente
+(async function start(){
+  try{
+    const sb=await getSB();
+    const {data:{session}}=await sb.auth.getSession();
+    if(session?.user){
+      await loadProfile(session.user.id);
+      applyAuth();
+    }
+    // Escuta mudanças de sessão (ex: expiração de token)
+    sb.auth.onAuthStateChange(async(event,session)=>{
+      if(event==='SIGNED_OUT'||!session){
+        _currentProfile=null;
+        document.getElementById('login-screen').classList.remove('hidden');
+        document.body.classList.remove('is-admin');
+      }
+    });
+  }catch(e){
+    console.warn('Supabase não configurado ainda:',e.message);
+    // Mostra aviso amigável no lugar do login
+    document.getElementById('login-err').textContent='Configure SUPABASE_URL e SUPABASE_ANON no topo do script.';
+    document.getElementById('login-err').classList.add('show');
+  }
+})();
+
+// ── NAVIGATION ──
+function nav(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  closeAllAc();
+  if(id==='admin'){if(!isAdmin()){toast('⚠️ Acesso restrito');return;}renderAdultoTable();renderPedTable();renderInjTable();renderExameDb();}
+  if(id==='usuarios'){if(!isAdmin()){toast('⚠️ Acesso restrito');return;}renderUsersList();}
+  if(id==='rx-adulto'){populateLocalSelects();}
+  if(id==='rx-ped'){updatePedMedOptions();populateLocalSelects();}
+  if(id==='injetaveis'){renderInjAc();}
+  if(id==='perfil'){loadPerfil();}
+  if(id==='dashboard'){updateDash();}
+  if(id==='exames'){selectedExams=[];renderSelectedExams();populateLocalSelects();}
+  if(id==='documentos'){populateLocalSelects();}
+  if(id==='modelos'){renderModelos();}
+}
+
+// ── DASHBOARD ──
+function updateDash(){
+  const now=new Date();
+  const p=ls(KEYS.perfil)||{};
+  const h=now.getHours();
+  const s=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
+  document.getElementById('dash-greeting').textContent=`${s}${p.nome?', '+p.nome:''} 👋`;
+  document.getElementById('dash-date').textContent=now.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const nMeds=(ls(KEYS.meds_adulto)||[]).length+(ls(KEYS.meds_ped)||[]).length;
+  const nModelos=(ls(KEYS.modelos_adulto)||[]).length+(ls(KEYS.modelos_ped)||[]).length+(ls(KEYS.modelos_exames)||[]).length;
+  const nLocais=(ls(KEYS.locais)||[]).length;
+  document.getElementById('stat-meds').textContent=nMeds;
+  document.getElementById('stat-modelos').textContent=nModelos;
+  document.getElementById('stat-locais').textContent=nLocais;
+  const el=document.getElementById('dash-base-info');
+  if(el){
+    el.innerHTML=`
+      <div class="top-med-item"><div class="top-med-rank" style="background:var(--teal-light);color:var(--teal);">${(ls(KEYS.meds_adulto)||[]).length}</div><div class="top-med-info"><strong>Medicamentos Adulto</strong><span>na base de dados</span></div></div>
+      <div class="top-med-item"><div class="top-med-rank" style="background:var(--amber-light);color:var(--amber);">${(ls(KEYS.meds_ped)||[]).length}</div><div class="top-med-info"><strong>Medicamentos Pediátricos</strong><span>na base de dados</span></div></div>
+      <div class="top-med-item"><div class="top-med-rank" style="background:var(--teal-light);color:var(--teal);">${(ls(KEYS.injetaveis)||[]).length}</div><div class="top-med-info"><strong>Drogas Injetáveis</strong><span>cadastradas</span></div></div>
+      <div class="top-med-item"><div class="top-med-rank" style="background:var(--purple-light);color:var(--purple);">${nModelos}</div><div class="top-med-info"><strong>Modelos de Prescrição</strong><span>salvos</span></div></div>`;
+  }
+}
+
+// ── PERFIL ──
+function loadPerfil(){
+  const p=cacheGet('perfil')||{};
+  ['nome','espec','crm','estado','tel'].forEach(f=>{const el=document.getElementById('prof-'+f);if(el)el.value=p[f]||'';});
+  document.getElementById('prof-av').textContent=initials(p.nome);
+  renderLocais();
+}
+function updateProfilePreview(){document.getElementById('prof-av').textContent=initials(v('prof-nome'));}
+function salvarPerfil(){salvarPerfilDB().catch(e=>toast('Erro ao salvar: '+e.message));}
+function updateSidebarDoctor(){
+  const user=_currentProfile;
+  const p=cacheGet('perfil')||{};
+  const nome=p.nome||user?.nome||'';
+  document.getElementById('sb-doc-name').textContent=nome||'Meu Perfil';
+  document.getElementById('sb-doc-crm').textContent=p.crm?`CRM ${p.crm}/${p.estado||''}`:(user?.role==='admin'?'Administrador':'CRM —');
+  document.getElementById('sb-av-initials').textContent=initials(nome||user?.nome||'?');
+}
+function initials(n){if(!n)return'?';const p=n.trim().split(' ').filter(Boolean);return p.length===1?p[0][0].toUpperCase():(p[0][0]+p[p.length-1][0]).toUpperCase();}
+
+// LOCAIS
+function renderLocais(){
+  const locs=ls(KEYS.locais)||[];
+  const el=document.getElementById('locais-list');
+  if(!locs.length){el.innerHTML='<div class="text-muted">Nenhum local cadastrado.</div>';return;}
+  el.innerHTML=locs.map((l,i)=>`<div class="local-card" style="display:flex;align-items:center;gap:12px;">
+    <div style="width:44px;height:44px;border-radius:8px;background:var(--bg2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+      ${l.logo?`<img src="${l.logo}" style="width:100%;height:100%;object-fit:contain;">`:`<span style="font-family:'Lora',serif;font-size:16px;font-weight:700;color:var(--ink3);">${l.nome[0].toUpperCase()}</span>`}
+    </div>
+    <div style="flex:1;">
+      <h4>${l.nome}</h4>
+      <p>${l.endereco}${l.cidade?' — '+l.cidade:''}</p>
+      ${l.tel?`<p>Tel: ${l.tel}</p>`:''}
+    </div>
+    <button class="local-remove" onclick="removeLocal(${i})">×</button>
+  </div>`).join('');
+  populateLocalSelects();
+}
+function saveLocal(){
+  const locs=ls(KEYS.locais)||[];
+  locs.push({nome:v("loc-nome"),endereco:v("loc-end"),cidade:v('loc-cidade'),tel:v('loc-tel'),logo:v('loc-logo')});
+  ss(KEYS.locais,locs);closeModal('modal-local');renderLocais();toast('✓ Local adicionado!');
+}
+function removeLocal(i){const locs=ls(KEYS.locais)||[];locs.splice(i,1);ss(KEYS.locais,locs);renderLocais();}
+function populateLocalSelects(){
+  const locs=ls(KEYS.locais)||[];
+  const lastIdx=ls('ms_last_local')||'';
+  const opts='<option value="">— selecionar —</option>'+locs.map((l,i)=>`<option value="${i}" ${String(i)===String(lastIdx)?'selected':''}>${l.nome}</option>`).join('');
+  ['a-local','p-local','ex-local','doc-local'].forEach(id=>{const el=document.getElementById(id);if(el){el.innerHTML=opts;}});
+}
+function onLocalChange(id){
+  const el=document.getElementById(id);
+  if(el)ss('ms_last_local',el.value);
+}
+
+// ── AUTOCOMPLETE ──
+let acState={adulto:{focused:-1,custom:null},ped:{focused:-1,custom:null}};
+
+function getMedList(tipo){
+  return tipo==='ped'
+    ? (ls(KEYS.meds_ped)||[]).filter(m=>pedAgeFilter(m))
+    : (ls(KEYS.meds_adulto)||[]);
+}
+function pedAgeFilter(m){
+  const idade=parseFloat(document.getElementById('p-idade').value);
+  if(isNaN(idade))return true;
+  if(m.idadeMin!==null&&idade<m.idadeMin)return false;
+  if(m.idadeMax!==null&&idade>m.idadeMax)return false;
+  return true;
+}
+function acFilter(tipo){
+  const inp=document.getElementById('ac-'+tipo);
+  const drop=document.getElementById('ac-'+tipo+'-drop');
+  const q=inp.value.trim().toLowerCase();
+  // Require at least 3 characters
+  if(q.length<3){drop.classList.remove('open');return;}
+  const meds=getMedList(tipo);
+  const filtered=meds.filter(m=>m.nome.toLowerCase().includes(q));
+  acState[tipo].focused=-1;
+  if(!filtered.length){
+    drop.innerHTML='<div class="ac-item" style="color:var(--ink3);">Nenhum resultado</div>';
+    drop.classList.add('open');return;
+  }
+  let html=filtered.map((m,i)=>{
+    const sub = tipo==='ped'
+      ? [m.apresentacao, m.intervalo, m.duracao].filter(Boolean).join(' · ')
+      : (m.posol||m.cat||'');
+    return`<div class="ac-item" data-idx="${i}" data-id="${m.id}" data-tipo="${tipo}" onclick="acSelect(${m.id},'${tipo}')">
+      <span>${highlightMatch(m.nome,q)}</span>
+      <span>${sub}</span>
+    </div>`;
+  }).join('');
+  const exactMatch=meds.some(m=>m.nome.toLowerCase()===q);
+  if(!exactMatch){
+    html+=`<div class="ac-add-row" onclick="acAddCustom('${tipo}')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Adicionar "<strong>${inp.value}</strong>" como personalizado
+    </div>`;
+  }
+  drop.innerHTML=html;
+  drop.classList.add('open');
+}
+function highlightMatch(text,q){
+  if(!q)return text;
+  const idx=text.toLowerCase().indexOf(q);
+  if(idx<0)return text;
+  return text.slice(0,idx)+'<strong>'+text.slice(idx,idx+q.length)+'</strong>'+text.slice(idx+q.length);
+}
+function acSelect(id,tipo){
+  const meds=tipo==='ped'?(ls(KEYS.meds_ped)||[]):(ls(KEYS.meds_adulto)||[]);
+  const m=meds.find(x=>x.id===id);
+  if(!m)return;
+  document.getElementById('ac-'+tipo).value=m.nome;
+  acState[tipo].custom=null;
+  // fill posologia
+  if(tipo==='ped'){
+    acState.ped.selectedMed=m;
+    calcPedDoseFromMed(m);
+  } else {
+    document.getElementById('a-med-posol').value=m.posol||'';
+  }
+  document.getElementById('ac-'+tipo+'-drop').classList.remove('open');
+  dismissSaveBanner(tipo);
+}
+function acAddCustom(tipo){
+  const inp=document.getElementById('ac-'+tipo);
+  const nome=inp.value.trim();
+  if(!nome)return;
+  acState[tipo].custom=nome;
+  document.getElementById('ac-'+tipo+'-drop').classList.remove('open');
+  // show save banner
+  const banner=document.getElementById(tipo==='ped'?'p-save-banner':'a-save-banner');
+  const nameEl=document.getElementById(tipo==='ped'?'p-new-med-name':'a-new-med-name');
+  nameEl.textContent=nome;
+  banner.classList.add('show');
+  if(tipo==='ped'){
+    document.getElementById('p-med-posol').value='';
+    document.getElementById('p-dose-box').style.display='none';
+    acState.ped.selectedMed=null;
+  }
+}
+function acKey(e,tipo){
+  const drop=document.getElementById('ac-'+tipo+'-drop');
+  const items=drop.querySelectorAll('.ac-item');
+  if(e.key==='ArrowDown'){e.preventDefault();acState[tipo].focused=Math.min(acState[tipo].focused+1,items.length-1);acHighlight(tipo,items);}
+  else if(e.key==='ArrowUp'){e.preventDefault();acState[tipo].focused=Math.max(acState[tipo].focused-1,0);acHighlight(tipo,items);}
+  else if(e.key==='Enter'&&acState[tipo].focused>=0){e.preventDefault();items[acState[tipo].focused].click();}
+  else if(e.key==='Escape'){drop.classList.remove('open');}
+}
+function acHighlight(tipo,items){items.forEach((el,i)=>el.classList.toggle('focused',i===acState[tipo].focused));}
+function closeAllAc(){document.querySelectorAll('.ac-dropdown').forEach(d=>d.classList.remove('open'));}
+document.addEventListener('click',e=>{if(!e.target.closest('.ac-wrap'))closeAllAc();});
+
+function saveNewMedToDb(tipo){
+  const nome=acState[tipo].custom||(tipo==='ped'?v('ac-ped'):v('ac-adulto'));
+  const posol=tipo==='ped'?v('p-med-posol'):v('a-med-posol');
+  if(!nome)return;
+  if(!posol){toast('⚠️ Preencha a descrição antes de salvar na base');document.getElementById(tipo==='ped'?'p-med-posol':'a-med-posol').focus();return;}
+  const key=tipo==='ped'?KEYS.meds_ped:KEYS.meds_adulto;
+  const meds=ls(key)||[];
+  if(!meds.find(m=>m.nome.toLowerCase()===nome.toLowerCase())){
+    meds.push(tipo==='ped'
+      ?{id:Date.now(),nome,apresentacao:'',modo:'Tomar',via:'oral',doseApresKg:null,doseMaxApres:null,idadeMin:null,idadeMax:null,intervalo:'8/8h',duracao:''}
+      :{id:Date.now(),nome,posol,cat:'Outro'});
+    ss(key,meds);
+    toast('✓ "'+nome+'" salvo na base de dados!');
+  }else toast('Medicamento já existe na base.');
+  dismissSaveBanner(tipo);
+}
+function dismissSaveBanner(tipo){
+  document.getElementById(tipo==='ped'?'p-save-banner':'a-save-banner').classList.remove('show');
+}
+
+// ── MEDICAMENTOS NO RECEITUÁRIO ──
+let aMeds=[],pMeds=[];
+
+function addMedRx(tipo){
+  const ac=tipo==='ped'?document.getElementById('ac-ped'):document.getElementById('ac-adulto');
+  const posolEl=document.getElementById(tipo==='ped'?'p-med-posol':'a-med-posol');
+  const nome=ac.value.trim();
+  const posol=posolEl.value.trim();
+  if(!nome){toast('⚠️ Informe o medicamento');return;}
+  if(!posol){toast('⚠️ Informe a posologia');return;}
+  const isCustom=!!acState[tipo].custom;
+  const entry={nome,posol,custom:isCustom};
+  // For ped: store the medId so we can recalc when weight changes
+  if(tipo==='ped' && acState.ped.selectedMed){
+    entry.medId=acState.ped.selectedMed.id;
+  }
+  if(tipo==='ped')pMeds.push(entry);else aMeds.push(entry);
+  renderMedList(tipo);
+  ac.value='';posolEl.value='';
+  acState[tipo].custom=null;
+  acState[tipo].selectedMed=null;
+  if(tipo==='ped')document.getElementById('p-dose-box').style.display='none';
+  dismissSaveBanner(tipo);
+  toast('✓ Medicamento adicionado!');
+}
+function renderMedList(tipo){
+  const meds=tipo==='ped'?pMeds:aMeds;
+  const el=document.getElementById(tipo==='ped'?'p-med-list':'a-med-list');
+  el.innerHTML=meds.map((m,i)=>`
+    <div class="med-item">
+      <div class="med-dot"></div>
+      <div class="med-info"><strong>${m.nome}</strong><span>${m.posol}</span></div>
+      ${m.custom?'<span class="med-item-badge badge-amber">Personalizado</span>':''}
+      <div style="display:flex;gap:2px;flex-shrink:0;">
+        <button class="btn btn-ghost" title="Editar" onclick="openEditMed('${tipo}',${i})" style="color:var(--ink3);">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn btn-ghost" title="Remover" onclick="${tipo==='ped'?'removePMed':'removeAMed'}(${i})">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+        </button>
+      </div>
+    </div>`).join('');
+}
+function removeAMed(i){aMeds.splice(i,1);renderMedList('adulto');}
+function removePMed(i){pMeds.splice(i,1);renderMedList('ped');}
+
+function openEditMed(tipo,i){
+  const meds=tipo==='ped'?pMeds:aMeds;
+  const m=meds[i];
+  document.getElementById('emed-tipo').value=tipo;
+  document.getElementById('emed-idx').value=i;
+  document.getElementById('emed-nome').value=m.nome;
+  document.getElementById('emed-posol').value=m.posol;
+  openModal('modal-edit-med');
+}
+function saveEditMed(){
+  const tipo=v('emed-tipo');
+  const i=parseInt(document.getElementById('emed-idx').value);
+  const nome=v('emed-nome').trim();
+  const posol=v('emed-posol').trim();
+  if(!nome||!posol){toast('⚠️ Preencha nome e posologia');return;}
+  const meds=tipo==='ped'?pMeds:aMeds;
+  meds[i]={...meds[i], nome, posol};
+  renderMedList(tipo);
+  closeModal('modal-edit-med');
+  toast('✓ Medicamento atualizado!');
+}
+
+// ── CALCULADORA PED ──
+function updatePedMedOptions(){
+  const idade=parseFloat(document.getElementById('p-idade').value);
+  const warn=document.getElementById('ped-age-warn');
+  warn.style.display=isNaN(idade)?'flex':'none';
+  if(acState.ped&&acState.ped.selectedMed) calcPedDoseFromMed(acState.ped.selectedMed);
+  recalcPedMeds();
+}
+function calcPedDose(){
+  if(acState.ped&&acState.ped.selectedMed) calcPedDoseFromMed(acState.ped.selectedMed);
+  recalcPedMeds();
+}
+
+function recalcPedMeds(){
+  const peso=parseFloat(document.getElementById('p-peso').value);
+  const allMeds=ls(KEYS.meds_ped)||[];
+  let changed=false;
+  pMeds=pMeds.map(entry=>{
+    if(!entry.medId) return entry; // custom — leave as-is
+    const m=allMeds.find(x=>x.id===entry.medId);
+    if(!m) return entry;
+    const apres=m.apresentacao||'';
+    const modo=m.modo||'Tomar';
+    const via=m.via?` (${m.via})`:'';
+    const intervalo=m.intervalo||'';
+    const duracao=m.duracao||'';
+    let desc;
+    if(m.doseApresKg&&!isNaN(peso)&&peso>0){
+      let dose=peso*m.doseApresKg, ajust=false;
+      if(m.doseMaxApres!=null&&dose>m.doseMaxApres){dose=m.doseMaxApres;ajust=true;}
+      const isGotas=apres==='gotas';
+      const doseRounded=isGotas?Math.round(dose):parseFloat(dose.toFixed(1));
+      const doseStr=doseRounded+' '+apres;
+      desc=`${modo} ${doseStr}${via}`;
+    } else {
+      desc=`${modo} ___ ${apres}${via}`;
+    }
+    if(intervalo) desc+=` de ${intervalo}`;
+    if(duracao) desc+=` por ${duracao}`;
+    changed=true;
+    return {...entry, posol:desc};
+  });
+  if(changed) renderMedList('ped');
+}
+function calcPedDoseFromMed(m){
+  const peso=parseFloat(document.getElementById('p-peso').value);
+  const idade=parseFloat(document.getElementById('p-idade').value);
+  const warnEl=document.getElementById('p-restrict-warn');
+  warnEl.style.display='none';
+  if(!isNaN(idade)){
+    if((m.idadeMin!==null&&idade<m.idadeMin)||(m.idadeMax!==null&&idade>m.idadeMax)){
+      warnEl.style.display='flex';
+      document.getElementById('p-restrict-text').textContent=`Atenção: ${m.nome} indicado para ${idadeStr(m.idadeMin,m.idadeMax)}.`;
+    }
+  }
+  const box=document.getElementById('p-dose-box');
+  const apres=m.apresentacao||'';
+  const intervalo=m.intervalo||'';
+  const duracao=m.duracao||'';
+  if(m.doseApresKg&&!isNaN(peso)){
+    let dose=peso*m.doseApresKg,ajust=false;
+    if(m.doseMaxApres!=null&&dose>m.doseMaxApres){dose=m.doseMaxApres;ajust=true;}
+    const isGotas=apres==='gotas';
+    const doseRounded=isGotas?Math.round(dose):parseFloat(dose.toFixed(1));
+    const doseStr=doseRounded+' '+apres;
+    box.style.display='block';
+    document.getElementById('p-dose-val').textContent=doseStr;
+    document.getElementById('p-dose-detail').textContent=
+      `${peso}kg × ${m.doseApresKg} ${apres}/kg = ${isGotas?Math.round(peso*m.doseApresKg):+(peso*m.doseApresKg).toFixed(1)} ${apres}`+
+      (ajust?` → máx ${m.doseMaxApres} ${apres}`:'');
+    const modo=m.modo||'Tomar';
+    const via=m.via?` (${m.via})`:'';
+    let desc=`${modo} ${doseStr}${via}`;
+    if(intervalo) desc+=` de ${intervalo}`;
+    if(duracao) desc+=` por ${duracao}`;
+    document.getElementById('p-med-posol').value=desc;
+  } else {
+    box.style.display='none';
+    const modo=m.modo||'Tomar';
+    const via=m.via?` (${m.via})`:'';
+    let desc=`${modo} ___ ${apres}${via}`;
+    if(intervalo) desc+=` de ${intervalo}`;
+    if(duracao) desc+=` por ${duracao}`;
+    document.getElementById('p-med-posol').value=desc;
+  }
+}
+function idadeStr(min,max){
+  if(!min&&!max)return'todas as idades';
+  if(min&&!max)return`≥${min} anos`;
+  if(!min&&max)return`≤${max} anos`;
+  return`${min}–${max} anos`;
+}
+
+// ── GERAR RECEITA ──
+function gerarRx(tipo,formato){
+  const pac=v(tipo==='ped'?'p-pac-nome':'a-pac-nome');
+  const meds=tipo==='ped'?pMeds:aMeds;
+  if(!pac){toast('⚠️ Informe o nome do paciente');return;}
+  if(!meds.length){toast('⚠️ Adicione ao menos 1 medicamento');return;}
+  const perfil=ls(KEYS.perfil)||{};
+  const locais=ls(KEYS.locais)||[];
+  const locIdx=v(tipo==='ped'?'p-local':'a-local');
+  const local=locIdx!==''?locais[parseInt(locIdx)]:null;
+  const hoje=new Date().toLocaleDateString('pt-BR');
+  // salvar modelo
+  const mnKey=tipo==='ped'?'p-model-name':'a-model-name';
+  const mn=v(mnKey);
+  if(mn){
+    const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
+    const modelos=ls(key)||[];
+    // For ped models: strip calculated posol from entries that have medId
+    // so that dose is always recalculated from weight when model is loaded
+    const medsToSave=tipo==='ped'
+      ? meds.map(m=>m.medId?{nome:m.nome,medId:m.medId,custom:false}:{...m})
+      : [...meds];
+    modelos.push({id:Date.now(),nome:mn,medicamentos:medsToSave,tipo});
+    ss(key,modelos);
+    toast('✓ Modelo "'+mn+'" salvo!');
+    document.getElementById(mnKey).value='';
+  }
+  const extra=tipo==='ped'?[v('p-idade')?'Idade: '+v('p-idade')+' anos':'',v('p-peso')?'Peso: '+v('p-peso')+' kg':''].filter(Boolean).join(' · '):'';
+  const html=formato==='controlado'
+    ? buildControladoHtml({perfil,local,hoje,pac,meds,tipo,extra})
+    : buildRxHtml({perfil,local,hoje,pac,meds,obs:v(tipo==='ped'?'p-obs':'a-obs'),tipo,extra});
+
+  const title=formato==='controlado'?'Receituário Controlado':'Prévia da Receita';
+  openRxModal(html, title);
+}
+
+function openRxModal(html, title){
+  // Generate PDF directly — open in new tab as print-ready A4 page
+  gerarPDF(html, title);
+}
+function closeRxModal(){}  // kept for safety, no-op
+function printRx(){}       // kept for safety, no-op
+
+function gerarPDF(data, title){
+  const fonts=`<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">`;
+  const style=`<style>
+    @page{size:210mm 270mm portrait;margin:15mm;}
+    html,body{margin:0;padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    *{box-sizing:border-box;font-family:'Outfit',sans-serif;}
+    body{color:#111;font-size:13px;line-height:1.5;}
+    /* Each sheet = one physical page. Flex column keeps footer at bottom. */
+    .rx-sheet{
+      width:100%;
+      /* 270mm - 2×15mm = 240mm usable */
+      height:240mm;
+      display:flex;
+      flex-direction:column;
+      page-break-after:always;
+      overflow:hidden;
+    }
+    .rx-sheet:last-child{page-break-after:auto;}
+    .rx-spacer{flex:1;min-height:8px;}
+    /* — Header — */
+    .rx-sh-head{display:flex;align-items:center;gap:12px;padding-bottom:10px;flex-shrink:0;}
+    .rx-sh-logo{max-width:110px;max-height:60px;flex-shrink:0;display:flex;align-items:center;}
+    .rx-sh-logo img{max-width:110px;max-height:60px;width:auto;height:auto;object-fit:contain;display:block;}
+    .rx-sh-logo-placeholder{font-family:'Lora',serif;font-size:20px;font-weight:700;color:#aaa;}
+    .rx-sh-local-info h3{font-size:13px;font-weight:600;margin:0;color:#111;}
+    .rx-sh-local-info p{font-size:10.5px;color:#555;margin-top:1px;line-height:1.45;}
+    /* — Dividers — */
+    .rx-divider{border:none;border-top:1.5px solid #111;margin:0;flex-shrink:0;}
+    .rx-divider-light{border:none;border-top:1px solid #ccc;margin:0;flex-shrink:0;}
+    /* — Patient — */
+    .rx-sh-patient{padding:8px 0;font-size:12.5px;color:#111;flex-shrink:0;}
+    /* — Title — */
+    .rx-sh-title{text-align:center;font-family:'Lora',serif;font-size:15px;font-weight:600;padding:10px 0 4px;color:#111;flex-shrink:0;}
+    /* — Meds — */
+    .rx-sh-meds{padding:4px 0 6px;overflow:hidden;}
+    .rx-sh-med{padding:6px 0;border-bottom:1px dashed #ccc;}
+    .rx-sh-med:last-child{border-bottom:none;}
+    .rx-sh-med strong{font-size:12.5px;display:block;color:#111;}
+    .rx-sh-med p{font-size:11.5px;color:#444;margin-top:2px;}
+    /* — Obs — */
+    .rx-sh-obs{background:#f7f5f0;border-radius:5px;padding:7px 10px;font-size:11.5px;color:#444;margin:6px 0 8px;flex-shrink:0;}
+    /* — Footer — */
+    .rx-sh-foot{text-align:center;padding:10px 0 0;flex-shrink:0;}
+    .rx-sh-foot-name{font-family:'Lora',serif;font-size:13.5px;font-weight:600;color:#111;}
+    .rx-sh-foot-espec,.rx-sh-foot-crm{font-size:11px;color:#555;margin-top:2px;}
+    .rx-sh-foot-date{font-size:11px;color:#888;margin-top:2px;}
+    .rx-divider-foot{border:none;border-top:1.5px solid #111;margin-top:12px;flex-shrink:0;}
+    /* — Controlado — */
+    .controlado-header{background:#fdeceb;border:1px solid #C0392B;border-radius:5px;padding:6px 11px;margin-bottom:10px;font-size:11px;font-weight:600;color:#C0392B;display:flex;align-items:center;gap:5px;flex-shrink:0;}
+    .controlado-box{border:1.5px solid #C0392B;border-radius:5px;padding:9px 11px;margin-top:10px;font-size:11px;color:#444;flex-shrink:0;}
+    .controlado-field{display:inline-block;border-bottom:1px solid #aaa;width:135px;height:13px;margin:0 3px;}
+    .rx-sheet.controlado .rx-divider{border-top-color:#C0392B;}
+    .rx-sheet.controlado .rx-divider-foot{border-top-color:#C0392B;}
+    /* — Screen preview — */
+    @media screen{
+      body{padding:60px 24px 24px;background:#e8e4dd;}
+      .rx-sheet{background:#fff;padding:15mm;box-shadow:0 4px 32px rgba(0,0,0,.18);width:210mm;height:270mm;margin:0 auto 24px;font-size:14px;}
+      .rx-sh-local-info h3{font-size:14px;}
+      .rx-sh-local-info p{font-size:11.5px;}
+      .rx-sh-patient{padding:10px 0;font-size:13.5px;}
+      .rx-sh-title{font-size:17px;padding:12px 0 5px;}
+      .rx-sh-med{padding:8px 0;}
+      .rx-sh-med strong{font-size:13.5px;}
+      .rx-sh-med p{font-size:12.5px;}
+      .rx-sh-foot{padding:12px 0 0;}
+      .rx-sh-foot-name{font-size:15px;}
+      .rx-sh-foot-espec,.rx-sh-foot-crm{font-size:12px;}
+      .rx-sh-foot-date{font-size:12px;}
+      .print-bar{position:fixed;top:0;left:0;right:0;background:#1C1C2A;color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;z-index:10;font-family:'Outfit',sans-serif;}
+      .print-bar h4{font-size:14px;font-weight:500;}
+      .print-bar .pb-btns{display:flex;gap:10px;}
+      .pb-btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'Outfit',sans-serif;}
+      .pb-btn-primary{background:#2C7A7B;color:#fff;}
+      .pb-btn-close{background:rgba(255,255,255,.12);color:#fff;}
+    }
+    @media print{
+      .print-bar,.print-bar-spacer{display:none!important;}
+      body{padding:0;background:#fff;}
+      .rx-sheet{box-shadow:none;padding:0;width:100%;}
+    }
+  </style>`;
+
+  // Auto-print removed — user sees preview and clicks "Imprimir / Salvar PDF"
+
+  // — Page layout engine (runs in the new window after DOM is ready) —
+  // Heights in mm at print resolution. 240mm usable = 680px at 96dpi (1mm ≈ 2.835px → 240mm ≈ 680px)
+  // We use mm units directly in the script that runs inside the iframe.
+  const layoutScript=`<script>
+  (function(){
+    var PG_H = 240; // mm usable per page
+    // Measure fixed elements (mm, approximate at 13px/96dpi)
+    var HEAD_H   = ${data.local ? 22 : 0};  // logo row + padding-bottom
+    var DIV1_H   = 0.5; // rx-divider
+    var PAT_H    = 10;  // patient row + padding
+    var DIV2_H   = 0.3;
+    var TITLE_H  = 14;  // title + padding
+    var FOOT_H   = 24;  // footer block (name+espec+crm+date)
+    var FDIV_H   = 3;   // footer divider + margin
+    var CTRLHDR  = ${data.controlado ? 14 : 0}; // controlado-header
+    var CTRLBOX  = ${data.controlado ? 28 : 0}; // controlado-box (last page only)
+    var OBS_H    = ${data.obs ? Math.max(10, Math.ceil(data.obs.length/60)*5 + 8) : 0};
+    var SPACER_H = 4;
+
+    var FIXED_H = HEAD_H + DIV1_H + PAT_H + DIV2_H + TITLE_H + FOOT_H + FDIV_H + SPACER_H + CTRLHDR;
+
+    // Per-med height (strong line + p line + border + padding) ≈ 11mm
+    function medH(m){
+      var lines = Math.ceil((m.posol||'').length / 55) + 1;
+      return 7 + lines * 4.5;
+    }
+
+    var meds = ${JSON.stringify(data.meds)};
+    var pages = [];
+    var remaining = meds.slice();
+    var pageNum = 0;
+
+    while(remaining.length > 0){
+      pageNum++;
+      var isLast = false;
+      var budget = PG_H - FIXED_H;
+      // On last page: subtract obs and controlado-box
+      // We'll check after distributing
+
+      var bucket = [];
+      var used = 0;
+      while(remaining.length > 0){
+        var mh = medH(remaining[0]);
+        // Check if adding obs+ctrlbox would still fit
+        var extraIfLast = (remaining.length === 1 ? OBS_H + CTRLBOX : 0);
+        if(used + mh + extraIfLast <= budget){
+          bucket.push(remaining.shift());
+          used += mh;
+        } else {
+          // If nothing fits yet, force at least one med
+          if(bucket.length === 0){ bucket.push(remaining.shift()); }
+          break;
+        }
+      }
+      isLast = remaining.length === 0;
+      pages.push({meds: bucket, isLast: isLast});
+    }
+    if(pages.length === 0) pages.push({meds:[], isLast:true});
+
+    // Render pages into #rx-pages
+    var container = document.getElementById('rx-pages');
+    var html = '';
+    pages.forEach(function(pg){
+      html += buildSheet(pg.meds, pg.isLast);
+    });
+    container.innerHTML = html;
+  })();
+
+  function buildSheet(meds, isLast){
+    return document.getElementById('tpl-sheet').innerHTML
+      .replace('__MEDS__', meds.map(function(m){
+        return '<div class="rx-sh-med"><strong>'+m.nome+'</strong><p>'+m.posol+'</p></div>';
+      }).join(''))
+      .replace('__OBS__', isLast && ${JSON.stringify(data.obs||'')} ? '<div class="rx-sh-obs"><strong>Observações:</strong> '+${JSON.stringify(data.obs||'')}+'</div>' : '')
+      .replace('__CTRL__', isLast && ${data.controlado} ? document.getElementById('tpl-ctrl').innerHTML : '');
+  }
+  <\/script>`;
+
+  const headHtml = data.local ? `
+    <div class="rx-sh-head">
+      <div class="rx-sh-logo">${data.local.logo?`<img src="${data.local.logo}" alt="logo">`:`<span class="rx-sh-logo-placeholder">${data.local.nome[0].toUpperCase()}</span>`}</div>
+      <div class="rx-sh-local-info">
+        <h3>${data.local.nome}</h3>
+        <p>${[data.local.endereco,data.local.cidade].filter(Boolean).join(', ')}</p>
+        ${data.local.tel?`<p>Tel: ${data.local.tel}</p>`:''}
+      </div>
+    </div>` : '';
+
+  const footHtml = `
+    <div class="rx-sh-foot">
+      <div class="rx-sh-foot-name">${data.perfil.nome||'—'}</div>
+      ${data.perfil.espec?`<div class="rx-sh-foot-espec">${data.perfil.espec}</div>`:''}
+      ${data.crmStr?`<div class="rx-sh-foot-crm">${data.crmStr}</div>`:''}
+      <div class="rx-sh-foot-date">${data.hoje}</div>
+    </div>
+    <hr class="rx-divider-foot${data.controlado?' rx-sheet-controlado-div':''}">`;
+
+  const ctrlHdr = data.controlado ? `<div class="controlado-header"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>RECEITUÁRIO DE CONTROLE ESPECIAL — 2 VIAS</div>` : '';
+
+  const bar=`<div class="print-bar">
+    <h4>${title||'Receita Médica'}</h4>
+    <div class="pb-btns">
+      <button class="pb-btn pb-btn-primary" onclick="window.print()">Imprimir / Salvar PDF</button>
+      <button class="pb-btn pb-btn-close" onclick="window.close()">Fechar</button>
+    </div>
+  </div><div class="print-bar-spacer" style="height:52px;display:block;"></div>`;
+
+  const sheetClass = `rx-sheet${data.controlado?' controlado':''}`;
+
+  // For documents (exames/encaminhamentos/atestados): single page with free-form body
+  if(data.docCorpo!==undefined){
+    const docSheet=`<div class="${sheetClass}">
+      ${headHtml}
+      <hr class="rx-divider">
+      <div class="rx-sh-patient"><strong>Paciente:</strong> ${data.pac}</div>
+      <hr class="rx-divider-light">
+      <div class="rx-sh-title">${data.tipoLabel}</div>
+      <div style="padding:8px 0 0;font-size:13px;line-height:1.7;">${data.docCorpo}</div>
+      <div class="rx-spacer"></div>
+      ${footHtml}
+    </div>`;
+    const fullDocHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Documento'}</title>${fonts}${style}</head><body>${bar}${docSheet}</body></html>`;
+    const blob=new Blob([fullDocHtml],{type:'text/html;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const win=window.open(url,'_blank');
+    if(!win){
+      const iframe=document.createElement('iframe');
+      iframe.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;';
+      iframe.srcdoc=fullDocHtml;
+      document.body.appendChild(iframe);
+      iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>{iframe.remove();URL.revokeObjectURL(url);},1500);},400);};
+    } else {
+      setTimeout(()=>URL.revokeObjectURL(url),60000);
+    }
+    return;
+  }
+
+  const tplSheet = `
+    <template id="tpl-sheet"><div class="${sheetClass}">
+      ${ctrlHdr}
+      ${headHtml}
+      <hr class="rx-divider">
+      <div class="rx-sh-patient"><strong>Paciente:</strong> ${data.pac}${data.extra?` &nbsp;·&nbsp; ${data.extra}`:''}</div>
+      <hr class="rx-divider-light">
+      <div class="rx-sh-title">${data.tipoLabel}</div>
+      <div class="rx-sh-meds">__MEDS__</div>
+      __OBS____CTRL__
+      <div class="rx-spacer"></div>
+      ${footHtml}
+    </div></template>`;
+
+  const tplCtrl = data.controlado ? `
+    <template id="tpl-ctrl"><div class="controlado-box">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>Endereço do paciente: <span class="controlado-field"></span></div>
+        <div>CPF / RG: <span class="controlado-field"></span></div>
+        <div>Telefone: <span class="controlado-field"></span></div>
+        <div>Data de nascimento: <span class="controlado-field"></span></div>
+      </div>
+    </div></template>` : '<template id="tpl-ctrl"></template>';
+
+  const fullHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Receita'}</title>${fonts}${style}</head><body>${bar}${tplSheet}${tplCtrl}<div id="rx-pages"></div>${layoutScript}</body></html>`;
+
+  const blob=new Blob([fullHtml],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const win=window.open(url,'_blank');
+  if(!win){
+    const iframe=document.createElement('iframe');
+    iframe.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;';
+    iframe.srcdoc=fullHtml;
+    document.body.appendChild(iframe);
+    iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>{iframe.remove();URL.revokeObjectURL(url);},1500);},400);};
+  } else {
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+  }
+}
+
+// Close modal on overlay click (kept for legacy, no-op)
+document.addEventListener('DOMContentLoaded',()=>{
+  const overlay=document.getElementById('rx-modal');
+  if(overlay) overlay.addEventListener('click',e=>{if(e.target===overlay)closeRxModal();});
+});
+
+function limparRx(tipo){
+  if(tipo==='adulto'){
+    ['a-pac-nome','a-obs','a-model-name'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    aMeds=[];renderMedList('adulto');
+    document.getElementById('ac-adulto').value='';
+    document.getElementById('a-med-posol').value='';
+  }else{
+    ['p-pac-nome','p-idade','p-peso','p-obs','p-model-name','p-med-posol'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    pMeds=[];renderMedList('ped');
+    document.getElementById('ac-ped').value='';
+    document.getElementById('p-dose-box').style.display='none';
+    acState.ped.selectedMed=null;
+  }
+  dismissSaveBanner(tipo);
+}
+
+// ── RX HTML HELPERS ──
+function rxShHead(local){
+  // kept for document/exam builders that still use raw HTML
+  if(!local) return '';
+  const logo=local.logo
+    ?`<img src="${local.logo}" alt="logo">`
+    :`<span class="rx-sh-logo-placeholder">${local.nome[0].toUpperCase()}</span>`;
+  return`<div class="rx-sh-head">
+    <div class="rx-sh-logo">${logo}</div>
+    <div class="rx-sh-local-info">
+      <h3>${local.nome}</h3>
+      <p>${[local.endereco,local.cidade].filter(Boolean).join(', ')}</p>
+      ${local.tel?`<p>Tel: ${local.tel}</p>`:''}
+    </div>
+  </div>`;
+}
+
+function buildRxHtml({perfil,local,hoje,pac,meds,obs,tipo,extra}){
+  return {
+    perfil, local, hoje, pac, meds, obs:obs||'', tipo,
+    extra: extra||'',
+    tipoLabel: tipo==='ped'?'Receituário Pediátrico':'Receituário Médico',
+    crmStr: perfil.crm?`CRM ${perfil.crm}/${perfil.estado||''}`:'',
+    controlado: false,
+  };
+}
+
+function buildControladoHtml({perfil,local,hoje,pac,meds,tipo,extra}){
+  return {
+    perfil, local, hoje, pac, meds, obs:'', tipo,
+    extra: extra||'',
+    tipoLabel: tipo==='ped'?'Receituário Controlado Pediátrico':'Receituário de Controle Especial',
+    crmStr: perfil.crm?`CRM ${perfil.crm}/${perfil.estado||''}`:'',
+    controlado: true,
+  };
+}
+
+// ── MODELOS ──
+function switchModeloTab(tipo,btn){
+  document.querySelectorAll('.modelo-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.modelo-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('modelo-panel-'+tipo).classList.add('active');
+}
+function renderModelos(){
+  renderModelosGrid('adulto');
+  renderModelosGrid('ped');
+  renderModelosExamesGrid();
+}
+function renderModelosGrid(tipo){
+  const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
+  const q=(document.getElementById('modelo-busca')||{value:''}).value.toLowerCase().trim();
+  let mods=ls(key)||[];
+  if(q) mods=mods.filter(m=>m.nome.toLowerCase().includes(q)||(m.medicamentos||[]).some(x=>x.nome.toLowerCase().includes(q)));
+  const grid=document.getElementById('modelos-'+tipo+'-grid');
+  if(!mods.length){
+    const empty=q?`Nenhum modelo encontrado para "${q}".`:`Nenhum modelo ${tipo==='ped'?'pediátrico':''} salvo ainda.<br>Crie uma receita e salve como modelo.`;
+    grid.innerHTML=`<div class="model-empty">${empty}</div>`;
+    return;
+  }
+  grid.innerHTML=mods.map(m=>`
+    <div class="model-card">
+      <h4>${m.nome}</h4>
+      <p>${(m.medicamentos||[]).map(x=>x.nome).join(', ')}</p>
+      <div class="mc-foot">
+        <span class="badge ${tipo==='ped'?'badge-amber':'badge-teal'}">${(m.medicamentos||[]).length} med.</span>
+        <button class="btn btn-sm btn-soft" onclick="usarModelo(${m.id},'${tipo}')">Usar</button>
+        <button class="btn btn-sm btn-outline" onclick="editModelo(${m.id},'${tipo}')">Renomear</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteModelo(${m.id},'${tipo}')">Excluir</button>
+      </div>
+    </div>`).join('');
+}
+function usarModelo(id,tipo){
+  const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
+  const m=(ls(key)||[]).find(m=>m.id===id);
+  if(!m)return;
+  if(tipo==='ped'){pMeds=[...m.medicamentos];renderMedList('ped');nav('rx-ped',document.querySelectorAll('.sb-item')[2]);recalcPedMeds();}
+  else{aMeds=[...m.medicamentos];renderMedList('adulto');nav('rx-adulto',document.querySelectorAll('.sb-item')[1]);}
+  toast('✓ Modelo "'+m.nome+'" carregado!');
+}
+function editModelo(id,tipo){
+  const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
+  const m=(ls(key)||[]).find(m=>m.id===id);
+  if(!m)return;
+  document.getElementById('em-id').value=id;
+  document.getElementById('em-tipo').value=tipo;
+  document.getElementById('em-nome').value=m.nome;
+  // Render editable med list
+  const sec=document.getElementById('em-meds-section');
+  const list=document.getElementById('em-meds-list');
+  if(m.medicamentos&&m.medicamentos.length){
+    sec.style.display='block';
+    list.innerHTML=m.medicamentos.map((med,i)=>`
+      <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+          <input data-em-nome="${i}" value="${med.nome.replace(/"/g,'&quot;')}" placeholder="Nome" style="padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;width:100%;">
+          <input data-em-posol="${i}" value="${(med.posol||'').replace(/"/g,'&quot;')}" placeholder="Posologia" style="padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;font-family:'Outfit',sans-serif;font-size:12.5px;outline:none;width:100%;color:var(--ink2);">
+        </div>
+        <button onclick="removeEmMed(${i})" style="padding:7px;background:var(--red-light);color:var(--red);border:none;border-radius:8px;cursor:pointer;font-size:16px;line-height:1;flex-shrink:0;">×</button>
+      </div>`).join('');
+  } else {
+    sec.style.display='none';
+  }
+  openModal('modal-edit-modelo');
+}
+function removeEmMed(i){
+  const row=document.querySelector(`[data-em-nome="${i}"]`);
+  if(row) row.closest('div').parentElement.remove();
+  // re-index
+  document.querySelectorAll('[data-em-nome]').forEach((el,idx)=>{el.dataset.emNome=idx;});
+  document.querySelectorAll('[data-em-posol]').forEach((el,idx)=>{el.dataset.emPosol=idx;});
+}
+function saveEditModelo(){
+  const id=parseInt(v('em-id'));
+  const tipo=v('em-tipo');
+  const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
+  const mods=ls(key)||[];
+  const i=mods.findIndex(m=>m.id===id);
+  if(i<0){closeModal('modal-edit-modelo');return;}
+  mods[i].nome=v('em-nome');
+  // collect edited meds
+  const nomeInputs=document.querySelectorAll('[data-em-nome]');
+  const posolInputs=document.querySelectorAll('[data-em-posol]');
+  if(nomeInputs.length){
+    mods[i].medicamentos=Array.from(nomeInputs).map((el,idx)=>({
+      ...( mods[i].medicamentos[idx]||{}),
+      nome:el.value.trim(),
+      posol:(posolInputs[idx]||{value:''}).value.trim(),
+    })).filter(m=>m.nome);
+  }
+  ss(key,mods);
+  closeModal('modal-edit-modelo');
+  renderModelosGrid(tipo);
+  toast('✓ Modelo atualizado!');
+}
+function deleteModelo(id,tipo){
+  if(!confirm('Excluir este modelo?'))return;
+  const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
+  ss(key,(ls(key)||[]).filter(m=>m.id!==id));
+  renderModelosGrid(tipo);
+  toast('Modelo removido.');
+}
+
+// ── ADMIN ──
+function switchAdminTab(tab,btn){
+  document.querySelectorAll('#page-admin .admin-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#page-admin .admin-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('admin-'+tab).classList.add('active');btn.classList.add('active');
+}
+function renderAdultoTable(){
+  const q=(document.getElementById('search-adulto')||{value:''}).value.toLowerCase();
+  const meds=(ls(KEYS.meds_adulto)||[]).filter(m=>!q||m.nome.toLowerCase().includes(q));
+  const colors={Antibiótico:'teal',Analgésico:'amber','Anti-inflamatório':'amber','Anti-hipertensivo':'green',Antidiabético:'green',Gastroprotetor:'teal'};
+  document.getElementById('adulto-tbody').innerHTML=meds.map(m=>`<tr><td><strong>${m.nome}</strong></td><td style="font-size:12.5px;color:var(--ink2);">${m.posol}</td><td><span class="badge badge-${colors[m.cat]||'teal'}">${m.cat}</span></td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline" onclick="editMedAdulto(${m.id})">Editar</button><button class="btn btn-sm btn-danger" onclick="deleteMedAdulto(${m.id})">Excluir</button></div></td></tr>`).join('');
+}
+function saveMedAdulto(){
+  const meds=ls(KEYS.meds_adulto)||[];
+  const editId=parseInt(document.getElementById('ma-edit-id').value)||null;
+  const item={id:editId||Date.now(),nome:v('ma-nome'),posol:v('ma-posol'),cat:v('ma-cat')};
+  if(editId){const i=meds.findIndex(m=>m.id===editId);if(i>=0)meds[i]=item;}else meds.push(item);
+  ss(KEYS.meds_adulto,meds);closeModal('modal-adulto');renderAdultoTable();toast('✓ Medicamento salvo!');
+}
+function editMedAdulto(id){
+  const m=(ls(KEYS.meds_adulto)||[]).find(m=>m.id===id);if(!m)return;
+  document.getElementById('ma-edit-id').value=m.id;document.getElementById('ma-nome').value=m.nome;document.getElementById('ma-posol').value=m.posol;document.getElementById('ma-cat').value=m.cat;
+  document.getElementById('modal-adulto-title').textContent='Editar Medicamento';openModal('modal-adulto');
+}
+function deleteMedAdulto(id){if(!confirm('Excluir?'))return;ss(KEYS.meds_adulto,(ls(KEYS.meds_adulto)||[]).filter(m=>m.id!==id));renderAdultoTable();}
+function renderPedTable(){
+  const q=(document.getElementById('search-ped-db')||{value:''}).value.toLowerCase();
+  const meds=(ls(KEYS.meds_ped)||[]).filter(m=>!q||m.nome.toLowerCase().includes(q));
+  document.getElementById('ped-tbody').innerHTML=meds.map(m=>`<tr>
+    <td><strong>${m.nome}</strong></td>
+    <td>${m.doseApresKg!=null?m.doseApresKg+' '+(m.apresentacao||'')+'/kg':'—'}</td>
+    <td>${m.apresentacao||'—'}</td>
+    <td>${m.modo||'—'}</td>
+    <td>${m.via||'—'}</td>
+    <td>${m.intervalo||'—'}</td>
+    <td>${m.duracao||'—'}</td>
+    <td>${m.doseMaxApres!=null?m.doseMaxApres+' '+(m.apresentacao||''):'—'}</td>
+    <td style="font-size:12px;">${idadeStr(m.idadeMin,m.idadeMax)}</td>
+    <td><div style="display:flex;gap:4px;">
+      <button class="btn btn-sm btn-outline" onclick="editMedPed(${m.id})">Editar</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteMedPed(${m.id})">Excluir</button>
+    </div></td>
+  </tr>`).join('');
+}
+function saveMedPed(){
+  const meds=ls(KEYS.meds_ped)||[];
+  const editId=parseInt(document.getElementById('mp-edit-id').value)||null;
+  const apresVal=v('mp-apresentacao');
+  const apres=apresVal==='outro'?v('mp-apresentacao-outro'):apresVal;
+  const item={
+    id:editId||Date.now(),
+    nome:v('mp-nome'),
+    apresentacao:apres,
+    modo:v('mp-modo')||'Tomar',
+    via:v('mp-via'),
+    doseApresKg:parseFloat(document.getElementById('mp-dose-apres-kg').value)||null,
+    doseMaxApres:parseFloat(document.getElementById('mp-dose-max-apres').value)||null,
+    idadeMin:document.getElementById('mp-idade-min').value!==''?parseFloat(document.getElementById('mp-idade-min').value):null,
+    idadeMax:document.getElementById('mp-idade-max').value!==''?parseFloat(document.getElementById('mp-idade-max').value):null,
+    intervalo:v('mp-intervalo'),
+    duracao:v('mp-duracao'),
+  };
+  if(editId){const i=meds.findIndex(m=>m.id===editId);if(i>=0)meds[i]=item;}else meds.push(item);
+  ss(KEYS.meds_ped,meds);closeModal('modal-ped');renderPedTable();toast('✓ Medicamento pediátrico salvo!');
+}
+function editMedPed(id){
+  const m=(ls(KEYS.meds_ped)||[]).find(m=>m.id===id);if(!m)return;
+  document.getElementById('mp-edit-id').value=m.id;
+  document.getElementById('mp-nome').value=m.nome;
+  // Apresentação: check if value exists in select options
+  const sel=document.getElementById('mp-apresentacao');
+  const opts=[...sel.options].map(o=>o.value);
+  if(opts.includes(m.apresentacao)){
+    sel.value=m.apresentacao;
+    document.getElementById('mp-apresentacao-outro').style.display='none';
+    document.getElementById('mp-apresentacao-outro').value='';
+  } else {
+    sel.value='outro';
+    document.getElementById('mp-apresentacao-outro').style.display='block';
+    document.getElementById('mp-apresentacao-outro').value=m.apresentacao||'';
+  }
+  document.getElementById('mp-modo').value=m.modo||'';
+  document.getElementById('mp-via').value=m.via||'';
+  document.getElementById('mp-dose-apres-kg').value=m.doseApresKg!=null?m.doseApresKg:'';
+  document.getElementById('mp-dose-max-apres').value=m.doseMaxApres!=null?m.doseMaxApres:'';
+  document.getElementById('mp-idade-min').value=m.idadeMin!==null?m.idadeMin:'';
+  document.getElementById('mp-idade-max').value=m.idadeMax!==null?m.idadeMax:'';
+  document.getElementById('mp-intervalo').value=m.intervalo||'8/8h';
+  document.getElementById('mp-duracao').value=m.duracao||'';
+  updateModalDoseLabel();
+  document.getElementById('modal-ped-title').textContent='Editar Medicamento Pediátrico';
+  openModal('modal-ped');
+}
+function deleteMedPed(id){if(!confirm('Excluir?'))return;ss(KEYS.meds_ped,(ls(KEYS.meds_ped)||[]).filter(m=>m.id!==id));renderPedTable();}
+function renderExameDb(){
+  const exs=ls(KEYS.exames_db)||[];
+  const groups={};exs.forEach(e=>{if(!groups[e.grupo])groups[e.grupo]=[];groups[e.grupo].push(e);});
+  document.getElementById('exam-db-list').innerHTML=Object.entries(groups).map(([g,items])=>`<div style="margin-bottom:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">${g}</div><div style="display:flex;flex-wrap:wrap;gap:5px;">${items.map(e=>`<div style="display:flex;align-items:center;gap:5px;background:var(--bg2);border-radius:8px;padding:5px 11px;font-size:13px;">${e.nome}<button onclick="deleteExameDb(${e.id})" style="background:none;border:none;cursor:pointer;color:var(--ink3);font-size:14px;line-height:1;padding:0;">&times;</button></div>`).join('')}</div></div>`).join('');
+}
+function saveExameDb(){const exs=ls(KEYS.exames_db)||[];exs.push({id:Date.now(),nome:v('edb-nome'),grupo:v('edb-grupo')||'Outros'});ss(KEYS.exames_db,exs);closeModal('modal-exame-db');renderExameDb();toast('✓ Exame adicionado!');}
+function deleteExameDb(id){ss(KEYS.exames_db,(ls(KEYS.exames_db)||[]).filter(e=>e.id!==id));renderExameDb();}
+
+// ── EXAMES ──
+let selectedExams=[],currentExTab='solicitacao';
+function switchExTab(tab,btn){
+  document.querySelectorAll('#page-exames .admin-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#page-exames .admin-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('ex-tab-'+tab).classList.add('active');btn.classList.add('active');currentExTab=tab;
+}
+
+// ── EXAM AUTOCOMPLETE ──
+let acExamFocused=-1;
+function acFilterExam(){
+  const inp=document.getElementById('ac-exam');
+  const drop=document.getElementById('ac-exam-drop');
+  const q=inp.value.trim().toLowerCase();
+  if(q.length<3){drop.classList.remove('open');return;}
+  const exs=ls(KEYS.exames_db)||[];
+  const filtered=exs.filter(e=>e.nome.toLowerCase().includes(q));
+  acExamFocused=-1;
+  if(!filtered.length){drop.innerHTML='<div class="ac-item" style="color:var(--ink3);">Nenhum resultado</div>';drop.classList.add('open');return;}
+  drop.innerHTML=filtered.map(e=>`
+    <div class="ac-item" onclick="selectExam('${e.nome.replace(/'/g,"\\'")}')">
+      <span>${highlightMatch(e.nome,q)}</span>
+      <span>${e.grupo||''}</span>
+    </div>`).join('');
+  drop.classList.add('open');
+}
+function acKeyExam(e){
+  const drop=document.getElementById('ac-exam-drop');
+  const items=drop.querySelectorAll('.ac-item');
+  if(e.key==='ArrowDown'){e.preventDefault();acExamFocused=Math.min(acExamFocused+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('focused',i===acExamFocused));}
+  else if(e.key==='ArrowUp'){e.preventDefault();acExamFocused=Math.max(acExamFocused-1,0);items.forEach((el,i)=>el.classList.toggle('focused',i===acExamFocused));}
+  else if(e.key==='Enter'&&acExamFocused>=0){e.preventDefault();items[acExamFocused].click();}
+  else if(e.key==='Escape'){drop.classList.remove('open');}
+}
+function selectExam(nome){
+  if(!selectedExams.includes(nome)) selectedExams.push(nome);
+  document.getElementById('ac-exam').value='';
+  document.getElementById('ac-exam-drop').classList.remove('open');
+  renderSelectedExams();
+}
+function renderSelectedExams(){
+  const el=document.getElementById('exam-selected-list');
+  if(!selectedExams.length){el.innerHTML='<span class="text-muted" style="font-size:12px;">Nenhum selecionado</span>';return;}
+  el.innerHTML=selectedExams.map(n=>`<div class="exam-sel-item">${n}<button onclick="removeSelExam('${n.replace(/'/g,"\\'")}')">×</button></div>`).join('');
+}
+function removeSelExam(n){selectedExams=selectedExams.filter(e=>e!==n);renderSelectedExams();}
+function addCustomExam(){
+  const n=document.getElementById('ex-custom-input').value.trim();
+  if(!n)return;
+  if(!selectedExams.includes(n))selectedExams.push(n);
+  document.getElementById('ex-custom-input').value='';
+  renderSelectedExams();
+  toast('✓ Exame adicionado!');
+}
+document.addEventListener('click',e=>{if(!e.target.closest('#ac-exam-wrap'))document.getElementById('ac-exam-drop').classList.remove('open');});
+
+function gerarDocExame(){
+  const pac=v('ex-pac');if(!pac){toast('⚠️ Informe o paciente');return;}
+  const perfil=ls(KEYS.perfil)||{};
+  const locais=ls(KEYS.locais)||[];
+  const locIdx=v('ex-local');
+  const local=locIdx!==''?locais[parseInt(locIdx)]:null;
+  const hoje=document.getElementById('ex-data').value?new Date(document.getElementById('ex-data').value+'T00:00:00').toLocaleDateString('pt-BR'):new Date().toLocaleDateString('pt-BR');
+  let titulo='',corpo='';
+  if(currentExTab==='solicitacao'){
+    if(!selectedExams.length){toast('⚠️ Selecione ao menos 1 exame');return;}
+    const mn=v('ex-model-name');
+    if(mn){
+      const modelos=ls(KEYS.modelos_exames)||[];
+      modelos.push({id:Date.now(),nome:mn,exames:[...selectedExams]});
+      ss(KEYS.modelos_exames,modelos);
+      toast('✓ Modelo de exames "'+mn+'" salvo!');
+      document.getElementById('ex-model-name').value='';
+    }
+    titulo='Solicitação de Exames';
+    corpo='<ul style="padding-left:18px;line-height:2;font-size:13px;">'+selectedExams.map(e=>`<li>${e}</li>`).join('')+'</ul>';
+  }else{
+    const texto=v('enc-texto');if(!texto){toast('⚠️ Descreva o motivo');return;}
+    titulo='Encaminhamento Médico';
+    const urg=v('enc-urgencia');
+    corpo=`<p style="font-size:12.5px;margin-bottom:6px;"><strong>Para:</strong> ${v('enc-destino')||'—'} &nbsp;·&nbsp; <strong>Urgência:</strong> ${urg}</p><hr style="border:none;border-top:1px solid #ccc;margin:8px 0;"><p style="font-size:12.5px;font-weight:600;margin-bottom:4px;">Motivo clínico:</p><p style="font-size:12.5px;line-height:1.7;">${texto}</p>`;
+  }
+  const data=buildDocData({perfil,local,hoje,pac,titulo,corpo});
+  gerarPDF(data,titulo);
+}
+
+function gerarDocumento(){
+  const pac=v('doc-pac');if(!pac){toast('⚠️ Informe o paciente');return;}
+  const perfil=ls(KEYS.perfil)||{};
+  const locais=ls(KEYS.locais)||[];
+  const locIdx=v('doc-local');
+  const local=locIdx!==''?locais[parseInt(locIdx)]:null;
+  const hoje=document.getElementById('doc-data').value?new Date(document.getElementById('doc-data').value+'T00:00:00').toLocaleDateString('pt-BR'):new Date().toLocaleDateString('pt-BR');
+  let titulo='',corpo='';
+  if(currentDocTab==='atestado'){
+    const dias=v('doc-dias')||1;const cid=v('doc-cid');const obs=v('doc-obs');
+    titulo='Atestado Médico';
+    corpo=`<p style="font-size:12.5px;line-height:1.8;">Atesto que o(a) paciente acima encontra-se sob cuidados médicos, necessitando de afastamento de suas atividades por <strong>${dias} dia(s)</strong> a partir da data acima.</p>${cid?`<p style="margin-top:8px;font-size:12.5px;"><strong>CID:</strong> ${cid}</p>`:''}${obs?`<p style="margin-top:8px;font-size:12.5px;"><strong>Observações:</strong> ${obs}</p>`:''}`;
+  }else{
+    const hin=v('doc-hin');const hout=v('doc-hout');const fin=v('doc-finalidade')||'consulta médica';
+    titulo='Declaração de Comparecimento';
+    corpo=`<p style="font-size:12.5px;line-height:1.8;">Declaramos que o(a) paciente acima compareceu a esta unidade para <strong>${fin}</strong> no dia ${hoje}${hin?' das '+hin:''}${hout?' às '+hout:''}.</p>`;
+  }
+  const data=buildDocData({perfil,local,hoje,pac,titulo,corpo});
+  gerarPDF(data,titulo);
+}
+
+// ── MODELOS EXAMES ──
+function renderModelosExamesGrid(){
+  const q=(document.getElementById('modelo-busca')||{value:''}).value.toLowerCase().trim();
+  let mods=ls(KEYS.modelos_exames)||[];
+  if(q) mods=mods.filter(m=>m.nome.toLowerCase().includes(q)||(m.exames||[]).some(e=>e.toLowerCase().includes(q)));
+  const grid=document.getElementById('modelos-exames-grid');
+  if(!mods.length){grid.innerHTML=`<div class="model-empty">${q?'Nenhum modelo encontrado.':'Nenhum modelo de exames salvo ainda.<br>Crie uma solicitação e salve como modelo.'}</div>`;return;}
+  grid.innerHTML=mods.map(m=>`
+    <div class="model-card">
+      <h4>${m.nome}</h4>
+      <p>${(m.exames||[]).join(', ')}</p>
+      <div class="mc-foot">
+        <span class="badge badge-teal">${(m.exames||[]).length} exames</span>
+        <button class="btn btn-sm btn-soft" onclick="usarModeloExames(${m.id})">Usar</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteModeloExames(${m.id})">Excluir</button>
+      </div>
+    </div>`).join('');
+}
+function usarModeloExames(id){
+  const m=(ls(KEYS.modelos_exames)||[]).find(m=>m.id===id);
+  if(!m)return;
+  selectedExams=[...m.exames];
+  renderSelectedExams();
+  nav('exames',document.querySelectorAll('.sb-item')[4]);
+  toast('✓ Modelo "'+m.nome+'" carregado!');
+}
+function deleteModeloExames(id){
+  if(!confirm('Excluir este modelo?'))return;
+  ss(KEYS.modelos_exames,(ls(KEYS.modelos_exames)||[]).filter(m=>m.id!==id));
+  renderModelosExamesGrid();
+}
+
+// ── DROGAS INJETÁVEIS ──
+let acInjFocused=-1;
+function renderInjAc(){}  // placeholder, just clears state
+function acFilterInj(){
+  const inp=document.getElementById('ac-inj');
+  const drop=document.getElementById('ac-inj-drop');
+  const q=inp.value.trim().toLowerCase();
+  if(q.length<3){drop.classList.remove('open');return;}
+  const drugs=(ls(KEYS.injetaveis)||[]).filter(d=>d.nome.toLowerCase().includes(q));
+  acInjFocused=-1;
+  if(!drugs.length){drop.innerHTML='<div class="ac-item" style="color:var(--ink3);">Nenhuma droga encontrada</div>';drop.classList.add('open');return;}
+  drop.innerHTML=drugs.map(d=>`
+    <div class="ac-item" onclick="selectInj(${d.id})">
+      <span>${highlightMatch(d.nome,q)}</span>
+      <span>${d.unidade} · ${d.via}</span>
+    </div>`).join('');
+  drop.classList.add('open');
+}
+function acKeyInj(e){
+  const drop=document.getElementById('ac-inj-drop');
+  const items=drop.querySelectorAll('.ac-item');
+  if(e.key==='ArrowDown'){e.preventDefault();acInjFocused=Math.min(acInjFocused+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('focused',i===acInjFocused));}
+  else if(e.key==='ArrowUp'){e.preventDefault();acInjFocused=Math.max(acInjFocused-1,0);items.forEach((el,i)=>el.classList.toggle('focused',i===acInjFocused));}
+  else if(e.key==='Enter'&&acInjFocused>=0){e.preventDefault();items[acInjFocused].click();}
+  else if(e.key==='Escape'){drop.classList.remove('open');}
+}
+function selectInj(id){
+  document.getElementById('ac-inj-drop').classList.remove('open');
+  const d=(ls(KEYS.injetaveis)||[]).find(x=>x.id===id);
+  if(!d)return;
+  document.getElementById('ac-inj').value=d.nome;
+  calcInjetavel(d);
+}
+function calcInjetavel(drug){
+  const peso=parseFloat(document.getElementById('inj-peso').value);
+  if(!drug){
+    const nome=document.getElementById('ac-inj').value.trim().toLowerCase();
+    drug=(ls(KEYS.injetaveis)||[]).find(d=>d.nome.toLowerCase()===nome);
+  }
+  if(!drug){document.getElementById('inj-result-box').style.display='none';return;}
+  const box=document.getElementById('inj-result-box');
+  const content=document.getElementById('inj-result-content');
+  box.style.display='block';
+
+  if(!isNaN(peso)&&peso>0){
+    const isInfusao=drug.unidade.includes('/min')||drug.unidade.includes('/h');
+    const fmt=n=>n<0.1?parseFloat(n.toFixed(3)):n<10?parseFloat(n.toFixed(2)):parseFloat(n.toFixed(1));
+
+    // 1. Dose calculada (massa)
+    let dose=peso*drug.dose;
+    let doseMin=drug.doseMin!=null?peso*drug.doseMin:null;
+    let doseMax=drug.doseMax!=null?(isInfusao?drug.doseMax:peso*drug.doseMax):null;
+    let ajust=false;
+    if(!isInfusao&&doseMax!=null&&dose>doseMax){dose=doseMax;ajust=true;}
+    const doseUnit=drug.unidade.replace('/kg','').replace('/kg/min','/min').replace('/kg/h','/h');
+
+    // 2. Converter para ml
+    let volML=null, volMLMin=null, volMLMax=null, mlLabel='';
+    if(drug.concentracao&&drug.concentracao>0){
+      // Handle unit mismatch: se dose em mcg e conc em mg/ml → converter mcg→mg
+      let doseForML=dose;
+      let doseMinForML=doseMin;
+      let doseMaxForML=doseMax;
+      if(drug.unidade.startsWith('mcg')&&(drug.concUnidade||'').startsWith('mg')){
+        doseForML=dose/1000;
+        if(doseMinForML!=null) doseMinForML/=1000;
+        if(doseMaxForML!=null) doseMaxForML/=1000;
+      }
+      if(!isInfusao){
+        volML=doseForML/drug.concentracao;
+        if(doseMinForML!=null) volMLMin=doseMinForML/drug.concentracao;
+        if(doseMaxForML!=null) volMLMax=doseMaxForML/drug.concentracao;
+        mlLabel='ml';
+      } else {
+        // Infusão: ml/h usando regra de 3 com concentração
+        // dose (mcg/kg/min) × peso / conc(mcg/ml) × 60 = ml/h
+        let doseRate=drug.dose; // mcg/kg/min ou mg/kg/h
+        let concVal=drug.concentracao;
+        if(drug.unidade==='mcg/kg/min'&&(drug.concUnidade||'').startsWith('mg')) concVal*=1000; // mg→mcg
+        volML=(doseRate*peso*60)/concVal; // ml/h para mcg/kg/min
+        if(drug.unidade==='mg/kg/h') volML=(doseRate*peso)/drug.concentracao;
+        mlLabel='ml/h';
+      }
+    }
+
+    let html='';
+
+    if(volML!=null){
+      // ⭐ ESTRELA: volume em ml
+      html+=`<div style="text-align:center;padding:12px 0 8px;">
+        <div style="font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:4px;">Volume a administrar</div>
+        <div style="font-family:'Lora',serif;font-size:42px;font-weight:700;color:var(--teal);line-height:1;">${fmt(volML)}</div>
+        <div style="font-size:18px;font-weight:600;color:var(--teal);margin-top:2px;">${mlLabel}</div>
+        ${volMLMin!=null||volMLMax!=null?`<div style="font-size:12px;color:var(--ink3);margin-top:4px;">Faixa: ${volMLMin!=null?fmt(volMLMin):'?'} – ${volMLMax!=null?fmt(volMLMax):'?'} ${mlLabel}</div>`:''}
+      </div>
+      <hr style="border:none;border-top:1px solid var(--line);margin:6px 0;">`;
+      // Dose secundária
+      html+=`<div style="font-size:12.5px;color:var(--ink2);margin-top:6px;">
+        <strong>Dose:</strong> ${fmt(dose)} ${doseUnit}
+        &nbsp;·&nbsp; <strong>Conc.:</strong> ${drug.concentracao} ${drug.concUnidade||'mg/ml'}
+        ${ajust?' <span style="color:var(--amber);">⚠ limitado ao máx.</span>':''}
+      </div>
+      <div style="font-size:12px;color:var(--ink3);margin-top:2px;">${peso}kg × ${drug.dose} ${drug.unidade}</div>`;
+    } else {
+      // Sem concentração cadastrada — mostra dose como principal
+      html+=`<div style="font-family:'Lora',serif;font-size:32px;font-weight:700;color:var(--teal);line-height:1;">${fmt(dose)}</div>
+      <div style="font-size:14px;color:var(--teal);font-weight:600;margin-top:2px;">${doseUnit}</div>
+      <div style="font-size:12px;color:var(--ink3);margin-top:4px;">${peso}kg × ${drug.dose} ${drug.unidade}${ajust?' → limitado ao máx.':''}</div>
+      <div style="font-size:11.5px;color:var(--amber);margin-top:6px;">Cadastre a concentração na Base de Dados para calcular o volume em ml.</div>`;
+    }
+
+    if(doseMin!=null||doseMax!=null){
+      html+=`<div style="font-size:12px;color:var(--ink3);margin-top:4px;">Faixa de dose: ${doseMin!=null?fmt(doseMin):'?'} – ${doseMax!=null?fmt(doseMax):'?'} ${doseUnit}</div>`;
+    }
+    if(drug.diluicao) html+=`<div style="font-size:12px;color:var(--ink2);margin-top:8px;"><strong>Diluição:</strong> ${drug.diluicao}</div>`;
+    if(drug.via) html+=`<div style="font-size:12px;color:var(--ink2);margin-top:2px;"><strong>Via:</strong> ${drug.via}</div>`;
+    if(drug.obs) html+=`<div style="font-size:12px;color:var(--amber);margin-top:6px;">⚠ ${drug.obs}</div>`;
+    content.innerHTML=html;
+
+  } else {
+    // Sem peso
+    content.innerHTML=`
+      <div style="color:var(--ink3);font-size:13px;margin-bottom:8px;">Informe o peso para calcular o volume em ml.</div>
+      <div style="font-size:12.5px;color:var(--ink2);"><strong>Dose padrão:</strong> ${drug.dose} ${drug.unidade}</div>
+      ${drug.concentracao?`<div style="font-size:12.5px;color:var(--ink2);margin-top:2px;"><strong>Concentração:</strong> ${drug.concentracao} ${drug.concUnidade||'mg/ml'}</div>`:''}
+      ${drug.diluicao?`<div style="font-size:12px;color:var(--ink2);margin-top:4px;"><strong>Diluição:</strong> ${drug.diluicao}</div>`:''}
+      ${drug.via?`<div style="font-size:12px;color:var(--ink2);margin-top:2px;"><strong>Via:</strong> ${drug.via}</div>`:''}
+      ${drug.obs?`<div style="font-size:12px;color:var(--amber);margin-top:6px;">⚠ ${drug.obs}</div>`:''}`;
+  }
+}
+document.addEventListener('click',e=>{if(!e.target.closest('#ac-inj-wrap'))document.getElementById('ac-inj-drop').classList.remove('open');});
+
+// ── INJETÁVEIS DB (ADMIN) ──
+function renderInjTable(){
+  const q=(document.getElementById('search-inj-db')||{value:''}).value.toLowerCase();
+  const drugs=(ls(KEYS.injetaveis)||[]).filter(d=>!q||d.nome.toLowerCase().includes(q));
+  document.getElementById('inj-tbody').innerHTML=drugs.map(d=>`<tr>
+    <td><strong>${d.nome}</strong></td>
+    <td>${d.dose} ${d.unidade}</td>
+    <td>${d.unidade}</td>
+    <td>${d.diluicao||'—'}</td>
+    <td>${d.via||'—'}</td>
+    <td style="font-size:11.5px;color:var(--ink3);max-width:160px;">${d.obs||'—'}</td>
+    <td><div style="display:flex;gap:4px;">
+      <button class="btn btn-sm btn-outline" onclick="editInj(${d.id})">Editar</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteInj(${d.id})">Excluir</button>
+    </div></td>
+  </tr>`).join('');
+}
+function openAddModal(tipo){
+  if(tipo==='inj'){
+    document.getElementById('mi-edit-id').value='';
+    ['mi-nome','mi-via','mi-dose','mi-dose-min','mi-dose-max','mi-concentracao','mi-diluicao','mi-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('mi-unidade').value='mg/kg';
+    document.getElementById('mi-conc-unidade').value='mg/ml';
+    document.getElementById('modal-inj-title').textContent='Nova Droga Injetável';
+    openModal('modal-inj');
+    return;
+  }
+  if(tipo==='ped'){
+    document.getElementById('mp-edit-id').value='';
+    ['mp-nome','mp-dose-apres-kg','mp-dose-max-apres','mp-idade-min','mp-idade-max','mp-duracao','mp-modo','mp-via','mp-apresentacao-outro'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('mp-apresentacao').value='';
+    document.getElementById('mp-apresentacao-outro').style.display='none';
+    document.getElementById('mp-intervalo').value='8/8h';
+    document.getElementById('mp-dose-label').textContent='Dose (apresentação/kg)';
+    document.getElementById('mp-dosemax-label').textContent='Dose máxima (apresentação)';
+    document.getElementById('modal-ped-title').textContent='Novo Medicamento Pediátrico';
+    openModal('modal-ped');
+  } else if(tipo!=='inj'){
+    document.getElementById('ma-edit-id').value='';['ma-nome','ma-posol'].forEach(id=>document.getElementById(id).value='');document.getElementById('ma-cat').value='Antibiótico';document.getElementById('modal-adulto-title').textContent='Novo Medicamento Adulto';openModal('modal-adulto');
+  }
+}
+function saveInj(){
+  const drugs=ls(KEYS.injetaveis)||[];
+  const editId=parseInt(document.getElementById('mi-edit-id').value)||null;
+  const item={
+    id:editId||Date.now(),nome:v('mi-nome'),dose:parseFloat(document.getElementById('mi-dose').value)||0,
+    unidade:v('mi-unidade'),
+    doseMin:document.getElementById('mi-dose-min').value!==''?parseFloat(document.getElementById('mi-dose-min').value):null,
+    doseMax:document.getElementById('mi-dose-max').value!==''?parseFloat(document.getElementById('mi-dose-max').value):null,
+    concentracao:document.getElementById('mi-concentracao').value!==''?parseFloat(document.getElementById('mi-concentracao').value):null,
+    concUnidade:v('mi-conc-unidade'),
+    via:v('mi-via'),diluicao:v('mi-diluicao'),obs:v('mi-obs'),
+  };
+  if(editId){const i=drugs.findIndex(d=>d.id===editId);if(i>=0)drugs[i]=item;}else drugs.push(item);
+  ss(KEYS.injetaveis,drugs);closeModal('modal-inj');renderInjTable();toast('✓ Droga injetável salva!');
+}
+function editInj(id){
+  const d=(ls(KEYS.injetaveis)||[]).find(d=>d.id===id);if(!d)return;
+  document.getElementById('mi-edit-id').value=d.id;
+  document.getElementById('mi-nome').value=d.nome;
+  document.getElementById('mi-dose').value=d.dose;
+  document.getElementById('mi-unidade').value=d.unidade||'mg/kg';
+  document.getElementById('mi-dose-min').value=d.doseMin!=null?d.doseMin:'';
+  document.getElementById('mi-dose-max').value=d.doseMax!=null?d.doseMax:'';
+  document.getElementById('mi-concentracao').value=d.concentracao!=null?d.concentracao:'';
+  document.getElementById('mi-conc-unidade').value=d.concUnidade||'mg/ml';
+  document.getElementById('mi-via').value=d.via||'';
+  document.getElementById('mi-diluicao').value=d.diluicao||'';
+  document.getElementById('mi-obs').value=d.obs||'';
+  document.getElementById('modal-inj-title').textContent='Editar Droga Injetável';
+  openModal('modal-inj');
+}
+function deleteInj(id){if(!confirm('Excluir?'))return;ss(KEYS.injetaveis,(ls(KEYS.injetaveis)||[]).filter(d=>d.id!==id));renderInjTable();}
+
+// ── DOCUMENTOS ──
+let currentDocTab='atestado';
+function switchDocTab(tab,btn){
+  document.querySelectorAll('#page-documentos .admin-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#page-documentos .admin-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('doc-tab-'+tab).classList.add('active');btn.classList.add('active');currentDocTab=tab;
+}
+// buildDocData: creates a data object compatible with gerarPDF for documents
+function buildDocData({perfil,local,hoje,pac,titulo,corpo}){
+  return {
+    perfil, local, hoje,
+    pac, meds:[],
+    obs:'', tipo:'doc', extra:'',
+    tipoLabel: titulo,
+    crmStr: perfil.crm?`CRM ${perfil.crm}/${perfil.estado||''}`:'',
+    controlado: false,
+    docCorpo: corpo,   // custom body content (replaces meds list)
+  };
+}
+
+function toggleApresOutro(){
+  const sel=v('mp-apresentacao');
+  const outro=document.getElementById('mp-apresentacao-outro');
+  outro.style.display=sel==='outro'?'block':'none';
+  if(sel!=='outro') outro.value='';
+}
+function updateModalDoseLabel(){
+  const sel=v('mp-apresentacao');
+  const apres=sel==='outro'?v('mp-apresentacao-outro'):sel;
+  const label=apres||'apresentação';
+  document.getElementById('mp-dose-label').textContent=`Dose (${label}/kg)`;
+  document.getElementById('mp-dosemax-label').textContent=`Dose máxima (${label})`;
+}
+
+function handleLogoUpload(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    document.getElementById('loc-logo').value=e.target.result;
+    const prev=document.getElementById('loc-logo-preview');
+    prev.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:contain;">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── MODAL HELPERS ──
+function openModal(id){
+  // reset logo upload preview when opening local modal
+  if(id==='modal-novo-user'){
+    const editId=document.getElementById('nu-edit-id').value;
+    if(!editId){
+      document.getElementById('modal-user-title').textContent='Novo Usuário';
+      ['nu-nome','nu-user','nu-pass','nu-crm'].forEach(x=>{const el=document.getElementById(x);if(el)el.value='';});
+      document.getElementById('nu-role').value='user';
+    }
+  }
+    document.getElementById('loc-logo').value='';
+    document.getElementById('loc-logo-file').value='';
+    document.getElementById('loc-logo-preview').innerHTML=`<svg width="20" height="20" fill="none" stroke="var(--ink3)" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>`;
+    ['loc-nome','loc-end','loc-cidade','loc-tel'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  }
+  document.getElementById(id).classList.add('show');
+}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+document.querySelectorAll('.modal-overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');});});
+
+// ── TOAST ──
+function toast(msg){const t=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000);}
+
+</script>
+</body>
+</html>
