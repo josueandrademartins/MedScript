@@ -2712,11 +2712,6 @@ async function deleteInj(id){
   if(error){toast('Erro: '+error.message);return;}
   renderInjTable();
 }
-  if(tipo==='inj'){
-    document.getElementById('mi-edit-id').value='';
-    ['mi-nome','mi-via','mi-dose','mi-dose-min','mi-dose-max','mi-concentracao','mi-diluicao','mi-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    document.getElementById('mi-unidade').value='mg/kg';
-    document.getElementById('mi-conc-unidade').value='mg/ml';
 function openAddModal(tipo){
   if(tipo==='inj'){
     document.getElementById('mi-edit-id').value='';
