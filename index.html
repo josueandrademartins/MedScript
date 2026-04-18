@@ -2206,9 +2206,16 @@ function gerarPDF(data, title){
     .rx-sh-foot-date{font-size:11px;color:#888;margin-top:2px;}
     .rx-divider-foot{border:none;border-top:1.5px solid #111;margin-top:12px;flex-shrink:0;}
     /* — Controlado — */
-    .controlado-header{background:#fdeceb;border:1px solid #C0392B;border-radius:5px;padding:6px 11px;margin-bottom:10px;font-size:11px;font-weight:600;color:#C0392B;display:flex;align-items:center;gap:5px;flex-shrink:0;}
-    .controlado-box{border:1.5px solid #C0392B;border-radius:5px;padding:9px 11px;margin-top:10px;font-size:11px;color:#444;flex-shrink:0;}
-    .controlado-field{display:inline-block;border-bottom:1px solid #aaa;width:135px;height:13px;margin:0 3px;}
+    .controlado-header{background:#fdeceb;border:1px solid #C0392B;border-radius:5px;padding:6px 11px;margin-bottom:8px;font-size:11px;font-weight:600;color:#C0392B;display:flex;align-items:center;gap:5px;flex-shrink:0;}
+    .controlado-box{border:1.5px solid #C0392B;border-radius:5px;padding:9px 11px;margin-top:8px;font-size:10.5px;color:#444;flex-shrink:0;}
+    .controlado-field{display:inline-block;border-bottom:1px solid #aaa;min-width:80px;flex:1;height:12px;margin:0 3px;}
+    .ctrl-section-title{font-size:9.5px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;border-bottom:1px solid #fdd;padding-bottom:2px;}
+    .cf-field-row{display:flex;align-items:baseline;gap:3px;font-size:10.5px;}
+    .controlado-ficha{border:1px solid #ddd;border-radius:5px;padding:7px 10px;margin:6px 0 8px;font-size:10.5px;background:#fafafa;flex-shrink:0;}
+    .cf-label{font-weight:600;color:#555;white-space:nowrap;}
+    .cf-val{color:#111;margin-left:3px;}
+    .cf-row{display:flex;align-items:baseline;gap:5px;margin-bottom:3px;}
+    .cf-row2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:3px;}
     .rx-sheet.controlado .rx-divider{border-top-color:#C0392B;}
     .rx-sheet.controlado .rx-divider-foot{border-top-color:#C0392B;}
     /* — Screen preview — */
@@ -2256,12 +2263,13 @@ function gerarPDF(data, title){
     var TITLE_H  = 14;  // title + padding
     var FOOT_H   = 24;  // footer block (name+espec+crm+date)
     var FDIV_H   = 3;   // footer divider + margin
-    var CTRLHDR  = ${data.controlado ? 14 : 0}; // controlado-header
-    var CTRLBOX  = ${data.controlado ? 28 : 0}; // controlado-box (last page only)
+    var CTRLHDR  = ${data.controlado ? 12 : 0}; // controlado-header
+    var FICHAMD  = ${data.controlado ? 28 : 0}; // ficha médica block
+    var CTRLBOX  = ${data.controlado ? 52 : 0}; // controlado-box (last page only — comprador+fornecedor)
     var OBS_H    = ${data.obs ? Math.max(10, Math.ceil(data.obs.length/60)*5 + 8) : 0};
     var SPACER_H = 4;
 
-    var FIXED_H = HEAD_H + DIV1_H + PAT_H + DIV2_H + TITLE_H + FOOT_H + FDIV_H + SPACER_H + CTRLHDR;
+    var FIXED_H = HEAD_H + DIV1_H + PAT_H + DIV2_H + TITLE_H + FOOT_H + FDIV_H + SPACER_H + CTRLHDR + FICHAMD;
 
     // Per-med height (strong line + p line + border + padding) ≈ 11mm
     function medH(m){
@@ -2330,14 +2338,36 @@ function gerarPDF(data, title){
       </div>
     </div>` : '';
 
-  const footHtml = `
+  // Ficha médica — só aparece no controlado, abaixo do cabeçalho
+  const fichaHtml = data.controlado ? `
+    <div class="controlado-ficha">
+      <div class="cf-row"><span class="cf-label">Médico:</span><span class="cf-val">${data.perfil.nome||'—'}</span></div>
+      <div class="cf-row2">
+        <div><span class="cf-label">CRM:</span><span class="cf-val">${data.perfil.crm||'—'}</span></div>
+        <div><span class="cf-label">UF:</span><span class="cf-val">${data.perfil.estado||'—'}</span></div>
+        <div><span class="cf-label">Especialidade:</span><span class="cf-val">${data.perfil.espec||'—'}</span></div>
+      </div>
+      ${data.local?`<div class="cf-row2">
+        <div style="grid-column:span 2"><span class="cf-label">Endereço:</span><span class="cf-val">${[data.local.endereco,data.local.cidade].filter(Boolean).join(', ')||'—'}</span></div>
+        <div><span class="cf-label">Tel:</span><span class="cf-val">${data.local.tel||'—'}</span></div>
+      </div>`:''}
+    </div>` : '';
+
+  const footHtml = data.controlado ? `
     <div class="rx-sh-foot">
       <div class="rx-sh-foot-name">${data.perfil.nome||'—'}</div>
       ${data.perfil.espec?`<div class="rx-sh-foot-espec">${data.perfil.espec}</div>`:''}
       ${data.crmStr?`<div class="rx-sh-foot-crm">${data.crmStr}</div>`:''}
       <div class="rx-sh-foot-date">${data.hoje}</div>
     </div>
-    <hr class="rx-divider-foot${data.controlado?' rx-sheet-controlado-div':''}">`;
+    <hr class="rx-divider-foot">` : `
+    <div class="rx-sh-foot">
+      <div class="rx-sh-foot-name">${data.perfil.nome||'—'}</div>
+      ${data.perfil.espec?`<div class="rx-sh-foot-espec">${data.perfil.espec}</div>`:''}
+      ${data.crmStr?`<div class="rx-sh-foot-crm">${data.crmStr}</div>`:''}
+      <div class="rx-sh-foot-date">${data.hoje}</div>
+    </div>
+    <hr class="rx-divider-foot">`;
 
   const ctrlHdr = data.controlado ? `<div class="controlado-header"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>RECEITUÁRIO DE CONTROLE ESPECIAL — 2 VIAS</div>` : '';
 
@@ -2383,6 +2413,7 @@ function gerarPDF(data, title){
     <template id="tpl-sheet"><div class="${sheetClass}">
       ${ctrlHdr}
       ${headHtml}
+      ${fichaHtml}
       <hr class="rx-divider">
       <div class="rx-sh-patient"><strong>Paciente:</strong> ${data.pac}${data.extra?` &nbsp;·&nbsp; ${data.extra}`:''}</div>
       <hr class="rx-divider-light">
@@ -2395,11 +2426,19 @@ function gerarPDF(data, title){
 
   const tplCtrl = data.controlado ? `
     <template id="tpl-ctrl"><div class="controlado-box">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div>Endereço do paciente: <span class="controlado-field"></span></div>
-        <div>CPF / RG: <span class="controlado-field"></span></div>
-        <div>Telefone: <span class="controlado-field"></span></div>
-        <div>Data de nascimento: <span class="controlado-field"></span></div>
+      <div class="ctrl-section-title">IDENTIFICAÇÃO DO COMPRADOR</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div class="cf-field-row"><span class="cf-label">Nome:</span><span class="controlado-field" style="flex:1;"></span></div>
+        <div class="cf-field-row"><span class="cf-label">CPF / RG:</span><span class="controlado-field" style="flex:1;"></span></div>
+        <div class="cf-field-row"><span class="cf-label">Endereço:</span><span class="controlado-field" style="flex:1;"></span></div>
+        <div class="cf-field-row"><span class="cf-label">Telefone:</span><span class="controlado-field" style="flex:1;"></span></div>
+      </div>
+      <div class="ctrl-section-title" style="margin-top:4px;">IDENTIFICAÇÃO DO FORNECEDOR</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="cf-field-row"><span class="cf-label">Farmácia:</span><span class="controlado-field" style="flex:1;"></span></div>
+        <div class="cf-field-row"><span class="cf-label">CNPJ / CRF:</span><span class="controlado-field" style="flex:1;"></span></div>
+        <div class="cf-field-row"><span class="cf-label">Endereço:</span><span class="controlado-field" style="flex:1;"></span></div>
+        <div class="cf-field-row"><span class="cf-label">Data:</span><span class="controlado-field" style="width:80px;"></span></div>
       </div>
     </div></template>` : '<template id="tpl-ctrl"></template>';
 
