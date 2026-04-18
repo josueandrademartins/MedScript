@@ -2710,7 +2710,6 @@ function handleLogoUpload(input){
 
 // ── MODAL HELPERS ──
 function openModal(id){
-  // reset logo upload preview when opening local modal
   if(id==='modal-novo-user'){
     const editId=document.getElementById('nu-edit-id').value;
     if(!editId){
@@ -2719,6 +2718,7 @@ function openModal(id){
       document.getElementById('nu-role').value='user';
     }
   }
+  if(id==='modal-local'){
     document.getElementById('loc-logo').value='';
     document.getElementById('loc-logo-file').value='';
     document.getElementById('loc-logo-preview').innerHTML=`<svg width="20" height="20" fill="none" stroke="var(--ink3)" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>`;
