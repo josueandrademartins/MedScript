@@ -336,8 +336,18 @@ body.is-admin .admin-only-block{display:block;}
 
     <!-- Painel Cadastro -->
     <div id="panel-register" style="display:none;">
+      <p style="font-size:12px;color:var(--ink3);margin:0 0 12px;text-align:center;">Esses dados serão usados nas suas receitas e documentos</p>
       <div class="login-field"><label>Nome completo</label><input id="reg-nome" type="text" placeholder="Dr. Nome Sobrenome"></div>
       <div class="login-field"><label>CPF</label><input id="reg-cpf" type="text" placeholder="000.000.000-00" oninput="fmtCPF(this)"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="login-field" style="margin:0;"><label>CRM</label><input id="reg-crm" type="text" placeholder="Ex: 12345"></div>
+        <div class="login-field" style="margin:0;"><label>Estado (CRM)</label>
+          <select id="reg-estado" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;background:var(--card);color:var(--ink);outline:none;">
+            <option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
+          </select>
+        </div>
+      </div>
+      <div class="login-field"><label>Especialidade</label><input id="reg-espec" type="text" placeholder="Ex: Pediatria, Clínica Geral"></div>
       <div class="login-field"><label>E-mail</label><input id="reg-email" type="email" placeholder="seu@email.com"></div>
       <div class="login-field"><label>Senha</label><input id="reg-pass" type="password" placeholder="Mínimo 6 caracteres"></div>
       <div class="login-field"><label>Confirmar senha</label><input id="reg-pass2" type="password" placeholder="Repita a senha"></div>
@@ -1476,16 +1486,19 @@ function validCPF(cpf){
 }
 
 async function doRegister(){
-  const nome=document.getElementById('reg-nome').value.trim();
-  const cpf=document.getElementById('reg-cpf').value.replace(/\D/g,'');
-  const email=document.getElementById('reg-email').value.trim().toLowerCase();
-  const pass=document.getElementById('reg-pass').value;
-  const pass2=document.getElementById('reg-pass2').value;
-  const errEl=document.getElementById('login-err');
-  const okEl=document.getElementById('login-ok');
+  const nome  = document.getElementById('reg-nome').value.trim();
+  const cpf   = document.getElementById('reg-cpf').value.replace(/\D/g,'');
+  const crm   = document.getElementById('reg-crm').value.trim();
+  const estado= document.getElementById('reg-estado').value;
+  const espec = document.getElementById('reg-espec').value.trim();
+  const email = document.getElementById('reg-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('reg-pass').value;
+  const pass2 = document.getElementById('reg-pass2').value;
+  const errEl = document.getElementById('login-err');
+  const okEl  = document.getElementById('login-ok');
   errEl.classList.remove('show'); okEl.style.display='none';
 
-  if(!nome||!cpf||!email||!pass){errEl.textContent='Preencha todos os campos.';errEl.classList.add('show');return;}
+  if(!nome||!cpf||!email||!pass){errEl.textContent='Preencha nome, CPF, e-mail e senha.';errEl.classList.add('show');return;}
   if(!validCPF(cpf)){errEl.textContent='CPF inválido.';errEl.classList.add('show');return;}
   if(pass.length<6){errEl.textContent='Senha deve ter pelo menos 6 caracteres.';errEl.classList.add('show');return;}
   if(pass!==pass2){errEl.textContent='Senhas não conferem.';errEl.classList.add('show');return;}
@@ -1496,23 +1509,28 @@ async function doRegister(){
     const sb=await getSB();
     // Verifica CPF duplicado
     const {data:cpfCheck}=await sb.from('profiles').select('id').eq('cpf',cpf).maybeSingle();
-    if(cpfCheck){errEl.textContent='Este CPF já está cadastrado.';errEl.classList.add('show');btn.textContent='Solicitar acesso';btn.disabled=false;return;}
+    if(cpfCheck){errEl.textContent='Este CPF já está cadastrado.';errEl.classList.add('show');btn.textContent='Criar conta';btn.disabled=false;return;}
 
-    // Cria usuário — entra direto após confirmação de e-mail (ou sem confirmação se desabilitado)
+    // Cria usuário
     const {data,error}=await sb.auth.signUp({
       email, password:pass,
-      options:{data:{nome, cpf, role:'user', status:'active'}}
+      options:{data:{nome, cpf, crm, estado, espec, role:'user', status:'active'}}
     });
     if(error) throw error;
 
-    // Tenta login imediato
-    if(data.session){
-      await loadProfile(data.user.id);
-      // Salva CPF no profile
+    if(data.session&&data.user){
+      // Atualiza profile com CPF e nome
       await sb.from('profiles').update({cpf,nome,status:'active'}).eq('id',data.user.id);
+      // Salva perfil médico completo
+      await sb.from('perfil_medico').upsert({
+        user_id:data.user.id, nome, crm, estado, espec, tel:''
+      },{onConflict:'user_id'});
+      // Popula cache para uso imediato
+      cacheSet('perfil',{nome,crm,estado,espec,tel:''});
+      await loadProfile(data.user.id);
       applyAuth();
     } else {
-      // Email confirmation required
+      // Confirmação de e-mail necessária
       okEl.textContent='✓ Conta criada! Verifique seu e-mail para confirmar o cadastro.';
       okEl.style.display='block';
       setTimeout(()=>showPanel('login'),3000);
