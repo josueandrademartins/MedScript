@@ -320,11 +320,32 @@ body.is-admin .admin-only-block{display:block;}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">MedScript</div>
-    <div class="login-sub">Sistema Médico — Acesso restrito</div>
-    <div class="login-err" id="login-err">Usuário ou senha incorretos.</div>
-    <div class="login-field"><label>E-mail</label><input id="login-user" type="email" placeholder="seu@email.com" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <div class="login-field"><label>Senha</label><input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-sub" id="login-sub">Sistema Médico — Acesso restrito</div>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-ok" id="login-ok" style="display:none;background:#e6f4ee;color:#0f6e56;border:1px solid #0f6e56;border-radius:8px;padding:9px 13px;font-size:13px;margin-bottom:14px;"></div>
+
+    <!-- Painel Login -->
+    <div id="panel-login">
+      <div class="login-field"><label>E-mail</label><input id="login-user" type="email" placeholder="seu@email.com" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="login-field"><label>Senha</label><input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="login-btn" onclick="doLogin()">Entrar</button>
+      <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--ink3);">
+        Não tem acesso? <a href="#" onclick="showPanel('register');return false;" style="color:var(--teal);text-decoration:none;font-weight:500;">Criar conta</a>
+      </p>
+    </div>
+
+    <!-- Painel Cadastro -->
+    <div id="panel-register" style="display:none;">
+      <div class="login-field"><label>Nome completo</label><input id="reg-nome" type="text" placeholder="Dr. Nome Sobrenome"></div>
+      <div class="login-field"><label>CPF</label><input id="reg-cpf" type="text" placeholder="000.000.000-00" oninput="fmtCPF(this)"></div>
+      <div class="login-field"><label>E-mail</label><input id="reg-email" type="email" placeholder="seu@email.com"></div>
+      <div class="login-field"><label>Senha</label><input id="reg-pass" type="password" placeholder="Mínimo 6 caracteres"></div>
+      <div class="login-field"><label>Confirmar senha</label><input id="reg-pass2" type="password" placeholder="Repita a senha"></div>
+      <button class="login-btn" onclick="doRegister()">Criar conta</button>
+      <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--ink3);">
+        Já tem cadastro? <a href="#" onclick="showPanel('login');return false;" style="color:var(--teal);text-decoration:none;font-weight:500;">Entrar</a>
+      </p>
+    </div>
   </div>
 </div>
 
@@ -575,6 +596,12 @@ body.is-admin .admin-only-block{display:block;}
     </div>
   </div>
   <div class="card">
+    <div class="card-title">⭐ Favoritos</div>
+    <div id="inj-favoritos-wrap" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
+      <span class="text-muted" style="font-size:13px;">Nenhum favorito ainda. Use ★ para fixar drogas.</span>
+    </div>
+  </div>
+  <div class="card">
     <div class="card-title">Selecionar Droga</div>
     <div class="fg">
       <label>Droga injetável</label>
@@ -585,7 +612,10 @@ body.is-admin .admin-only-block{display:block;}
       </div>
     </div>
     <div id="inj-result-box" style="display:none;background:var(--teal-light);border:1.5px solid var(--teal-mid);border-radius:var(--radius-sm);padding:16px;margin-top:10px;">
-      <div style="font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px;">Resultado do cálculo</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Resultado do cálculo</div>
+        <button id="inj-fav-btn" onclick="toggleFavInj()" title="Favoritar" style="background:none;border:none;cursor:pointer;font-size:20px;line-height:1;padding:0;">☆</button>
+      </div>
       <div id="inj-result-content"></div>
     </div>
   </div>
@@ -645,18 +675,16 @@ body.is-admin .admin-only-block{display:block;}
     </div>
     <div id="ex-tab-solicitacao" class="admin-panel active">
       <div class="fg">
-        <label>Buscar exame</label>
-        <div class="ac-wrap" id="ac-exam-wrap">
-          <input class="ac-input" id="ac-exam" placeholder="Digite 3 letras para buscar..." autocomplete="off"
-            oninput="acFilterExam()" onfocus="acFilterExam()" onkeydown="acKeyExam(event)">
-          <div class="ac-dropdown" id="ac-exam-drop"></div>
+        <label>Buscar ou adicionar exame</label>
+        <div class="ac-wrap" id="ac-exam-wrap" style="display:flex;gap:8px;align-items:flex-start;">
+          <div style="flex:1;position:relative;">
+            <input class="ac-input" id="ac-exam" placeholder="Digite para buscar ou escrever exame personalizado..." autocomplete="off"
+              oninput="acFilterExam()" onfocus="acFilterExam()" onkeydown="acKeyExam(event)">
+            <div class="ac-dropdown" id="ac-exam-drop"></div>
+          </div>
+          <button class="btn btn-soft btn-sm" onclick="addExamFromInput()" style="flex-shrink:0;margin-top:1px;">Adicionar</button>
         </div>
-      </div>
-      <div class="fg" style="margin-top:4px;"><label>Exame personalizado</label>
-        <div class="gap-row">
-          <input id="ex-custom-input" placeholder="Nome do exame não listado..." style="flex:1;padding:9px 13px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;outline:none;">
-          <button class="btn btn-soft btn-sm" onclick="addCustomExam()">Adicionar</button>
-        </div>
+        <p style="font-size:12px;color:var(--ink3);margin-top:5px;">Selecione da lista ou escreva livremente e clique em Adicionar.</p>
       </div>
       <div class="fg" style="margin-top:10px;"><label>Exames selecionados</label>
         <div class="exam-selected-list" id="exam-selected-list"><span class="text-muted" style="font-size:12px;">Nenhum selecionado</span></div>
@@ -721,7 +749,7 @@ body.is-admin .admin-only-block{display:block;}
 
 <!-- ===== USUÁRIOS (ADMIN ONLY) ===== -->
 <div class="page" id="page-usuarios">
-  <div class="page-head"><h2>Gestão de Usuários</h2><p>Crie e gerencie acessos ao sistema</p></div>
+  <div class="page-head"><h2>Gestão de Usuários</h2><p>Gerencie acessos ao sistema</p></div>
   <div class="card">
     <div class="card-title">Usuários cadastrados</div>
     <div id="users-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
@@ -790,7 +818,9 @@ body.is-admin .admin-only-block{display:block;}
       <div class="fg"><label>Especialidade</label><input id="prof-espec" placeholder="Ex: Clínica Geral, Pediatria"></div>
     </div>
     <div class="gr2">
+      <div class="fg"><label>CPF</label><input id="prof-cpf" placeholder="000.000.000-00" oninput="fmtCPF(this)"></div>
       <div class="fg"><label>CRM</label><input id="prof-crm" placeholder="Ex: 12345"></div>
+    </div>
       <div class="fg"><label>Estado (CRM)</label>
         <select id="prof-estado"><option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select>
       </div>
@@ -1187,26 +1217,6 @@ function applyAuth(){
 }
 
 // ── USER MANAGEMENT (admin) ──────────────────────────────────
-async function renderUsersList(){
-  const sb=await getSB();
-  const {data,error}=await sb.from('profiles').select('*').order('nome');
-  if(error){toast('Erro ao carregar usuários');return;}
-  const me=_currentProfile;
-  document.getElementById('users-list').innerHTML=(data||[]).map(u=>`
-    <div class="user-card">
-      <div class="user-av">${(u.nome||u.email||'?').slice(0,2).toUpperCase()}</div>
-      <div class="user-info">
-        <strong>${u.nome||'—'}</strong>
-        <span>${u.email||''} ${u.crm?'· '+u.crm:''}</span>
-      </div>
-      <span class="user-role-badge ${u.role==='admin'?'badge-teal':'badge-amber'}">${u.role==='admin'?'Admin':'Usuário'}</span>
-      ${u.id!==me.id?`<div style="display:flex;gap:5px;">
-        <button class="btn btn-sm btn-outline" onclick="editUser('${u.id}','${u.nome||''}','${u.email||''}','${u.role||'user'}','${u.crm||''}')">Editar</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">Excluir</button>
-      </div>`:`<span style="font-size:11px;color:var(--ink3);">(você)</span>`}
-    </div>`).join('');
-}
-
 async function saveUser(){
   if(!isAdmin()){toast('⚠️ Sem permissão');return;}
   const nome   = v('nu-nome').trim();
@@ -1240,7 +1250,7 @@ async function saveUser(){
 
 function editUser(id,nome,email,role,crm){
   document.getElementById('nu-edit-id').value=id;
-  document.getElementById('nu-nome').value=nome;
+  document.getElementById('nu-nome').value=decodeURIComponent(nome);
   document.getElementById('nu-user').value=email;
   document.getElementById('nu-pass').value='';
   document.getElementById('nu-role').value=role;
@@ -1338,12 +1348,197 @@ async function salvarPerfilDB(){
   toast('✓ Perfil salvo!');
 }
 
-// ── BOOT ──────────────────────────────────────────────────────
+// ── FAVORITOS (estado em memória + Supabase) ──────────────────
+let _favInjetaveis = [];  // array de ref_id (string UUID)
+let _favModelos    = [];  // array de ref_id (string UUID)
+let _currentInjId  = null; // droga atualmente exibida
+
+async function loadFavoritos(){
+  const sb=await getSB();
+  const {data}=await sb.from('favoritos').select('*');
+  if(!data) return;
+  _favInjetaveis=data.filter(f=>f.tipo==='injetavel').map(f=>String(f.ref_id));
+  _favModelos   =data.filter(f=>f.tipo==='modelo').map(f=>String(f.ref_id));
+}
+
+async function toggleFavInj(){
+  if(!_currentInjId) return;
+  const id=String(_currentInjId);
+  const sb=await getSB();
+  const isFav=_favInjetaveis.includes(id);
+  if(isFav){
+    await sb.from('favoritos').delete().eq('user_id',(await sb.auth.getUser()).data.user.id).eq('tipo','injetavel').eq('ref_id',id);
+    _favInjetaveis=_favInjetaveis.filter(x=>x!==id);
+  } else {
+    const {data:{user}}=await sb.auth.getUser();
+    await sb.from('favoritos').insert({user_id:user.id,tipo:'injetavel',ref_id:id});
+    _favInjetaveis.push(id);
+  }
+  document.getElementById('inj-fav-btn').textContent=_favInjetaveis.includes(id)?'★':'☆';
+  renderFavInjetaveis();
+}
+
+async function toggleFavModelo(id){
+  id=String(id);
+  const sb=await getSB();
+  const isFav=_favModelos.includes(id);
+  if(isFav){
+    const {data:{user}}=await sb.auth.getUser();
+    await sb.from('favoritos').delete().eq('user_id',user.id).eq('tipo','modelo').eq('ref_id',id);
+    _favModelos=_favModelos.filter(x=>x!==id);
+  } else {
+    const {data:{user}}=await sb.auth.getUser();
+    await sb.from('favoritos').insert({user_id:user.id,tipo:'modelo',ref_id:id});
+    _favModelos.push(id);
+  }
+  renderModelos();
+}
+
+function renderFavInjetaveis(){
+  const wrap=document.getElementById('inj-favoritos-wrap');
+  if(!wrap) return;
+  const drugs=cacheGet('injetaveis')||[];
+  const favDrugs=drugs.filter(d=>_favInjetaveis.includes(String(d.id)));
+  if(!favDrugs.length){
+    wrap.innerHTML='<span class="text-muted" style="font-size:13px;">Nenhum favorito ainda. Use ★ para fixar drogas.</span>';
+    return;
+  }
+  wrap.innerHTML=favDrugs.map(d=>`
+    <button onclick="selectInj('${d.id}')" style="padding:7px 14px;background:var(--teal-light);border:1.5px solid var(--teal-mid);border-radius:20px;font-size:13px;font-weight:500;color:var(--teal);cursor:pointer;font-family:'Outfit',sans-serif;">
+      ⭐ ${d.nome}
+    </button>`).join('');
+}
+
+// ── CADASTRO (registro público com aprovação) ─────────────────
+function showPanel(panel){
+  document.getElementById('panel-login').style.display=panel==='login'?'block':'none';
+  document.getElementById('panel-register').style.display=panel==='register'?'block':'none';
+  document.getElementById('login-err').classList.remove('show');
+  document.getElementById('login-ok').style.display='none';
+}
+
+function fmtCPF(el){
+  let v=el.value.replace(/\D/g,'').slice(0,11);
+  if(v.length>9) v=v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/,'$1.$2.$3-$4');
+  else if(v.length>6) v=v.replace(/(\d{3})(\d{3})(\d{0,3})/,'$1.$2.$3');
+  else if(v.length>3) v=v.replace(/(\d{3})(\d{0,3})/,'$1.$2');
+  el.value=v;
+}
+
+function validCPF(cpf){
+  cpf=cpf.replace(/\D/g,'');
+  if(cpf.length!==11||/^(\d)\1+$/.test(cpf)) return false;
+  let s=0; for(let i=0;i<9;i++) s+=parseInt(cpf[i])*(10-i);
+  let r=s%11; let d1=r<2?0:11-r;
+  s=0; for(let i=0;i<10;i++) s+=parseInt(cpf[i])*(11-i);
+  r=s%11; let d2=r<2?0:11-r;
+  return parseInt(cpf[9])===d1&&parseInt(cpf[10])===d2;
+}
+
+async function doRegister(){
+  const nome=document.getElementById('reg-nome').value.trim();
+  const cpf=document.getElementById('reg-cpf').value.replace(/\D/g,'');
+  const email=document.getElementById('reg-email').value.trim().toLowerCase();
+  const pass=document.getElementById('reg-pass').value;
+  const pass2=document.getElementById('reg-pass2').value;
+  const errEl=document.getElementById('login-err');
+  const okEl=document.getElementById('login-ok');
+  errEl.classList.remove('show'); okEl.style.display='none';
+
+  if(!nome||!cpf||!email||!pass){errEl.textContent='Preencha todos os campos.';errEl.classList.add('show');return;}
+  if(!validCPF(cpf)){errEl.textContent='CPF inválido.';errEl.classList.add('show');return;}
+  if(pass.length<6){errEl.textContent='Senha deve ter pelo menos 6 caracteres.';errEl.classList.add('show');return;}
+  if(pass!==pass2){errEl.textContent='Senhas não conferem.';errEl.classList.add('show');return;}
+
+  const btn=document.querySelector('#panel-register .login-btn');
+  btn.textContent='Criando conta...'; btn.disabled=true;
+  try{
+    const sb=await getSB();
+    // Verifica CPF duplicado
+    const {data:cpfCheck}=await sb.from('profiles').select('id').eq('cpf',cpf).maybeSingle();
+    if(cpfCheck){errEl.textContent='Este CPF já está cadastrado.';errEl.classList.add('show');btn.textContent='Solicitar acesso';btn.disabled=false;return;}
+
+    // Cria usuário — entra direto após confirmação de e-mail (ou sem confirmação se desabilitado)
+    const {data,error}=await sb.auth.signUp({
+      email, password:pass,
+      options:{data:{nome, cpf, role:'user', status:'active'}}
+    });
+    if(error) throw error;
+
+    // Tenta login imediato
+    if(data.session){
+      await loadProfile(data.user.id);
+      // Salva CPF no profile
+      await sb.from('profiles').update({cpf,nome,status:'active'}).eq('id',data.user.id);
+      applyAuth();
+    } else {
+      // Email confirmation required
+      okEl.textContent='✓ Conta criada! Verifique seu e-mail para confirmar o cadastro.';
+      okEl.style.display='block';
+      setTimeout(()=>showPanel('login'),3000);
+    }
+  }catch(err){
+    errEl.textContent='Erro: '+(err.message||'Tente novamente');
+    errEl.classList.add('show');
+  } finally {
+    btn.textContent='Criar conta'; btn.disabled=false;
+  }
+}
+
+// ── APROVAÇÃO DE USUÁRIOS ─────────────────────────────────────
+async function renderUsersList(){
+  const sb=await getSB();
+  const {data,error}=await sb.from('profiles').select('*').order('nome');
+  if(error){toast('Erro ao carregar usuários');return;}
+  const me=_currentProfile;
+  document.getElementById('users-list').innerHTML=(data||[]).map(u=>`
+    <div class="user-card">
+      <div class="user-av">${(u.nome||u.email||'?').slice(0,2).toUpperCase()}</div>
+      <div class="user-info">
+        <strong>${u.nome||'—'}</strong>
+        <span>${u.email||''} ${u.cpf?'· CPF: '+u.cpf:''} ${u.crm?'· '+u.crm:''}</span>
+      </div>
+      <span class="user-role-badge ${u.role==='admin'?'badge-teal':'badge-amber'}">${u.role==='admin'?'Admin':'Usuário'}</span>
+      ${u.id!==me.id?`<div style="display:flex;gap:5px;">
+        <button class="btn btn-sm btn-outline" onclick="editUser('${u.id}','${encodeURIComponent(u.nome||'')}','${u.email||''}','${u.role||'user'}','${u.crm||''}')">Editar</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">Excluir</button>
+      </div>`:`<span style="font-size:11px;color:var(--ink3);">(você)</span>`}
+    </div>`).join('');
+}
+
+async function approveUser(id){
+  const sb=await getSB();
+  const {error}=await sb.from('profiles').update({status:'active'}).eq('id',id);
+  if(error){toast('Erro: '+error.message);return;}
+  renderUsersList();
+  toast('✓ Usuário aprovado!');
+}
+
+async function rejectUser(id){
+  if(!confirm('Rejeitar e excluir este cadastro?'))return;
+  const sb=await getSB();
+  await sb.from('profiles').delete().eq('id',id);
+  renderUsersList();
+  toast('Cadastro rejeitado.');
+}
+
+// ── EXAMES: adicionar do campo unificado ──────────────────────
+function addExamFromInput(){
+  const inp=document.getElementById('ac-exam');
+  const nome=inp.value.trim();
+  if(!nome){toast('⚠️ Digite o nome do exame');return;}
+  if(!selectedExams.includes(nome)) selectedExams.push(nome);
+  inp.value='';
+  document.getElementById('ac-exam-drop').classList.remove('open');
+  renderSelectedExams();
+  toast('✓ Exame adicionado!');
+}
 async function boot(){
-  await Promise.all([initData(), loadPerfilFromDB()]);
+  await Promise.all([initData(), loadPerfilFromDB(), loadFavoritos()]);
   updateSidebarDoctor();
   updateDash();
   populateLocalSelects();
+  renderFavInjetaveis();
   const td=new Date().toISOString().slice(0,10);
   ['ex-data','doc-data'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=td;});
 }
@@ -2141,25 +2336,34 @@ function renderModelos(){
 function renderModelosGrid(tipo){
   const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
   const q=(document.getElementById('modelo-busca')||{value:''}).value.toLowerCase().trim();
-  let mods=ls(key)||[];
+  let mods=cacheGet(tipo==='ped'?'modelos_ped':'modelos_adulto')||ls(key)||[];
   if(q) mods=mods.filter(m=>m.nome.toLowerCase().includes(q)||(m.medicamentos||[]).some(x=>x.nome.toLowerCase().includes(q)));
+  const favs=_favModelos;
+  // Sort: favorites first
+  mods=[...mods.filter(m=>favs.includes(String(m.id))),...mods.filter(m=>!favs.includes(String(m.id)))];
   const grid=document.getElementById('modelos-'+tipo+'-grid');
   if(!mods.length){
     const empty=q?`Nenhum modelo encontrado para "${q}".`:`Nenhum modelo ${tipo==='ped'?'pediátrico':''} salvo ainda.<br>Crie uma receita e salve como modelo.`;
     grid.innerHTML=`<div class="model-empty">${empty}</div>`;
     return;
   }
-  grid.innerHTML=mods.map(m=>`
-    <div class="model-card">
-      <h4>${m.nome}</h4>
+  grid.innerHTML=mods.map(m=>{
+    const isFav=favs.includes(String(m.id));
+    return`<div class="model-card" style="${isFav?'border-color:var(--amber);':''}" >
+      <div style="display:flex;justify-content:space-between;align-items:start;">
+        <h4>${isFav?'⭐ ':''}${m.nome}</h4>
+        <button onclick="toggleFavModelo('${m.id}')" title="${isFav?'Remover favorito':'Favoritar'}"
+          style="background:none;border:none;cursor:pointer;font-size:18px;padding:0;line-height:1;color:${isFav?'var(--amber)':'var(--ink3)'};">${isFav?'★':'☆'}</button>
+      </div>
       <p>${(m.medicamentos||[]).map(x=>x.nome).join(', ')}</p>
       <div class="mc-foot">
         <span class="badge ${tipo==='ped'?'badge-amber':'badge-teal'}">${(m.medicamentos||[]).length} med.</span>
-        <button class="btn btn-sm btn-soft" onclick="usarModelo(${m.id},'${tipo}')">Usar</button>
-        <button class="btn btn-sm btn-outline" onclick="editModelo(${m.id},'${tipo}')">Renomear</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteModelo(${m.id},'${tipo}')">Excluir</button>
+        <button class="btn btn-sm btn-soft" onclick="usarModelo('${m.id}','${tipo}')">Usar</button>
+        <button class="btn btn-sm btn-outline" onclick="editModelo('${m.id}','${tipo}')">Editar</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteModelo('${m.id}','${tipo}')">Excluir</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 function usarModelo(id,tipo){
   const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
@@ -2578,7 +2782,10 @@ function selectInj(id){
   document.getElementById('ac-inj-drop').classList.remove('open');
   const d=(cacheGet('injetaveis')||[]).find(x=>String(x.id)===String(id));
   if(!d)return;
+  _currentInjId=String(d.id);
   document.getElementById('ac-inj').value=d.nome;
+  const favBtn=document.getElementById('inj-fav-btn');
+  if(favBtn) favBtn.textContent=_favInjetaveis.includes(_currentInjId)?'★':'☆';
   calcInjetavel(d);
 }
 function calcInjetavel(drug){
