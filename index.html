@@ -1197,19 +1197,28 @@ async function doLogin(){
 }
 
 async function doLogout(){
-  const sb=await getSB();
-  await sb.auth.signOut();
+  try{
+    const sb=await getSB();
+    await sb.auth.signOut();
+  }catch(e){console.warn('signOut error:',e);}
+  // Destroi o cliente Supabase — força recriação com sessão limpa no próximo login
+  _sb=null;
   _currentProfile=null;
-  // Limpa cache para evitar dados de um usuário aparecerem para outro
+  // Limpa todo o cache de dados
   Object.keys(_cache).forEach(k=>delete _cache[k]);
   _favInjetaveis=[];
   _favModelos=[];
   _currentInjId=null;
+  // Limpa campos de UI
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
   document.getElementById('login-err').classList.remove('show');
   document.getElementById('login-screen').classList.remove('hidden');
   document.body.classList.remove('is-admin');
+  // Navega para dashboard para garantir estado limpo
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const dash=document.getElementById('page-dashboard');
+  if(dash) dash.classList.add('active');
 }
 
 async function loadProfile(userId){
@@ -1233,11 +1242,7 @@ function applyAuth(){
   if(!user){document.getElementById('login-screen').classList.remove('hidden');return;}
   document.getElementById('login-screen').classList.add('hidden');
   document.body.classList.toggle('is-admin', user.role==='admin');
-  document.getElementById('sb-doc-name').textContent=user.nome||user.email||'';
-  document.getElementById('sb-doc-crm').textContent=user.role==='admin'?'Administrador':'Usuário';
-  const initStr=(user.nome||user.email||'?').split(' ').slice(0,2).map(w=>w[0].toUpperCase()).join('');
-  document.getElementById('sb-av-initials').textContent=initStr;
-  boot();
+  boot(); // boot carrega perfil_medico e depois chama updateSidebarDoctor
 }
 
 // ── USER MANAGEMENT (admin) ──────────────────────────────────
@@ -1347,7 +1352,16 @@ async function loadPerfilFromDB(){
   if(!user) return;
   // Carrega perfil médico
   const {data:p}=await sb.from('perfil_medico').select('*').eq('user_id',user.id).single();
-  if(p) cacheSet('perfil',{nome:p.nome,crm:p.crm,estado:p.estado,espec:p.espec,tel:p.tel});
+  if(p) cacheSet('perfil',{nome:p.nome||'',crm:p.crm||'',estado:p.estado||'',espec:p.espec||'',tel:p.tel||''});
+  else {
+    // Tenta usar dados do cadastro via metadata
+    const meta=user.user_metadata||{};
+    if(meta.nome||meta.crm){
+      const perf={user_id:user.id,nome:meta.nome||'',crm:meta.crm||'',estado:meta.estado||'',espec:meta.espec||'',tel:''};
+      await sb.from('perfil_medico').upsert(perf,{onConflict:'user_id'});
+      cacheSet('perfil',{nome:perf.nome,crm:perf.crm,estado:perf.estado,espec:perf.espec,tel:''});
+    }
+  }
   // Carrega locais
   const {data:l}=await sb.from('locais').select('*').eq('user_id',user.id).order('nome');
   if(l) cacheSet('locais',l);
@@ -1693,8 +1707,15 @@ function updateDash(){
 // ── PERFIL ──
 function loadPerfil(){
   const p=cacheGet('perfil')||{};
-  ['nome','espec','crm','estado','tel'].forEach(f=>{const el=document.getElementById('prof-'+f);if(el)el.value=p[f]||'';});
-  document.getElementById('prof-av').textContent=initials(p.nome);
+  ['nome','espec','crm','estado','tel'].forEach(f=>{
+    const el=document.getElementById('prof-'+f);
+    if(el) el.value=p[f]||'';
+  });
+  // CPF vem do profile (não do perfil_medico)
+  const cpfEl=document.getElementById('prof-cpf');
+  if(cpfEl) cpfEl.value=_currentProfile?.cpf||'';
+  const avEl=document.getElementById('prof-av');
+  if(avEl) avEl.textContent=initials(p.nome||_currentProfile?.nome);
   renderLocais();
 }
 function updateProfilePreview(){document.getElementById('prof-av').textContent=initials(v('prof-nome'));}
@@ -1703,8 +1724,9 @@ function updateSidebarDoctor(){
   const user=_currentProfile;
   const p=cacheGet('perfil')||{};
   const nome=p.nome||user?.nome||'';
-  document.getElementById('sb-doc-name').textContent=nome||'Meu Perfil';
-  document.getElementById('sb-doc-crm').textContent=p.crm?`CRM ${p.crm}/${p.estado||''}`:(user?.role==='admin'?'Administrador':'CRM —');
+  const crm=p.crm?(p.estado?`CRM-${p.estado} ${p.crm}`:`CRM ${p.crm}`):null;
+  document.getElementById('sb-doc-name').textContent=nome||user?.email||'Meu Perfil';
+  document.getElementById('sb-doc-crm').textContent=crm||(user?.role==='admin'?'Administrador':p.espec||'');
   document.getElementById('sb-av-initials').textContent=initials(nome||user?.nome||'?');
 }
 function initials(n){if(!n)return'?';const p=n.trim().split(' ').filter(Boolean);return p.length===1?p[0][0].toUpperCase():(p[0][0]+p[p.length-1][0]).toUpperCase();}
