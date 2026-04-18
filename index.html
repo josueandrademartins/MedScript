@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MedScript</title>
+<!-- Supabase SDK carregado antes de tudo -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedScript</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1040,17 +1044,12 @@ body.is-admin .admin-only-block{display:block;}
 const SUPABASE_URL  = 'https://lgqeommxhdiicqqapflw.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxncWVvbW14aGRpaWNxcWFwZmx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NjcyODYsImV4cCI6MjA5MjA0MzI4Nn0.YSwTBcZedmwel1ongMPltZau_3Ora1A62uXxk8kbG_8';
 
-// SDK carregado via CDN (injetado dinamicamente para não bloquear parse)
+// SDK já carregado via <script> no <head>
 let _sb = null;
 async function getSB(){
   if(_sb) return _sb;
-  await new Promise((res,rej)=>{
-    const s=document.createElement('script');
-    s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
-    s.onload=res; s.onerror=rej;
-    document.head.appendChild(s);
-  });
-  _sb=window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  if(!window.supabase) throw new Error('SDK Supabase não carregou. Verifique sua conexão e recarregue a página.');
+  _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
   return _sb;
 }
 
@@ -1118,17 +1117,38 @@ async function doLogin(){
   const email = document.getElementById('login-user').value.trim();
   const pass  = document.getElementById('login-pass').value;
   const errEl = document.getElementById('login-err');
+  const btn   = document.querySelector('.login-btn');
   errEl.classList.remove('show');
-  if(!email||!pass){errEl.textContent='Preencha e-mail e senha.';errEl.classList.add('show');return;}
+  if(!email||!pass){
+    errEl.textContent='Preencha e-mail e senha.';
+    errEl.classList.add('show');
+    return;
+  }
+  // Feedback visual
+  btn.textContent='Entrando…';
+  btn.disabled=true;
   try{
     const sb=await getSB();
+    console.log('Supabase conectado, tentando login...');
     const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
-    if(error) throw error;
+    if(error){
+      console.error('Erro de autenticação:', error);
+      throw error;
+    }
+    console.log('Login OK, carregando perfil...');
     await loadProfile(data.user.id);
     applyAuth();
   }catch(err){
-    errEl.textContent=err.message||'Usuário ou senha incorretos.';
+    console.error('Erro no login:', err);
+    const msg = err.message || '';
+    if(msg.includes('Invalid login')) errEl.textContent='E-mail ou senha incorretos.';
+    else if(msg.includes('Email not confirmed')) errEl.textContent='Confirme seu e-mail antes de entrar.';
+    else if(msg.includes('SDK')) errEl.textContent=msg;
+    else errEl.textContent='Erro: '+msg;
     errEl.classList.add('show');
+  } finally {
+    btn.textContent='Entrar';
+    btn.disabled=false;
   }
 }
 
@@ -1145,8 +1165,17 @@ async function doLogout(){
 
 async function loadProfile(userId){
   const sb=await getSB();
-  const {data,error}=await sb.from('profiles').select('*').eq('id',userId).single();
-  if(error||!data) throw new Error('Perfil não encontrado.');
+  let {data,error}=await sb.from('profiles').select('*').eq('id',userId).single();
+  if(error||!data){
+    console.warn('Perfil não encontrado, criando...');
+    // Busca email do usuário e cria perfil básico
+    const {data:{user}}=await sb.auth.getUser();
+    const {data:created,error:insErr}=await sb.from('profiles')
+      .upsert({id:userId,email:user.email,nome:user.email.split('@')[0],role:'user'},{onConflict:'id'})
+      .select().single();
+    if(insErr) throw new Error('Não foi possível carregar o perfil: '+insErr.message);
+    data=created;
+  }
   _currentProfile=data;
 }
 
