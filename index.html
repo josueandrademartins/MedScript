@@ -891,56 +891,142 @@ body.is-admin .admin-only-block{display:block;}
 </div>
 
 <div class="modal-overlay" id="modal-ped">
-  <div class="modal" style="max-width:580px;">
+  <div class="modal" style="max-width:600px;">
     <h3 id="modal-ped-title">Novo Medicamento Pediátrico</h3>
     <input type="hidden" id="mp-edit-id">
-    <div class="gr2">
-      <div class="fg"><label>Nome + Concentração</label><input id="mp-nome" placeholder="Ex: Amoxicilina 250mg/5ml"></div>
-      <div class="fg"><label>Apresentação</label>
-        <select id="mp-apresentacao" onchange="updateModalDoseLabel();toggleApresOutro()">
-          <option value="">— selecionar —</option>
-          <option value="ml">ml</option>
-          <option value="gotas">gotas</option>
-          <option value="jatos">jatos</option>
-          <option value="comprimido(s)">comprimido(s)</option>
-          <option value="cápsula(s)">cápsula(s)</option>
-          <option value="sachê(s)">sachê(s)</option>
-          <option value="supositório(s)">supositório(s)</option>
-          <option value="mg">mg</option>
-          <option value="outro">outro (escrever)</option>
-        </select>
-        <input type="text" id="mp-apresentacao-outro" placeholder="Descreva a apresentação" style="display:none;margin-top:6px;width:100%;padding:8px 12px;border:1.5px solid var(--line);border-radius:8px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;" oninput="updateModalDoseLabel()">
+    <input type="hidden" id="mp-tipo-dose">
+
+    <!-- ── PASSO 1: escolha do tipo (só aparece em modo "novo") ── -->
+    <div id="mp-tipo-selector" style="display:none;">
+      <p style="font-size:13px;color:var(--ink3);margin:0 0 12px;">Como a dose é calculada?</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <button class="mp-tipo-btn" onclick="mpSelecionaTipo('peso')" style="border:2px solid var(--line);border-radius:12px;padding:18px 8px;background:var(--bg2);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:.15s;">
+          <svg width="28" height="28" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h2l3 12h8l3-12h2"/><path d="M9 6V5a3 3 0 0 1 6 0v1"/></svg>
+          <span style="font-size:13px;font-weight:600;color:var(--ink);">Por peso</span>
+          <span style="font-size:11px;color:var(--ink3);text-align:center;">ml/kg, gotas/kg</span>
+        </button>
+        <button class="mp-tipo-btn" onclick="mpSelecionaTipo('idade')" style="border:2px solid var(--line);border-radius:12px;padding:18px 8px;background:var(--bg2);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:.15s;">
+          <svg width="28" height="28" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          <span style="font-size:13px;font-weight:600;color:var(--ink);">Por idade</span>
+          <span style="font-size:11px;color:var(--ink3);text-align:center;">faixas etárias fixas</span>
+        </button>
+        <button class="mp-tipo-btn" onclick="mpSelecionaTipo('fixo')" style="border:2px solid var(--line);border-radius:12px;padding:18px 8px;background:var(--bg2);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:.15s;">
+          <svg width="28" height="28" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+          <span style="font-size:13px;font-weight:600;color:var(--ink);">Dose fixa</span>
+          <span style="font-size:11px;color:var(--ink3);text-align:center;">independe de peso/idade</span>
+        </button>
       </div>
     </div>
-    <div class="gr2">
-      <div class="fg"><label>Modo de administração</label>
-        <input id="mp-modo" placeholder="Ex: Tomar, Aplicar, Instilar, Pingar..." style="width:100%;padding:9px 13px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;outline:none;">
+
+    <!-- ══ SEÇÃO: PESO ══════════════════════════════════════ -->
+    <div id="mp-secao-peso" style="display:none;">
+      <div class="fg" style="margin-bottom:12px;"><label>Nome + Concentração</label><input id="mp-nome" placeholder="Ex: Amoxicilina 250mg/5ml"></div>
+      <div class="gr2" style="margin-bottom:12px;">
+        <div class="fg"><label>Apresentação</label>
+          <select id="mp-apresentacao" onchange="mpUpdateDoseLabel();mpToggleApresOutro()">
+            <option value="">— selecionar —</option>
+            <option value="ml">ml</option>
+            <option value="gotas">gotas</option>
+            <option value="jatos">jatos</option>
+            <option value="comprimido(s)">comprimido(s)</option>
+            <option value="cápsula(s)">cápsula(s)</option>
+            <option value="sachê(s)">sachê(s)</option>
+            <option value="supositório(s)">supositório(s)</option>
+            <option value="mg">mg</option>
+            <option value="outro">outro…</option>
+          </select>
+          <input type="text" id="mp-apresentacao-outro" placeholder="Descreva a apresentação" style="display:none;margin-top:6px;width:100%;padding:8px 12px;border:1.5px solid var(--line);border-radius:8px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;" oninput="mpUpdateDoseLabel()">
+        </div>
+        <div class="fg"><label>Via de administração</label>
+          <input id="mp-via" placeholder="Ex: oral, tópica, inalatória…" style="width:100%;padding:9px 13px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;outline:none;">
+        </div>
       </div>
-      <div class="fg"><label>Via de administração</label>
-        <input id="mp-via" placeholder="Ex: oral, sublingual, inalatória, tópica..." style="width:100%;padding:9px 13px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;outline:none;">
+      <div class="fg" style="margin-bottom:12px;"><label>Modo de administração</label>
+        <input id="mp-modo" placeholder="Ex: Tomar, Aplicar, Pingar…" style="width:100%;padding:9px 13px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;outline:none;">
+      </div>
+      <div class="gr2" style="margin-bottom:12px;">
+        <div class="fg">
+          <label id="mp-dose-label">Dose (apresentação/kg)</label>
+          <input type="number" id="mp-dose-apres-kg" step="0.001" placeholder="Ex: 1 gota/kg → 1" oninput="mpUpdateDoseLabel()">
+        </div>
+        <div class="fg">
+          <label id="mp-dosemax-label">Dose máxima</label>
+          <input type="number" id="mp-dose-max-apres" step="0.1" placeholder="Ex: 20">
+        </div>
+      </div>
+      <div class="gr2" style="margin-bottom:12px;">
+        <div class="fg"><label>Intervalo</label>
+          <select id="mp-intervalo">
+            <option value="4/4h">4/4h</option><option value="6/6h">6/6h</option>
+            <option value="8/8h" selected>8/8h</option><option value="12/12h">12/12h</option>
+            <option value="1x/dia">1x/dia</option><option value="dose única">dose única</option>
+          </select>
+        </div>
+        <div class="fg"><label>Duração padrão</label><input id="mp-duracao" placeholder="Ex: 7 dias, 5 dias"></div>
+      </div>
+      <div class="gr2" style="margin-bottom:4px;">
+        <div class="fg"><label>Idade mínima (anos)</label><input type="number" id="mp-idade-min" min="0" step="0.1" placeholder="Opcional"></div>
+        <div class="fg"><label>Idade máxima (anos)</label><input type="number" id="mp-idade-max" min="0" step="0.1" placeholder="Opcional"></div>
       </div>
     </div>
-    <div class="gr2">
-      <div class="fg">
-        <label id="mp-dose-label">Dose (apresentação/kg)</label>
-        <input type="number" id="mp-dose-apres-kg" step="0.001" placeholder="Ex: 0.27" oninput="updateModalDoseLabel()">
+
+    <!-- ══ SEÇÃO: IDADE ═════════════════════════════════════ -->
+    <div id="mp-secao-idade" style="display:none;">
+      <div class="fg" style="margin-bottom:12px;"><label>Nome + Concentração</label><input id="mp-nome-idade" placeholder="Ex: Acetilcisteína xarope 20mg/ml"></div>
+      <div class="gr2" style="margin-bottom:12px;">
+        <div class="fg"><label>Apresentação</label>
+          <select id="mp-apresentacao-idade">
+            <option value="">— selecionar —</option>
+            <option value="ml">ml</option><option value="gotas">gotas</option>
+            <option value="jatos">jatos</option><option value="comprimido(s)">comprimido(s)</option>
+            <option value="cápsula(s)">cápsula(s)</option><option value="sachê(s)">sachê(s)</option>
+            <option value="supositório(s)">supositório(s)</option><option value="mg">mg</option>
+          </select>
+        </div>
+        <div class="fg"><label>Via de administração</label>
+          <input id="mp-via-idade" placeholder="Ex: oral, tópica…" style="width:100%;padding:9px 13px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;outline:none;">
+        </div>
       </div>
-      <div class="fg">
-        <label id="mp-dosemax-label">Dose máxima (apresentação)</label>
-        <input type="number" id="mp-dose-max-apres" step="0.1" placeholder="Ex: 10">
+      <div class="fg" style="margin-bottom:12px;"><label>Modo de administração</label>
+        <input id="mp-modo-idade" placeholder="Ex: Dar, Aplicar…" style="width:100%;padding:9px 13px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;outline:none;">
+      </div>
+      <!-- faixas de dose por idade -->
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <label style="font-size:12.5px;font-weight:600;color:var(--ink2);">Faixas de dose por idade</label>
+          <button onclick="mpAddFaixa()" style="font-size:12px;padding:4px 12px;border:1.5px solid var(--accent);border-radius:8px;background:transparent;color:var(--accent);cursor:pointer;font-family:'Outfit',sans-serif;">+ Adicionar faixa</button>
+        </div>
+        <div id="mp-faixas-container"></div>
+      </div>
+      <div class="gr2" style="margin-bottom:4px;">
+        <div class="fg"><label>Intervalo padrão</label>
+          <select id="mp-intervalo-idade">
+            <option value="4/4h">4/4h</option><option value="6/6h">6/6h</option>
+            <option value="8/8h" selected>8/8h</option><option value="12/12h">12/12h</option>
+            <option value="1x/dia">1x/dia</option><option value="dose única">dose única</option>
+          </select>
+        </div>
+        <div class="fg"><label>Duração padrão</label><input id="mp-duracao-idade" placeholder="Ex: 5 dias"></div>
       </div>
     </div>
-    <div class="gr2">
-      <div class="fg"><label>Intervalo entre doses</label>
-        <select id="mp-intervalo"><option value="4/4h">4/4h</option><option value="6/6h">6/6h</option><option value="8/8h" selected>8/8h</option><option value="12/12h">12/12h</option><option value="24h">24h (uma vez ao dia)</option></select>
+
+    <!-- ══ SEÇÃO: FIXO ══════════════════════════════════════ -->
+    <div id="mp-secao-fixo" style="display:none;">
+      <div class="fg" style="margin-bottom:12px;"><label>Nome + Concentração</label><input id="mp-nome-fixo" placeholder="Ex: Floratil sachê 100mg"></div>
+      <div class="fg" style="margin-bottom:12px;"><label>Descrição / Posologia</label>
+        <textarea id="mp-descricao-fixo" rows="3" placeholder="Ex: Dar 1 sachê diluído em 100ml de água de 12/12h por 5 dias" style="width:100%;padding:9px 13px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;outline:none;resize:vertical;"></textarea>
       </div>
-      <div class="fg"><label>Duração padrão</label><input id="mp-duracao" placeholder="Ex: 7 dias, 5 dias"></div>
+      <div class="gr2" style="margin-bottom:4px;">
+        <div class="fg"><label>Idade mínima (anos)</label><input type="number" id="mp-idade-min-fixo" min="0" step="0.1" placeholder="Opcional"></div>
+        <div class="fg"><label>Idade máxima (anos)</label><input type="number" id="mp-idade-max-fixo" min="0" step="0.1" placeholder="Opcional"></div>
+      </div>
     </div>
-    <div class="gr2">
-      <div class="fg"><label>Idade mínima (anos)</label><input type="number" id="mp-idade-min" min="0" placeholder="Opcional"></div>
-      <div class="fg"><label>Idade máxima (anos)</label><input type="number" id="mp-idade-max" min="0" placeholder="Opcional"></div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-ped')">Cancelar</button>
+      <button class="btn btn-outline" id="mp-btn-voltar" onclick="mpVoltarTipo()" style="display:none;">← Tipo</button>
+      <button class="btn btn-primary" id="mp-btn-salvar" onclick="saveMedPed()" style="display:none;">Salvar</button>
     </div>
-    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-ped')">Cancelar</button><button class="btn btn-primary" onclick="saveMedPed()">Salvar</button></div>
   </div>
 </div>
 
@@ -2723,49 +2809,112 @@ async function renderPedTable(){
 }
 async function saveMedPed(){
   const editId=document.getElementById('mp-edit-id').value||null;
-  const apresVal=v('mp-apresentacao');
-  const apres=apresVal==='outro'?v('mp-apresentacao-outro'):apresVal;
-  const item={
-    nome:v('mp-nome'), apresentacao:apres,
-    modo:v('mp-modo')||'Tomar', via:v('mp-via'),
-    dose_apres_kg:parseFloat(document.getElementById('mp-dose-apres-kg').value)||null,
-    dose_max_apres:parseFloat(document.getElementById('mp-dose-max-apres').value)||null,
-    idade_min:document.getElementById('mp-idade-min').value!==''?parseFloat(document.getElementById('mp-idade-min').value):null,
-    idade_max:document.getElementById('mp-idade-max').value!==''?parseFloat(document.getElementById('mp-idade-max').value):null,
-    intervalo:v('mp-intervalo'), duracao:v('mp-duracao'),
-  };
-  if(!item.nome){toast('⚠️ Informe o nome');return;}
+  const tipo=document.getElementById('mp-tipo-dose').value;
+  if(!tipo){toast('⚠️ Selecione o tipo de dose');return;}
+  let item={tipo_dose:tipo};
+
+  if(tipo==='peso'){
+    const apresVal=v('mp-apresentacao');
+    const apres=apresVal==='outro'?v('mp-apresentacao-outro'):apresVal;
+    item={...item,
+      nome:v('mp-nome'), apresentacao:apres,
+      modo:v('mp-modo')||'Tomar', via:v('mp-via'),
+      dose_apres_kg:parseFloat(document.getElementById('mp-dose-apres-kg').value)||null,
+      dose_max_apres:parseFloat(document.getElementById('mp-dose-max-apres').value)||null,
+      idade_min:document.getElementById('mp-idade-min').value!==''?parseFloat(document.getElementById('mp-idade-min').value):null,
+      idade_max:document.getElementById('mp-idade-max').value!==''?parseFloat(document.getElementById('mp-idade-max').value):null,
+      intervalo:v('mp-intervalo'), duracao:v('mp-duracao'),
+      faixas_idade:null, faixas_fixo:null, dose_fixa:null,
+    };
+    if(!item.nome){toast('⚠️ Informe o nome');return;}
+
+  } else if(tipo==='idade'){
+    const faixas=mpColetarFaixas();
+    if(!faixas.length){toast('⚠️ Adicione ao menos uma faixa de dose');return;}
+    item={...item,
+      nome:v('mp-nome-idade'), apresentacao:v('mp-apresentacao-idade'),
+      modo:v('mp-modo-idade')||'Dar', via:v('mp-via-idade'),
+      faixas_idade:faixas,
+      intervalo:v('mp-intervalo-idade'), duracao:v('mp-duracao-idade'),
+      dose_apres_kg:null, dose_max_apres:null, faixas_fixo:null, dose_fixa:null,
+      idade_min:null, idade_max:null,
+    };
+    if(!item.nome){toast('⚠️ Informe o nome');return;}
+
+  } else if(tipo==='fixo'){
+    const descricao=v('mp-descricao-fixo');
+    item={...item,
+      nome:v('mp-nome-fixo'),
+      dose_fixa:descricao,
+      idade_min:document.getElementById('mp-idade-min-fixo').value!==''?parseFloat(document.getElementById('mp-idade-min-fixo').value):null,
+      idade_max:document.getElementById('mp-idade-max-fixo').value!==''?parseFloat(document.getElementById('mp-idade-max-fixo').value):null,
+      apresentacao:null, modo:null, via:null,
+      dose_apres_kg:null, dose_max_apres:null,
+      faixas_idade:null, faixas_fixo:null,
+      intervalo:null, duracao:null,
+    };
+    if(!item.nome){toast('⚠️ Informe o nome');return;}
+  }
+
   const sb=await getSB();
   let error;
   if(editId){({error}=await sb.from('meds_ped').update(item).eq('id',editId));}
   else{({error}=await sb.from('meds_ped').insert(item));}
   if(error){toast('Erro: '+error.message);return;}
+  cacheSet('meds_ped',null);
   closeModal('modal-ped');renderPedTable();toast('✓ Medicamento pediátrico salvo!');
 }
+
 function editMedPed(id){
-  const m=(cacheGet('meds_ped')||[]).find(m=>m.id===id);if(!m)return;
+  const m=(cacheGet('meds_ped')||[]).find(m=>String(m.id)===String(id));if(!m)return;
+  mpResetModal();
   document.getElementById('mp-edit-id').value=m.id;
-  document.getElementById('mp-nome').value=m.nome;
-  const sel=document.getElementById('mp-apresentacao');
-  const opts=[...sel.options].map(o=>o.value);
-  if(opts.includes(m.apresentacao)){
-    sel.value=m.apresentacao;
-    document.getElementById('mp-apresentacao-outro').style.display='none';
-  } else {
-    sel.value='outro';
-    document.getElementById('mp-apresentacao-outro').style.display='block';
-    document.getElementById('mp-apresentacao-outro').value=m.apresentacao||'';
-  }
-  document.getElementById('mp-modo').value=m.modo||'';
-  document.getElementById('mp-via').value=m.via||'';
-  document.getElementById('mp-dose-apres-kg').value=m.dose_apres_kg!=null?m.dose_apres_kg:'';
-  document.getElementById('mp-dose-max-apres').value=m.dose_max_apres!=null?m.dose_max_apres:'';
-  document.getElementById('mp-idade-min').value=m.idade_min!=null?m.idade_min:'';
-  document.getElementById('mp-idade-max').value=m.idade_max!=null?m.idade_max:'';
-  document.getElementById('mp-intervalo').value=m.intervalo||'8/8h';
-  document.getElementById('mp-duracao').value=m.duracao||'';
-  updateModalDoseLabel();
   document.getElementById('modal-ped-title').textContent='Editar Medicamento Pediátrico';
+
+  const tipo=m.tipo_dose||'peso';
+  mpSelecionaTipo(tipo);
+  document.getElementById('mp-btn-voltar').style.display='none';
+
+  if(tipo==='peso'){
+    document.getElementById('mp-nome').value=m.nome||'';
+    const sel=document.getElementById('mp-apresentacao');
+    const opts=[...sel.options].map(o=>o.value);
+    if(opts.includes(m.apresentacao)){
+      sel.value=m.apresentacao;
+      document.getElementById('mp-apresentacao-outro').style.display='none';
+    } else {
+      sel.value='outro';
+      document.getElementById('mp-apresentacao-outro').style.display='block';
+      document.getElementById('mp-apresentacao-outro').value=m.apresentacao||'';
+    }
+    document.getElementById('mp-modo').value=m.modo||'';
+    document.getElementById('mp-via').value=m.via||'';
+    document.getElementById('mp-dose-apres-kg').value=m.dose_apres_kg!=null?m.dose_apres_kg:'';
+    document.getElementById('mp-dose-max-apres').value=m.dose_max_apres!=null?m.dose_max_apres:'';
+    document.getElementById('mp-idade-min').value=m.idade_min!=null?m.idade_min:'';
+    document.getElementById('mp-idade-max').value=m.idade_max!=null?m.idade_max:'';
+    document.getElementById('mp-intervalo').value=m.intervalo||'8/8h';
+    document.getElementById('mp-duracao').value=m.duracao||'';
+    mpUpdateDoseLabel();
+
+  } else if(tipo==='idade'){
+    document.getElementById('mp-nome-idade').value=m.nome||'';
+    document.getElementById('mp-apresentacao-idade').value=m.apresentacao||'';
+    document.getElementById('mp-modo-idade').value=m.modo||'';
+    document.getElementById('mp-via-idade').value=m.via||'';
+    document.getElementById('mp-intervalo-idade').value=m.intervalo||'8/8h';
+    document.getElementById('mp-duracao-idade').value=m.duracao||'';
+    document.getElementById('mp-faixas-container').innerHTML='';
+    const faixas=Array.isArray(m.faixas_idade)?m.faixas_idade:[];
+    if(faixas.length) faixas.forEach(f=>mpAddFaixa(f));
+    else mpAddFaixa();
+
+  } else if(tipo==='fixo'){
+    document.getElementById('mp-nome-fixo').value=m.nome||'';
+    document.getElementById('mp-descricao-fixo').value=m.dose_fixa||'';
+    document.getElementById('mp-idade-min-fixo').value=m.idade_min!=null?m.idade_min:'';
+    document.getElementById('mp-idade-max-fixo').value=m.idade_max!=null?m.idade_max:'';
+  }
   openModal('modal-ped');
 }
 async function deleteMedPed(id){
@@ -3174,14 +3323,11 @@ function openAddModal(tipo){
     return;
   }
   if(tipo==='ped'){
-    document.getElementById('mp-edit-id').value='';
-    ['mp-nome','mp-dose-apres-kg','mp-dose-max-apres','mp-idade-min','mp-idade-max','mp-duracao','mp-modo','mp-via','mp-apresentacao-outro'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    document.getElementById('mp-apresentacao').value='';
-    document.getElementById('mp-apresentacao-outro').style.display='none';
-    document.getElementById('mp-intervalo').value='8/8h';
-    document.getElementById('mp-dose-label').textContent='Dose (apresentação/kg)';
-    document.getElementById('mp-dosemax-label').textContent='Dose máxima (apresentação)';
+    mpResetModal();
     document.getElementById('modal-ped-title').textContent='Novo Medicamento Pediátrico';
+    document.getElementById('mp-tipo-selector').style.display='block';
+    document.getElementById('mp-btn-salvar').style.display='none';
+    document.getElementById('mp-btn-voltar').style.display='none';
     openModal('modal-ped');
   } else if(tipo!=='inj'){
     document.getElementById('ma-edit-id').value='';['ma-nome','ma-posol'].forEach(id=>document.getElementById(id).value='');document.getElementById('ma-cat').value='Antibiótico';document.getElementById('modal-adulto-title').textContent='Novo Medicamento Adulto';openModal('modal-adulto');
@@ -3207,19 +3353,90 @@ function buildDocData({perfil,local,hoje,pac,titulo,corpo}){
   };
 }
 
-function toggleApresOutro(){
+// ── MODAL PED: helpers ──────────────────────────────────────
+function mpResetModal(){
+  document.getElementById('mp-edit-id').value='';
+  document.getElementById('mp-tipo-dose').value='';
+  ['mp-nome','mp-dose-apres-kg','mp-dose-max-apres','mp-idade-min','mp-idade-max',
+   'mp-duracao','mp-modo','mp-via','mp-apresentacao-outro',
+   'mp-nome-idade','mp-via-idade','mp-modo-idade','mp-duracao-idade',
+   'mp-nome-fixo','mp-descricao-fixo','mp-idade-min-fixo','mp-idade-max-fixo'
+  ].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['mp-apresentacao','mp-apresentacao-idade','mp-intervalo','mp-intervalo-idade']
+    .forEach(id=>{const el=document.getElementById(id);if(el)el.value=el.id.includes('intervalo')?'8/8h':'';});
+  document.getElementById('mp-apresentacao-outro').style.display='none';
+  document.getElementById('mp-faixas-container').innerHTML='';
+  ['mp-secao-peso','mp-secao-idade','mp-secao-fixo','mp-tipo-selector'].forEach(id=>{
+    document.getElementById(id).style.display='none';
+  });
+}
+
+function mpSelecionaTipo(tipo){
+  document.getElementById('mp-tipo-dose').value=tipo;
+  document.getElementById('mp-tipo-selector').style.display='none';
+  document.getElementById('mp-secao-peso').style.display= tipo==='peso'?'block':'none';
+  document.getElementById('mp-secao-idade').style.display=tipo==='idade'?'block':'none';
+  document.getElementById('mp-secao-fixo').style.display= tipo==='fixo'?'block':'none';
+  document.getElementById('mp-btn-salvar').style.display='inline-flex';
+  document.getElementById('mp-btn-voltar').style.display= document.getElementById('mp-edit-id').value?'none':'inline-flex';
+  if(tipo==='idade' && document.getElementById('mp-faixas-container').children.length===0) mpAddFaixa();
+}
+
+function mpVoltarTipo(){
+  document.getElementById('mp-tipo-selector').style.display='block';
+  ['mp-secao-peso','mp-secao-idade','mp-secao-fixo'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('mp-btn-salvar').style.display='none';
+  document.getElementById('mp-btn-voltar').style.display='none';
+}
+
+function mpToggleApresOutro(){
   const sel=v('mp-apresentacao');
   const outro=document.getElementById('mp-apresentacao-outro');
   outro.style.display=sel==='outro'?'block':'none';
   if(sel!=='outro') outro.value='';
+  mpUpdateDoseLabel();
 }
-function updateModalDoseLabel(){
+
+function mpUpdateDoseLabel(){
   const sel=v('mp-apresentacao');
   const apres=sel==='outro'?v('mp-apresentacao-outro'):sel;
   const label=apres||'apresentação';
   document.getElementById('mp-dose-label').textContent=`Dose (${label}/kg)`;
   document.getElementById('mp-dosemax-label').textContent=`Dose máxima (${label})`;
 }
+
+function mpAddFaixa(data){
+  const c=document.getElementById('mp-faixas-container');
+  const idx=c.children.length;
+  const d=data||{};
+  const row=document.createElement('div');
+  row.style.cssText='display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px;';
+  row.innerHTML=`
+    <div><label style="font-size:11.5px;color:var(--ink3);display:block;margin-bottom:3px;">Idade mín (anos)</label>
+      <input type="number" class="mp-faixa-imin" min="0" step="0.1" value="${d.idade_min??''}" placeholder="0"
+        style="width:100%;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;"></div>
+    <div><label style="font-size:11.5px;color:var(--ink3);display:block;margin-bottom:3px;">Idade máx (anos)</label>
+      <input type="number" class="mp-faixa-imax" min="0" step="0.1" value="${d.idade_max??''}" placeholder="sem limite"
+        style="width:100%;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;"></div>
+    <div><label style="font-size:11.5px;color:var(--ink3);display:block;margin-bottom:3px;">Dose</label>
+      <input type="text" class="mp-faixa-dose" value="${d.dose??''}" placeholder="Ex: 5ml"
+        style="width:100%;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;"></div>
+    <button onclick="this.parentElement.remove()" style="padding:8px 10px;border:1.5px solid var(--err,#e55);border-radius:8px;background:transparent;color:var(--err,#e55);cursor:pointer;font-size:14px;line-height:1;">✕</button>
+  `;
+  c.appendChild(row);
+}
+
+function mpColetarFaixas(){
+  return [...document.querySelectorAll('#mp-faixas-container > div')].map(row=>({
+    idade_min: row.querySelector('.mp-faixa-imin').value!==''?parseFloat(row.querySelector('.mp-faixa-imin').value):null,
+    idade_max: row.querySelector('.mp-faixa-imax').value!==''?parseFloat(row.querySelector('.mp-faixa-imax').value):null,
+    dose: row.querySelector('.mp-faixa-dose').value.trim(),
+  })).filter(f=>f.dose);
+}
+
+// manter compatibilidade com código antigo (não usado no novo fluxo)
+function toggleApresOutro(){ mpToggleApresOutro(); }
+function updateModalDoseLabel(){ mpUpdateDoseLabel(); }
 
 function handleLogoUpload(input){
   const file=input.files[0];
