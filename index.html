@@ -458,7 +458,6 @@ body.is-admin .admin-only-block{display:block;}
   <div class="card">
     <div class="card-title">Dados do Paciente</div>
     <div class="fg"><label>Nome completo</label><input id="a-pac-nome" placeholder="Nome do paciente"></div>
-    <div class="fg"><label>Local de atendimento</label><select id="a-local" onchange="onLocalChange('a-local')"><option value="">— selecionar —</option></select></div>
   </div>
 
   <div class="card">
@@ -519,7 +518,7 @@ body.is-admin .admin-only-block{display:block;}
       <div class="fg"><label>Idade (anos)</label><input type="number" id="p-idade" min="0" max="17" placeholder="Ex: 4" oninput="updatePedMedOptions()"></div>
       <div class="fg"><label>Peso (kg)</label><input type="number" id="p-peso" step="0.1" placeholder="Ex: 18.5" oninput="calcPedDose()"></div>
     </div>
-    <div class="fg"><label>Local de atendimento</label><select id="p-local" onchange="onLocalChange('p-local')"><option value="">— selecionar —</option></select></div>
+
   </div>
 
   <div class="card">
@@ -592,13 +591,13 @@ body.is-admin .admin-only-block{display:block;}
     <div class="card-title">Dados da Criança</div>
     <div class="gr2">
       <div class="fg"><label>Nome</label><input id="inj-nome" placeholder="Nome da criança"></div>
-      <div class="fg"><label>Peso (kg)</label><input type="number" id="inj-peso" step="0.1" placeholder="Ex: 12.5" oninput="calcInjetavel()"></div>
+      <div class="fg"><label>Peso (kg)</label><input type="number" id="inj-peso" step="0.1" placeholder="Ex: 12.5" oninput="calcInjetavel();renderFavInjetaveis()"></div>
     </div>
   </div>
   <div class="card">
-    <div class="card-title">⭐ Favoritos</div>
+    <div class="card-title">Favoritos</div>
     <div id="inj-favoritos-wrap" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
-      <span class="text-muted" style="font-size:13px;">Nenhum favorito ainda. Use ★ para fixar drogas.</span>
+      <span class="text-muted" style="font-size:13px;">Nenhum favorito ainda. Use ☆ para fixar drogas.</span>
     </div>
   </div>
   <div class="card">
@@ -614,7 +613,7 @@ body.is-admin .admin-only-block{display:block;}
     <div id="inj-result-box" style="display:none;background:var(--teal-light);border:1.5px solid var(--teal-mid);border-radius:var(--radius-sm);padding:16px;margin-top:10px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <div style="font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Resultado do cálculo</div>
-        <button id="inj-fav-btn" onclick="toggleFavInj()" title="Favoritar" style="background:none;border:none;cursor:pointer;font-size:20px;line-height:1;padding:0;">☆</button>
+        <button id="inj-fav-btn" onclick="toggleFavInj()" title="Favoritar" style="background:none;border:none;cursor:pointer;font-size:20px;line-height:1;padding:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
       </div>
       <div id="inj-result-content"></div>
     </div>
@@ -665,7 +664,7 @@ body.is-admin .admin-only-block{display:block;}
       <div class="fg"><label>Nome do paciente</label><input id="ex-pac" placeholder="Nome completo"></div>
       <div class="fg"><label>Data</label><input type="date" id="ex-data"></div>
     </div>
-    <div class="fg"><label>Local de atendimento</label><select id="ex-local" onchange="onLocalChange('ex-local')"><option value="">— selecionar —</option></select></div>
+
   </div>
   <div class="card">
     <div class="card-title">Tipo de documento</div>
@@ -719,7 +718,7 @@ body.is-admin .admin-only-block{display:block;}
       <div class="fg"><label>Nome do paciente</label><input id="doc-pac" placeholder="Nome completo"></div>
       <div class="fg"><label>Data</label><input type="date" id="doc-data"></div>
     </div>
-    <div class="fg"><label>Local de atendimento</label><select id="doc-local" onchange="onLocalChange('doc-local')"><option value="">— selecionar —</option></select></div>
+
   </div>
   <div class="card">
     <div class="card-title">Tipo de documento</div>
@@ -1181,6 +1180,11 @@ async function doLogout(){
   const sb=await getSB();
   await sb.auth.signOut();
   _currentProfile=null;
+  // Limpa cache para evitar dados de um usuário aparecerem para outro
+  Object.keys(_cache).forEach(k=>delete _cache[k]);
+  _favInjetaveis=[];
+  _favModelos=[];
+  _currentInjId=null;
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
   document.getElementById('login-err').classList.remove('show');
@@ -1374,7 +1378,7 @@ async function toggleFavInj(){
     await sb.from('favoritos').insert({user_id:user.id,tipo:'injetavel',ref_id:id});
     _favInjetaveis.push(id);
   }
-  document.getElementById('inj-fav-btn').textContent=_favInjetaveis.includes(id)?'★':'☆';
+  document.getElementById('inj-fav-btn').textContent=_favInjetaveis.includes(id)?'<svg width="16" height="16" viewBox="0 0 24 24" fill="var(--amber)" stroke="var(--amber)" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
   renderFavInjetaveis();
 }
 
@@ -1400,13 +1404,39 @@ function renderFavInjetaveis(){
   const drugs=cacheGet('injetaveis')||[];
   const favDrugs=drugs.filter(d=>_favInjetaveis.includes(String(d.id)));
   if(!favDrugs.length){
-    wrap.innerHTML='<span class="text-muted" style="font-size:13px;">Nenhum favorito ainda. Use ★ para fixar drogas.</span>';
+    wrap.innerHTML='<p class="text-muted" style="font-size:13px;margin:0;">Nenhum favorito ainda. Selecione uma droga e use <svg style="vertical-align:middle" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> para fixar.</p>';
     return;
   }
-  wrap.innerHTML=favDrugs.map(d=>`
-    <button onclick="selectInj('${d.id}')" style="padding:7px 14px;background:var(--teal-light);border:1.5px solid var(--teal-mid);border-radius:20px;font-size:13px;font-weight:500;color:var(--teal);cursor:pointer;font-family:'Outfit',sans-serif;">
-      ⭐ ${d.nome}
-    </button>`).join('');
+  const peso=parseFloat(document.getElementById('inj-peso').value);
+  const fmt=n=>n<0.1?parseFloat(n.toFixed(3)):n<10?parseFloat(n.toFixed(2)):parseFloat(n.toFixed(1));
+  wrap.innerHTML=favDrugs.map(d=>{
+    let resultado='';
+    if(!isNaN(peso)&&peso>0&&d.concentracao){
+      const isInfusao=d.unidade.includes('/min')||d.unidade.includes('/h');
+      let dose=peso*d.dose;
+      if(d.dose_max!=null&&!isInfusao&&dose>d.dose_max) dose=d.dose_max;
+      let volML;
+      let concVal=d.concentracao;
+      if(d.unidade.startsWith('mcg')&&(d.conc_unidade||'').startsWith('mg')) concVal*=1000;
+      if(!isInfusao){
+        let doseForML=dose;
+        if(d.unidade.startsWith('mcg')&&(d.conc_unidade||'').startsWith('mg')) doseForML=dose/1000;
+        volML=doseForML/d.concentracao;
+        resultado=`<span style="font-family:'Lora',serif;font-size:18px;font-weight:700;color:var(--teal);">${fmt(volML)} ml</span>`;
+      } else {
+        volML=(d.dose*peso*60)/concVal;
+        resultado=`<span style="font-family:'Lora',serif;font-size:18px;font-weight:700;color:var(--teal);">${fmt(volML)} ml/h</span>`;
+      }
+    } else if(!isNaN(peso)&&peso>0){
+      resultado=`<span style="font-size:13px;color:var(--ink2);">${fmt(peso*d.dose)} ${d.unidade.replace('/kg','')}</span>`;
+    } else {
+      resultado=`<span style="font-size:12px;color:var(--ink3);">informe o peso</span>`;
+    }
+    return`<div onclick="selectInj('${d.id}')" style="padding:10px 14px;background:var(--card);border:1.5px solid var(--teal-mid);border-radius:var(--radius-sm);cursor:pointer;min-width:120px;flex:1;max-width:200px;">
+      <div style="font-size:12px;font-weight:600;color:var(--teal);margin-bottom:4px;">${d.nome}</div>
+      ${resultado}
+    </div>`;
+  }).join('');
 }
 
 // ── CADASTRO (registro público com aprovação) ─────────────────
@@ -1965,9 +1995,11 @@ function gerarRx(tipo,formato){
   if(!pac){toast('⚠️ Informe o nome do paciente');return;}
   if(!meds.length){toast('⚠️ Adicione ao menos 1 medicamento');return;}
   const perfil=ls(KEYS.perfil)||{};
-  const locais=ls(KEYS.locais)||[];
-  const locIdx=v(tipo==='ped'?'p-local':'a-local');
-  const local=locIdx!==''?locais[parseInt(locIdx)]:null;
+  const locais=cacheGet('locais')||[];
+  // Usa o local selecionado no select (se existir) ou o primeiro local do perfil
+  const locIdxEl=document.getElementById(tipo==='ped'?'p-local':'a-local');
+  const locIdx=locIdxEl?locIdxEl.value:'';
+  const local=locIdx!==''?locais[parseInt(locIdx)]:(locais[0]||null);
   const hoje=new Date().toLocaleDateString('pt-BR');
   // salvar modelo
   const mnKey=tipo==='ped'?'p-model-name':'a-model-name';
@@ -2351,9 +2383,9 @@ function renderModelosGrid(tipo){
     const isFav=favs.includes(String(m.id));
     return`<div class="model-card" style="${isFav?'border-color:var(--amber);':''}" >
       <div style="display:flex;justify-content:space-between;align-items:start;">
-        <h4>${isFav?'⭐ ':''}${m.nome}</h4>
+        <h4>${isFav?'★ ':''}${m.nome}</h4>
         <button onclick="toggleFavModelo('${m.id}')" title="${isFav?'Remover favorito':'Favoritar'}"
-          style="background:none;border:none;cursor:pointer;font-size:18px;padding:0;line-height:1;color:${isFav?'var(--amber)':'var(--ink3)'};">${isFav?'★':'☆'}</button>
+          style="background:none;border:none;cursor:pointer;font-size:18px;padding:0;line-height:1;color:${isFav?'var(--amber)':'var(--ink3)'};">${isFav?'<svg width="16" height="16" viewBox="0 0 24 24" fill="var(--amber)" stroke="var(--amber)" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'}</button>
       </div>
       <p>${(m.medicamentos||[]).map(x=>x.nome).join(', ')}</p>
       <div class="mc-foot">
@@ -2665,9 +2697,8 @@ document.addEventListener('click',e=>{if(!e.target.closest('#ac-exam-wrap'))docu
 function gerarDocExame(){
   const pac=v('ex-pac');if(!pac){toast('⚠️ Informe o paciente');return;}
   const perfil=ls(KEYS.perfil)||{};
-  const locais=ls(KEYS.locais)||[];
-  const locIdx=v('ex-local');
-  const local=locIdx!==''?locais[parseInt(locIdx)]:null;
+  const locais=cacheGet('locais')||[];
+  const local=locais[0]||null;
   const hoje=document.getElementById('ex-data').value?new Date(document.getElementById('ex-data').value+'T00:00:00').toLocaleDateString('pt-BR'):new Date().toLocaleDateString('pt-BR');
   let titulo='',corpo='';
   if(currentExTab==='solicitacao'){
@@ -2695,9 +2726,8 @@ function gerarDocExame(){
 function gerarDocumento(){
   const pac=v('doc-pac');if(!pac){toast('⚠️ Informe o paciente');return;}
   const perfil=ls(KEYS.perfil)||{};
-  const locais=ls(KEYS.locais)||[];
-  const locIdx=v('doc-local');
-  const local=locIdx!==''?locais[parseInt(locIdx)]:null;
+  const locais=cacheGet('locais')||[];
+  const local=locais[0]||null;
   const hoje=document.getElementById('doc-data').value?new Date(document.getElementById('doc-data').value+'T00:00:00').toLocaleDateString('pt-BR'):new Date().toLocaleDateString('pt-BR');
   let titulo='',corpo='';
   if(currentDocTab==='atestado'){
@@ -2785,7 +2815,7 @@ function selectInj(id){
   _currentInjId=String(d.id);
   document.getElementById('ac-inj').value=d.nome;
   const favBtn=document.getElementById('inj-fav-btn');
-  if(favBtn) favBtn.textContent=_favInjetaveis.includes(_currentInjId)?'★':'☆';
+  if(favBtn) favBtn.textContent=_favInjetaveis.includes(_currentInjId)?'<svg width="16" height="16" viewBox="0 0 24 24" fill="var(--amber)" stroke="var(--amber)" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
   calcInjetavel(d);
 }
 function calcInjetavel(drug){
