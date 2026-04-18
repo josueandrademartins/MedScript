@@ -1276,7 +1276,14 @@ async function initData(){
   cacheSet('exames_db',exdb);
 }
 
-// Shim: funções antigas que usavam ls(KEYS.X) agora usam cacheGet
+// ── KEYS: mapeamento para o shim ls() ──
+const KEYS={
+  meds_adulto:'ms_meds_adulto', meds_ped:'ms_meds_ped',
+  injetaveis:'ms_injetaveis',   exames_db:'ms_exames_db',
+  perfil:'ms_perfil',           locais:'ms_locais',
+  modelos_adulto:'ms_modelos_adulto', modelos_ped:'ms_modelos_ped',
+  modelos_exames:'ms_modelos_exames',
+};
 // Isso mantém compatibilidade sem reescrever cada função do app
 function ls(k){
   // Primeiro tenta o cache do Supabase
