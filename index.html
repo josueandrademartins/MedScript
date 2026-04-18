@@ -1304,7 +1304,7 @@ async function deleteUser(id){
 // Dados do usuário (perfil, locais, modelos) — lidos do banco por user_id via RLS
 
 async function initData(){
-  // Carrega dados globais em paralelo e guarda no cache
+  // Carrega dados globais em paralelo
   const [ma,mp,inj,exdb]=await Promise.all([
     dbGet('meds_adulto'), dbGet('meds_ped'),
     dbGet('injetaveis'),  dbGet('exames_db'),
@@ -1313,6 +1313,15 @@ async function initData(){
   cacheSet('meds_ped',mp);
   cacheSet('injetaveis',inj);
   cacheSet('exames_db',exdb);
+  // Carrega medicamentos personalizados do usuário
+  try{
+    const sb=await getSB();
+    const {data}=await sb.from('meds_custom').select('*').order('nome');
+    if(data){
+      cacheSet('meds_custom_adulto',data.filter(m=>m.tipo==='adulto'));
+      cacheSet('meds_custom_ped',data.filter(m=>m.tipo==='ped'));
+    }
+  }catch(e){console.warn('meds_custom não carregado:',e);}
 }
 
 // ── KEYS: mapeamento para o shim ls() ──
@@ -1785,12 +1794,13 @@ function onLocalChange(id){
 let acState={adulto:{focused:-1,custom:null},ped:{focused:-1,custom:null}};
 
 function getMedList(tipo){
-  // Lê direto do cache — populado pelo initData() no boot
-  const list = tipo==='ped'
-    ? (cacheGet('meds_ped')||[])
-    : (cacheGet('meds_adulto')||[]);
-  if(tipo==='ped') return list.filter(m=>pedAgeFilter(m));
-  return list;
+  const global=tipo==='ped'?(cacheGet('meds_ped')||[]):(cacheGet('meds_adulto')||[]);
+  const custom=cacheGet('meds_custom_'+tipo)||[];
+  // Meds personalizados aparecem primeiro com badge
+  const customMapped=custom.map(m=>({...m,_custom:true}));
+  const merged=[...customMapped,...global];
+  if(tipo==='ped') return merged.filter(m=>pedAgeFilter(m));
+  return merged;
 }
 function pedAgeFilter(m){
   const idade=parseFloat(document.getElementById('p-idade').value);
@@ -1833,8 +1843,9 @@ function acFilter(tipo){
     const sub = tipo==='ped'
       ? [m.apresentacao, m.intervalo, m.duracao].filter(Boolean).join(' · ')
       : (m.posol||m.cat||'');
+    const badge=m._custom?`<span style="font-size:10px;background:var(--amber-light);color:var(--amber);border-radius:4px;padding:1px 5px;margin-left:4px;">pessoal</span>`:'';
     return`<div class="ac-item" data-idx="${i}" data-id="${m.id}" data-tipo="${tipo}" onclick="acSelect('${m.id}','${tipo}')">
-      <span>${highlightMatch(m.nome,q)}</span>
+      <span>${highlightMatch(m.nome,q)}${badge}</span>
       <span>${sub}</span>
     </div>`;
   }).join('');
@@ -1855,8 +1866,8 @@ function highlightMatch(text,q){
   return text.slice(0,idx)+'<strong>'+text.slice(idx,idx+q.length)+'</strong>'+text.slice(idx+q.length);
 }
 function acSelect(id,tipo){
-  const meds=tipo==='ped'?(cacheGet('meds_ped')||[]):(cacheGet('meds_adulto')||[]);
-  const m=meds.find(x=>String(x.id)===String(id));
+  const allMeds=getMedList(tipo);
+  const m=allMeds.find(x=>String(x.id)===String(id));
   if(!m)return;
   document.getElementById('ac-'+tipo).value=m.nome;
   acState[tipo].custom=null;
@@ -1903,19 +1914,21 @@ async function saveNewMedToDb(tipo){
   const posol=tipo==='ped'?v('p-med-posol'):v('a-med-posol');
   if(!nome)return;
   if(!posol){toast('⚠️ Preencha a descrição antes de salvar na base');document.getElementById(tipo==='ped'?'p-med-posol':'a-med-posol').focus();return;}
-  const table=tipo==='ped'?'meds_ped':'meds_adulto';
-  const existing=(cacheGet(table)||[]).find(m=>m.nome.toLowerCase()===nome.toLowerCase());
-  if(existing){toast('Medicamento já existe na base.');dismissSaveBanner(tipo);return;}
+  // Verifica duplicata na base global e na base pessoal
+  const globalList=cacheGet(tipo==='ped'?'meds_ped':'meds_adulto')||[];
+  const customList=cacheGet('meds_custom_'+tipo)||[];
+  const allNames=[...globalList,...customList].map(m=>m.nome.toLowerCase());
+  if(allNames.includes(nome.toLowerCase())){toast('Medicamento já existe na base.');dismissSaveBanner(tipo);return;}
   const sb=await getSB();
+  const {data:{user}}=await sb.auth.getUser();
   const item=tipo==='ped'
-    ?{nome,apresentacao:'',modo:'Tomar',via:'oral',dose_apres_kg:null,dose_max_apres:null,idade_min:null,idade_max:null,intervalo:'8/8h',duracao:''}
-    :{nome,posol,cat:'Outro'};
-  const {data,error}=await sb.from(table).insert(item).select().single();
+    ?{user_id:user.id,tipo,nome,apresentacao:'',modo:'Tomar',via:'oral',dose_apres_kg:null,dose_max_apres:null,idade_min:null,idade_max:null,intervalo:'8/8h',duracao:'',posol}
+    :{user_id:user.id,tipo,nome,posol,cat:'Personalizado'};
+  const {data,error}=await sb.from('meds_custom').insert(item).select().single();
   if(error){toast('Erro ao salvar: '+error.message);return;}
-  // Atualiza cache
-  const updated=[...(cacheGet(table)||[]),data];
-  cacheSet(table,updated);
-  toast('✓ "'+nome+'" salvo na base de dados!');
+  // Atualiza cache local
+  cacheSet('meds_custom_'+tipo,[...customList,data]);
+  toast('✓ "'+nome+'" salvo na base pessoal!');
   dismissSaveBanner(tipo);
 }
 function dismissSaveBanner(tipo){
