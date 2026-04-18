@@ -820,11 +820,12 @@ body.is-admin .admin-only-block{display:block;}
       <div class="fg"><label>CPF</label><input id="prof-cpf" placeholder="000.000.000-00" oninput="fmtCPF(this)"></div>
       <div class="fg"><label>CRM</label><input id="prof-crm" placeholder="Ex: 12345"></div>
     </div>
+    <div class="gr2">
       <div class="fg"><label>Estado (CRM)</label>
         <select id="prof-estado"><option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select>
       </div>
+      <div class="fg"><label>Telefone para contato</label><input id="prof-tel" placeholder="Ex: (91) 99999-9999"></div>
     </div>
-    <div class="fg"><label>Telefone para contato</label><input id="prof-tel" placeholder="Ex: (91) 99999-9999"></div>
   </div>
   <div class="card">
     <div class="card-title">Locais de Atendimento</div>
@@ -1662,28 +1663,43 @@ function initials(n){if(!n)return'?';const p=n.trim().split(' ').filter(Boolean)
 
 // LOCAIS
 function renderLocais(){
-  const locs=ls(KEYS.locais)||[];
+  const locs=cacheGet('locais')||[];
   const el=document.getElementById('locais-list');
+  if(!el) return;
   if(!locs.length){el.innerHTML='<div class="text-muted">Nenhum local cadastrado.</div>';return;}
-  el.innerHTML=locs.map((l,i)=>`<div class="local-card" style="display:flex;align-items:center;gap:12px;">
+  el.innerHTML=locs.map(l=>`<div class="local-card" style="display:flex;align-items:center;gap:12px;">
     <div style="width:44px;height:44px;border-radius:8px;background:var(--bg2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
       ${l.logo?`<img src="${l.logo}" style="width:100%;height:100%;object-fit:contain;">`:`<span style="font-family:'Lora',serif;font-size:16px;font-weight:700;color:var(--ink3);">${l.nome[0].toUpperCase()}</span>`}
     </div>
     <div style="flex:1;">
       <h4>${l.nome}</h4>
-      <p>${l.endereco}${l.cidade?' — '+l.cidade:''}</p>
+      <p>${l.endereco||''}${l.cidade?' — '+l.cidade:''}</p>
       ${l.tel?`<p>Tel: ${l.tel}</p>`:''}
     </div>
-    <button class="local-remove" onclick="removeLocal(${i})">×</button>
+    <button class="local-remove" onclick="removeLocal('${l.id}')">×</button>
   </div>`).join('');
-  populateLocalSelects();
 }
-function saveLocal(){
-  const locs=ls(KEYS.locais)||[];
-  locs.push({nome:v("loc-nome"),endereco:v("loc-end"),cidade:v('loc-cidade'),tel:v('loc-tel'),logo:v('loc-logo')});
-  ss(KEYS.locais,locs);closeModal('modal-local');renderLocais();toast('✓ Local adicionado!');
+async function saveLocal(){
+  const sb=await getSB();
+  const {data:{user}}=await sb.auth.getUser();
+  const item={user_id:user.id,nome:v('loc-nome'),endereco:v('loc-end'),cidade:v('loc-cidade'),tel:v('loc-tel'),logo:v('loc-logo')};
+  if(!item.nome){toast('⚠️ Informe o nome do local');return;}
+  const {data,error}=await sb.from('locais').insert(item).select().single();
+  if(error){toast('Erro: '+error.message);return;}
+  const updated=[...(cacheGet('locais')||[]),data];
+  cacheSet('locais',updated);
+  closeModal('modal-local');
+  renderLocais();
+  toast('✓ Local adicionado!');
 }
-function removeLocal(i){const locs=ls(KEYS.locais)||[];locs.splice(i,1);ss(KEYS.locais,locs);renderLocais();}
+async function removeLocal(id){
+  if(!confirm('Remover este local?'))return;
+  const sb=await getSB();
+  const {error}=await sb.from('locais').delete().eq('id',id);
+  if(error){toast('Erro: '+error.message);return;}
+  cacheSet('locais',(cacheGet('locais')||[]).filter(l=>String(l.id)!==String(id)));
+  renderLocais();
+}
 function populateLocalSelects(){
   const locs=ls(KEYS.locais)||[];
   const lastIdx=ls('ms_last_local')||'';
@@ -1807,20 +1823,24 @@ function acHighlight(tipo,items){items.forEach((el,i)=>el.classList.toggle('focu
 function closeAllAc(){document.querySelectorAll('.ac-dropdown').forEach(d=>d.classList.remove('open'));}
 document.addEventListener('click',e=>{if(!e.target.closest('.ac-wrap'))closeAllAc();});
 
-function saveNewMedToDb(tipo){
+async function saveNewMedToDb(tipo){
   const nome=acState[tipo].custom||(tipo==='ped'?v('ac-ped'):v('ac-adulto'));
   const posol=tipo==='ped'?v('p-med-posol'):v('a-med-posol');
   if(!nome)return;
   if(!posol){toast('⚠️ Preencha a descrição antes de salvar na base');document.getElementById(tipo==='ped'?'p-med-posol':'a-med-posol').focus();return;}
-  const key=tipo==='ped'?KEYS.meds_ped:KEYS.meds_adulto;
-  const meds=ls(key)||[];
-  if(!meds.find(m=>m.nome.toLowerCase()===nome.toLowerCase())){
-    meds.push(tipo==='ped'
-      ?{id:Date.now(),nome,apresentacao:'',modo:'Tomar',via:'oral',doseApresKg:null,doseMaxApres:null,idadeMin:null,idadeMax:null,intervalo:'8/8h',duracao:''}
-      :{id:Date.now(),nome,posol,cat:'Outro'});
-    ss(key,meds);
-    toast('✓ "'+nome+'" salvo na base de dados!');
-  }else toast('Medicamento já existe na base.');
+  const table=tipo==='ped'?'meds_ped':'meds_adulto';
+  const existing=(cacheGet(table)||[]).find(m=>m.nome.toLowerCase()===nome.toLowerCase());
+  if(existing){toast('Medicamento já existe na base.');dismissSaveBanner(tipo);return;}
+  const sb=await getSB();
+  const item=tipo==='ped'
+    ?{nome,apresentacao:'',modo:'Tomar',via:'oral',dose_apres_kg:null,dose_max_apres:null,idade_min:null,idade_max:null,intervalo:'8/8h',duracao:''}
+    :{nome,posol,cat:'Outro'};
+  const {data,error}=await sb.from(table).insert(item).select().single();
+  if(error){toast('Erro ao salvar: '+error.message);return;}
+  // Atualiza cache
+  const updated=[...(cacheGet(table)||[]),data];
+  cacheSet(table,updated);
+  toast('✓ "'+nome+'" salvo na base de dados!');
   dismissSaveBanner(tipo);
 }
 function dismissSaveBanner(tipo){
