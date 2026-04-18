@@ -2354,13 +2354,13 @@ function gerarPDF(data, title){
     </div>` : '';
 
   const footHtml = data.controlado ? `
-    <div class="rx-sh-foot">
+    <hr class="rx-divider-foot">
+    <div class="rx-sh-foot" style="text-align:center;padding:10px 0 8px;">
       <div class="rx-sh-foot-name">${data.perfil.nome||'—'}</div>
       ${data.perfil.espec?`<div class="rx-sh-foot-espec">${data.perfil.espec}</div>`:''}
       ${data.crmStr?`<div class="rx-sh-foot-crm">${data.crmStr}</div>`:''}
       <div class="rx-sh-foot-date">${data.hoje}</div>
-    </div>
-    <hr class="rx-divider-foot">` : `
+    </div>` : `
     <div class="rx-sh-foot">
       <div class="rx-sh-foot-name">${data.perfil.nome||'—'}</div>
       ${data.perfil.espec?`<div class="rx-sh-foot-espec">${data.perfil.espec}</div>`:''}
@@ -2419,26 +2419,39 @@ function gerarPDF(data, title){
       <hr class="rx-divider-light">
       <div class="rx-sh-title">${data.tipoLabel}</div>
       <div class="rx-sh-meds">__MEDS__</div>
-      __OBS____CTRL__
+      __OBS__
       <div class="rx-spacer"></div>
-      ${footHtml}
+      ${data.controlado ? footHtml + '__CTRL__' : footHtml}
     </div></template>`;
 
   const tplCtrl = data.controlado ? `
     <template id="tpl-ctrl"><div class="controlado-box">
-      <div class="ctrl-section-title">IDENTIFICAÇÃO DO COMPRADOR</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-        <div class="cf-field-row"><span class="cf-label">Nome:</span><span class="controlado-field" style="flex:1;"></span></div>
-        <div class="cf-field-row"><span class="cf-label">CPF / RG:</span><span class="controlado-field" style="flex:1;"></span></div>
-        <div class="cf-field-row"><span class="cf-label">Endereço:</span><span class="controlado-field" style="flex:1;"></span></div>
-        <div class="cf-field-row"><span class="cf-label">Telefone:</span><span class="controlado-field" style="flex:1;"></span></div>
-      </div>
-      <div class="ctrl-section-title" style="margin-top:4px;">IDENTIFICAÇÃO DO FORNECEDOR</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div class="cf-field-row"><span class="cf-label">Farmácia:</span><span class="controlado-field" style="flex:1;"></span></div>
-        <div class="cf-field-row"><span class="cf-label">CNPJ / CRF:</span><span class="controlado-field" style="flex:1;"></span></div>
-        <div class="cf-field-row"><span class="cf-label">Endereço:</span><span class="controlado-field" style="flex:1;"></span></div>
-        <div class="cf-field-row"><span class="cf-label">Data:</span><span class="controlado-field" style="width:80px;"></span></div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:0;align-items:stretch;">
+
+        <!-- COMPRADOR (esquerda) -->
+        <div style="padding-right:14px;border-right:1.5px solid #C0392B;">
+          <div class="ctrl-section-title">IDENTIFICAÇÃO DO COMPRADOR</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;">
+            <div class="cf-field-row"><span class="cf-label">Nome:</span><span class="controlado-field" style="flex:1;"></span></div>
+            <div class="cf-field-row"><span class="cf-label">CPF / RG:</span><span class="controlado-field" style="flex:1;"></span></div>
+            <div class="cf-field-row"><span class="cf-label">Endereço:</span><span class="controlado-field" style="flex:1;"></span></div>
+            <div class="cf-field-row"><span class="cf-label">Telefone:</span><span class="controlado-field" style="flex:1;"></span></div>
+          </div>
+        </div>
+
+        <!-- FORNECEDOR (direita) — caixa estilo carimbo -->
+        <div style="padding-left:14px;min-width:170px;display:flex;flex-direction:column;">
+          <div class="ctrl-section-title">IDENTIFICAÇÃO DO FORNECEDOR</div>
+          <div style="flex:1;border:1px solid #bbb;border-radius:4px;padding:6px 8px;display:flex;flex-direction:column;justify-content:flex-end;min-height:52px;">
+            <div style="border-top:1px solid #888;padding-top:4px;margin-top:8px;display:flex;align-items:baseline;gap:8px;">
+              <span class="cf-label" style="font-size:9px;white-space:nowrap;">ASSINATURA DO FARMACÊUTICO</span>
+              <span class="cf-label" style="font-size:9px;">DATA</span>
+              <span class="controlado-field" style="width:20px;"></span><span style="font-size:9px;">/</span>
+              <span class="controlado-field" style="width:20px;"></span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div></template>` : '<template id="tpl-ctrl"></template>';
 
