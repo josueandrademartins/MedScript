@@ -406,6 +406,10 @@ body.is-admin .admin-only-block{display:block;}
       <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
       Base de Dados
     </button>
+    <button class="sb-item" onclick="nav('minha-base',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>
+      Minha Base
+    </button>
     <button class="sb-item" onclick="nav('perfil',this)">
       <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
       Perfil
@@ -778,7 +782,7 @@ body.is-admin .admin-only-block{display:block;}
   </div>
 </div>
 
-<!-- ===== ADMIN ===== -->
+<!-- ===== ADMIN (Base Global — só admin vê no menu) ===== -->
 <div class="page" id="page-admin">
   <div class="page-head"><h2>Base de Dados</h2><p>Medicamentos adultos, pediátricos e tipos de exames</p></div>
   <div class="admin-tabs">
@@ -799,7 +803,46 @@ body.is-admin .admin-only-block{display:block;}
     <div class="card">
       <div class="card-title">Medicamentos Pediátricos</div>
       <div class="search-wrap"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input id="search-ped-db" placeholder="Buscar..." oninput="renderPedTable()"></div>
-      <div style="overflow-x:auto;"><table class="med-table"><thead><tr><th>Medicamento</th><th>Dose (apres./kg)</th><th>Apresentação</th><th>Modo</th><th>Via</th><th>Intervalo</th><th>Duração</th><th>Dose máx.</th><th>Idade</th><th></th></tr></thead><tbody id="ped-tbody"></tbody></table></div>
+
+      <!-- Subsecção: Por Peso -->
+      <div style="margin:16px 0 6px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="width:3px;height:18px;background:var(--accent);border-radius:2px;"></div>
+          <span style="font-size:13px;font-weight:700;color:var(--ink2);">Por Peso</span>
+          <span style="font-size:11.5px;color:var(--ink3);">— dose calculada em ml/kg ou gotas/kg</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="med-table"><thead><tr><th>Medicamento</th><th>Apresentação</th><th>Dose/kg</th><th>Dose máx.</th><th>Via</th><th>Intervalo</th><th>Duração</th><th>Idade</th><th></th></tr></thead>
+          <tbody id="ped-tbody-peso"></tbody></table>
+        </div>
+      </div>
+
+      <!-- Subsecção: Por Idade -->
+      <div style="margin:20px 0 6px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="width:3px;height:18px;background:#8b5cf6;border-radius:2px;"></div>
+          <span style="font-size:13px;font-weight:700;color:var(--ink2);">Por Idade</span>
+          <span style="font-size:11.5px;color:var(--ink3);">— faixas etárias com doses fixas</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="med-table"><thead><tr><th>Medicamento</th><th>Apresentação</th><th>Faixas de dose</th><th>Via</th><th>Duração</th><th></th></tr></thead>
+          <tbody id="ped-tbody-idade"></tbody></table>
+        </div>
+      </div>
+
+      <!-- Subsecção: Dose Fixa -->
+      <div style="margin:20px 0 6px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="width:3px;height:18px;background:#10b981;border-radius:2px;"></div>
+          <span style="font-size:13px;font-weight:700;color:var(--ink2);">Dose Fixa</span>
+          <span style="font-size:11.5px;color:var(--ink3);">— independe de peso ou idade</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="med-table"><thead><tr><th>Medicamento</th><th>Posologia</th><th>Restrição de idade</th><th></th></tr></thead>
+          <tbody id="ped-tbody-fixo"></tbody></table>
+        </div>
+      </div>
+
       <div class="btn-group"><button class="btn btn-soft" onclick="openAddModal('ped')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo medicamento</button></div>
     </div>
   </div>
@@ -822,6 +865,57 @@ body.is-admin .admin-only-block{display:block;}
       <div class="card-title">Tipos de Exame</div>
       <div id="exam-db-list"></div>
       <div class="btn-group"><button class="btn btn-soft" onclick="openModal('modal-exame-db')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo exame</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BASE PESSOAL (todos os usuários) ===== -->
+<div class="page" id="page-minha-base">
+  <div class="page-head"><h2>Minha Base</h2><p>Medicamentos e exames que você adicionou</p></div>
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="switchMinhaBaseTab('adulto',this)">Medicamentos Adulto</button>
+    <button class="admin-tab" onclick="switchMinhaBaseTab('ped',this)">Medicamentos Pediátrico</button>
+    <button class="admin-tab" onclick="switchMinhaBaseTab('exames',this)">Exames</button>
+  </div>
+
+  <!-- Adulto pessoal -->
+  <div id="mb-adulto" class="admin-panel active">
+    <div class="card">
+      <div class="card-title">Meus Medicamentos Adultos</div>
+      <p style="font-size:13px;color:var(--ink3);margin-bottom:14px;">Medicamentos personalizados disponíveis apenas para você nas receitas.</p>
+      <div style="overflow-x:auto;"><table class="med-table"><thead><tr><th>Medicamento</th><th>Posologia</th><th>Categoria</th><th></th></tr></thead><tbody id="mb-adulto-tbody"></tbody></table></div>
+      <div id="mb-adulto-empty" style="text-align:center;color:var(--ink3);font-size:13px;padding:24px 0;display:none;">Nenhum medicamento personalizado ainda.</div>
+    </div>
+  </div>
+
+  <!-- Pediátrico pessoal -->
+  <div id="mb-ped" class="admin-panel">
+    <div class="card">
+      <div class="card-title">Meus Medicamentos Pediátricos</div>
+      <p style="font-size:13px;color:var(--ink3);margin-bottom:14px;">Salvos da receita pediátrica ou adicionados manualmente.</p>
+
+      <!-- subsecção dose fixa pessoal -->
+      <div style="margin:4px 0 6px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="width:3px;height:18px;background:#10b981;border-radius:2px;"></div>
+          <span style="font-size:13px;font-weight:700;color:var(--ink2);">Dose Fixa</span>
+        </div>
+        <div style="overflow-x:auto;"><table class="med-table"><thead><tr><th>Medicamento</th><th>Posologia</th><th>Restrição de idade</th><th></th></tr></thead><tbody id="mb-ped-fixo-tbody"></tbody></table></div>
+        <div id="mb-ped-fixo-empty" style="color:var(--ink3);font-size:13px;padding:8px 0 16px;display:none;">Nenhum medicamento de dose fixa.</div>
+      </div>
+
+      <div class="btn-group" style="margin-top:8px;">
+        <button class="btn btn-soft" onclick="openAddModalMinhaPed()"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo medicamento pediátrico</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exames pessoais -->
+  <div id="mb-exames" class="admin-panel">
+    <div class="card">
+      <div class="card-title">Meus Tipos de Exame</div>
+      <div id="mb-exames-list"></div>
+      <div id="mb-exames-empty" style="text-align:center;color:var(--ink3);font-size:13px;padding:24px 0;display:none;">Nenhum exame personalizado ainda.</div>
     </div>
   </div>
 </div>
@@ -1764,6 +1858,7 @@ function nav(id,btn){
   if(btn) btn.classList.add('active');
   closeAllAc();
   if(id==='admin'){if(!isAdmin()){toast('⚠️ Acesso restrito');return;}renderAdultoTable();renderPedTable();renderInjTable();renderExameDb();}
+  if(id==='minha-base'){renderMinhaBase();}
   if(id==='usuarios'){if(!isAdmin()){toast('⚠️ Acesso restrito');return;}renderUsersList();}
   if(id==='rx-adulto'){populateLocalSelects();}
   if(id==='rx-ped'){updatePedMedOptions();populateLocalSelects();}
@@ -2000,7 +2095,6 @@ async function saveNewMedToDb(tipo){
   const posol=tipo==='ped'?v('p-med-posol'):v('a-med-posol');
   if(!nome)return;
   if(!posol){toast('⚠️ Preencha a descrição antes de salvar na base');document.getElementById(tipo==='ped'?'p-med-posol':'a-med-posol').focus();return;}
-  // Verifica duplicata na base global e na base pessoal
   const globalList=cacheGet(tipo==='ped'?'meds_ped':'meds_adulto')||[];
   const customList=cacheGet('meds_custom_'+tipo)||[];
   const allNames=[...globalList,...customList].map(m=>m.nome.toLowerCase());
@@ -2008,14 +2102,182 @@ async function saveNewMedToDb(tipo){
   const sb=await getSB();
   const {data:{user}}=await sb.auth.getUser();
   const item=tipo==='ped'
-    ?{user_id:user.id,tipo,nome,apresentacao:'',modo:'Tomar',via:'oral',dose_apres_kg:null,dose_max_apres:null,idade_min:null,idade_max:null,intervalo:'8/8h',duracao:'',posol}
+    ?{user_id:user.id,tipo,nome,
+      tipo_dose:'fixo', dose_fixa:posol,
+      apresentacao:null,modo:null,via:null,
+      dose_apres_kg:null,dose_max_apres:null,
+      idade_min:null,idade_max:null,
+      intervalo:null,duracao:null}
     :{user_id:user.id,tipo,nome,posol,cat:'Personalizado'};
   const {data,error}=await sb.from('meds_custom').insert(item).select().single();
   if(error){toast('Erro ao salvar: '+error.message);return;}
-  // Atualiza cache local
   cacheSet('meds_custom_'+tipo,[...customList,data]);
-  toast('✓ "'+nome+'" salvo na base pessoal!');
+  toast('✓ "'+nome+'" salvo na sua base pessoal!');
   dismissSaveBanner(tipo);
+}
+
+// ── MINHA BASE ──────────────────────────────────────────────
+function switchMinhaBaseTab(tab,btn){
+  document.querySelectorAll('#page-minha-base .admin-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#page-minha-base .admin-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('mb-'+tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+async function renderMinhaBase(){
+  const sb=await getSB();
+  const {data:{user}}=await sb.auth.getUser();
+  const {data}=await sb.from('meds_custom').select('*').eq('user_id',user.id).order('nome');
+  const all=data||[];
+  cacheSet('meds_custom_adulto',all.filter(m=>m.tipo==='adulto'));
+  cacheSet('meds_custom_ped',all.filter(m=>m.tipo==='ped'));
+
+  // ── adulto
+  const adultos=all.filter(m=>m.tipo==='adulto');
+  const adTbody=document.getElementById('mb-adulto-tbody');
+  const adEmpty=document.getElementById('mb-adulto-empty');
+  if(adultos.length){
+    adEmpty.style.display='none';
+    adTbody.innerHTML=adultos.map(m=>`<tr>
+      <td><strong>${m.nome}</strong></td>
+      <td>${m.posol||'—'}</td>
+      <td><span style="font-size:11px;background:var(--bg2);padding:2px 8px;border-radius:6px;">${m.cat||'Personalizado'}</span></td>
+      <td><div style="display:flex;gap:4px;">
+        <button class="btn btn-sm btn-outline" onclick="editCustomMed('${m.id}','adulto')">Editar</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteCustomMed('${m.id}','adulto')">Excluir</button>
+      </div></td></tr>`).join('');
+  } else { adEmpty.style.display='block'; adTbody.innerHTML=''; }
+
+  // ── pediátrico (só dose fixa por enquanto)
+  const peds=all.filter(m=>m.tipo==='ped');
+  const pedFixo=peds.filter(m=>(m.tipo_dose||'fixo')==='fixo');
+  const pfTbody=document.getElementById('mb-ped-fixo-tbody');
+  const pfEmpty=document.getElementById('mb-ped-fixo-empty');
+  if(pedFixo.length){
+    pfEmpty.style.display='none';
+    pfTbody.innerHTML=pedFixo.map(m=>`<tr>
+      <td><strong>${m.nome}</strong></td>
+      <td style="max-width:260px;white-space:pre-wrap;">${m.dose_fixa||m.posol||'—'}</td>
+      <td style="font-size:12px;">${idadeStr(m.idade_min,m.idade_max)}</td>
+      <td><div style="display:flex;gap:4px;">
+        <button class="btn btn-sm btn-outline" onclick="editCustomMedPed('${m.id}')">Editar</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteCustomMed('${m.id}','ped')">Excluir</button>
+      </div></td></tr>`).join('');
+  } else { pfEmpty.style.display='block'; pfTbody.innerHTML=''; }
+
+  // ── exames (reutiliza tabela de exames_db mas filtrada por user)
+  const {data:exData}=await sb.from('exames_db').select('*').eq('user_id',user.id).order('nome').catch(()=>({data:[]}));
+  const exs=exData||[];
+  const exList=document.getElementById('mb-exames-list');
+  const exEmpty=document.getElementById('mb-exames-empty');
+  if(exs.length){
+    exEmpty.style.display='none';
+    const groups={};exs.forEach(e=>{if(!groups[e.grupo])groups[e.grupo]=[];groups[e.grupo].push(e);});
+    exList.innerHTML=Object.entries(groups).map(([g,items])=>`
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">${g}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;">${items.map(e=>`
+          <div style="display:flex;align-items:center;gap:5px;background:var(--bg2);border-radius:8px;padding:5px 11px;font-size:13px;">
+            ${e.nome}
+            <button onclick="deleteExameDb('${e.id}')" style="background:none;border:none;cursor:pointer;color:var(--ink3);padding:0 2px;font-size:13px;" title="Excluir">✕</button>
+          </div>`).join('')}</div></div>`).join('');
+  } else { exEmpty.style.display='block'; exList.innerHTML=''; }
+}
+
+function openAddModalMinhaPed(){
+  // Abre o modal ped no modo dose-fixa direto
+  mpResetModal();
+  document.getElementById('modal-ped-title').textContent='Novo Medicamento Pediátrico Pessoal';
+  mpSelecionaTipo('fixo');
+  document.getElementById('mp-btn-voltar').style.display='none';
+  // override save to use meds_custom
+  document.getElementById('mp-btn-salvar').setAttribute('onclick','saveCustomMedPed()');
+  openModal('modal-ped');
+}
+
+async function saveCustomMedPed(){
+  const nome=v('mp-nome-fixo');
+  const descricao=v('mp-descricao-fixo');
+  if(!nome){toast('⚠️ Informe o nome');return;}
+  const sb=await getSB();
+  const {data:{user}}=await sb.auth.getUser();
+  const idMinEl=document.getElementById('mp-idade-min-fixo');
+  const idMaxEl=document.getElementById('mp-idade-max-fixo');
+  const item={
+    user_id:user.id, tipo:'ped', tipo_dose:'fixo',
+    nome, dose_fixa:descricao,
+    idade_min:idMinEl.value!==''?parseFloat(idMinEl.value):null,
+    idade_max:idMaxEl.value!==''?parseFloat(idMaxEl.value):null,
+    apresentacao:null,modo:null,via:null,
+    dose_apres_kg:null,dose_max_apres:null,
+    faixas_idade:null,faixas_fixo:null,
+    intervalo:null,duracao:null,
+  };
+  const editId=document.getElementById('mp-edit-id').value||null;
+  let error;
+  const {error:e}=editId
+    ? await sb.from('meds_custom').update(item).eq('id',editId)
+    : await sb.from('meds_custom').insert(item);
+  error=e;
+  if(error){toast('Erro: '+error.message);return;}
+  document.getElementById('mp-btn-salvar').setAttribute('onclick','saveMedPed()');
+  closeModal('modal-ped');
+  renderMinhaBase();
+  cacheSet('meds_custom_ped',null);
+  toast('✓ Medicamento salvo na base pessoal!');
+}
+
+async function editCustomMed(id,tipo){
+  const list=cacheGet('meds_custom_'+tipo)||[];
+  const m=list.find(x=>String(x.id)===String(id));if(!m)return;
+  // Reuse adulto modal fields
+  document.getElementById('ma-edit-id').value=m.id;
+  document.getElementById('ma-nome').value=m.nome||'';
+  document.getElementById('ma-posol').value=m.posol||'';
+  document.getElementById('ma-cat').value=m.cat||'Personalizado';
+  document.getElementById('modal-adulto-title').textContent='Editar Medicamento Pessoal';
+  // Override save button to use meds_custom table
+  document.getElementById('modal-adulto').querySelector('.btn-primary').setAttribute('onclick',`saveCustomAdulto('${m.id}')`);
+  openModal('modal-adulto');
+}
+
+async function saveCustomAdulto(id){
+  const nome=v('ma-nome');const posol=v('ma-posol');const cat=v('ma-cat');
+  if(!nome){toast('⚠️ Informe o nome');return;}
+  const sb=await getSB();
+  const {error}=await sb.from('meds_custom').update({nome,posol,cat}).eq('id',id);
+  if(error){toast('Erro: '+error.message);return;}
+  document.getElementById('modal-adulto').querySelector('.btn-primary').setAttribute('onclick','saveMedAdulto()');
+  closeModal('modal-adulto');
+  cacheSet('meds_custom_adulto',null);
+  renderMinhaBase();
+  toast('✓ Medicamento atualizado!');
+}
+
+async function editCustomMedPed(id){
+  const list=cacheGet('meds_custom_ped')||[];
+  const m=list.find(x=>String(x.id)===String(id));if(!m)return;
+  mpResetModal();
+  document.getElementById('mp-edit-id').value=m.id;
+  document.getElementById('modal-ped-title').textContent='Editar Medicamento Pediátrico Pessoal';
+  mpSelecionaTipo('fixo');
+  document.getElementById('mp-nome-fixo').value=m.nome||'';
+  document.getElementById('mp-descricao-fixo').value=m.dose_fixa||m.posol||'';
+  document.getElementById('mp-idade-min-fixo').value=m.idade_min!=null?m.idade_min:'';
+  document.getElementById('mp-idade-max-fixo').value=m.idade_max!=null?m.idade_max:'';
+  document.getElementById('mp-btn-voltar').style.display='none';
+  document.getElementById('mp-btn-salvar').setAttribute('onclick','saveCustomMedPed()');
+  openModal('modal-ped');
+}
+
+async function deleteCustomMed(id,tipo){
+  if(!confirm('Excluir este medicamento da sua base pessoal?'))return;
+  const sb=await getSB();
+  const {error}=await sb.from('meds_custom').delete().eq('id',id);
+  if(error){toast('Erro: '+error.message);return;}
+  cacheSet('meds_custom_'+tipo,null);
+  renderMinhaBase();
+  toast('✓ Removido da base pessoal.');
 }
 function dismissSaveBanner(tipo){
   document.getElementById(tipo==='ped'?'p-save-banner':'a-save-banner').classList.remove('show');
@@ -2791,21 +3053,53 @@ async function renderPedTable(){
   const {data}=await sb.from('meds_ped').select('*').order('nome');
   cacheSet('meds_ped',data||[]);
   const meds=(data||[]).filter(m=>!q||m.nome.toLowerCase().includes(q));
-  document.getElementById('ped-tbody').innerHTML=meds.map(m=>`<tr>
-    <td><strong>${m.nome}</strong></td>
-    <td>${m.dose_apres_kg!=null?m.dose_apres_kg+' '+(m.apresentacao||'')+'/kg':'—'}</td>
-    <td>${m.apresentacao||'—'}</td>
-    <td>${m.modo||'—'}</td>
-    <td>${m.via||'—'}</td>
-    <td>${m.intervalo||'—'}</td>
-    <td>${m.duracao||'—'}</td>
-    <td>${m.dose_max_apres!=null?m.dose_max_apres+' '+(m.apresentacao||''):'—'}</td>
-    <td style="font-size:12px;">${idadeStr(m.idade_min,m.idade_max)}</td>
-    <td><div style="display:flex;gap:4px;">
-      <button class="btn btn-sm btn-outline" onclick="editMedPed('${m.id}')">Editar</button>
-      <button class="btn btn-sm btn-danger" onclick="deleteMedPed('${m.id}')">Excluir</button>
-    </div></td>
-  </tr>`).join('');
+
+  const byTipo={peso:[],idade:[],fixo:[]};
+  meds.forEach(m=>{ const t=m.tipo_dose||'peso'; if(byTipo[t])byTipo[t].push(m); else byTipo.fixo.push(m); });
+
+  const btnsPed=(id)=>`<div style="display:flex;gap:4px;">
+    <button class="btn btn-sm btn-outline" onclick="editMedPed('${id}')">Editar</button>
+    <button class="btn btn-sm btn-danger" onclick="deleteMedPed('${id}')">Excluir</button></div>`;
+
+  document.getElementById('ped-tbody-peso').innerHTML=byTipo.peso.length
+    ? byTipo.peso.map(m=>`<tr>
+        <td><strong>${m.nome}</strong></td>
+        <td>${m.apresentacao||'—'}</td>
+        <td>${m.dose_apres_kg!=null?m.dose_apres_kg+' '+( m.apresentacao||'')+'/kg':'—'}</td>
+        <td>${m.dose_max_apres!=null?m.dose_max_apres+' '+(m.apresentacao||''):'—'}</td>
+        <td>${m.via||'—'}</td>
+        <td>${m.intervalo||'—'}</td>
+        <td>${m.duracao||'—'}</td>
+        <td style="font-size:12px;">${idadeStr(m.idade_min,m.idade_max)}</td>
+        <td>${btnsPed(m.id)}</td></tr>`).join('')
+    : '<tr><td colspan="9" style="color:var(--ink3);text-align:center;padding:12px;">Nenhum</td></tr>';
+
+  document.getElementById('ped-tbody-idade').innerHTML=byTipo.idade.length
+    ? byTipo.idade.map(m=>{
+        const faixas=Array.isArray(m.faixas_idade)?m.faixas_idade:[];
+        const faixaStr=faixas.map(f=>{
+          const min=f.idade_min!=null?f.idade_min+'a':'';
+          const max=f.idade_max!=null?f.idade_max+'a':'';
+          const fx=min&&max?`${min}–${max}`:min||max||'qualquer';
+          return `<span style="display:inline-block;background:var(--bg2);border-radius:6px;padding:2px 7px;font-size:11.5px;margin:1px;">${fx}: ${f.dose}</span>`;
+        }).join(' ');
+        return `<tr>
+          <td><strong>${m.nome}</strong></td>
+          <td>${m.apresentacao||'—'}</td>
+          <td>${faixaStr||'—'}</td>
+          <td>${m.via||'—'}</td>
+          <td>${m.duracao||'—'}</td>
+          <td>${btnsPed(m.id)}</td></tr>`;
+      }).join('')
+    : '<tr><td colspan="6" style="color:var(--ink3);text-align:center;padding:12px;">Nenhum</td></tr>';
+
+  document.getElementById('ped-tbody-fixo').innerHTML=byTipo.fixo.length
+    ? byTipo.fixo.map(m=>`<tr>
+        <td><strong>${m.nome}</strong></td>
+        <td style="max-width:280px;white-space:pre-wrap;">${m.dose_fixa||'—'}</td>
+        <td style="font-size:12px;">${idadeStr(m.idade_min,m.idade_max)}</td>
+        <td>${btnsPed(m.id)}</td></tr>`).join('')
+    : '<tr><td colspan="4" style="color:var(--ink3);text-align:center;padding:12px;">Nenhum</td></tr>';
 }
 async function saveMedPed(){
   const editId=document.getElementById('mp-edit-id').value||null;
