@@ -1100,11 +1100,6 @@ async function dbDelete(table,id){
   delete _cache[table];
 }
 
-// ── Compatibilidade: ls/ss ainda usados para config local ──
-// Apenas para: users (gestão local de auth), sessão de UI
-function ls(k){try{return JSON.parse(localStorage.getItem(k))||null;}catch(e){return null;}}
-function ss(k,val){localStorage.setItem(k,JSON.stringify(val));}
-function v(id){return(document.getElementById(id)||{}).value||'';}
 
 // ── AUTH (Supabase) ──────────────────────────────────────────
 // Role do usuário fica em profiles.role (admin | user)
@@ -1302,6 +1297,7 @@ function ss(k,val){
   // Dados reais são salvos via dbUpsert
   localStorage.setItem(k,JSON.stringify(val));
 }
+function v(id){return(document.getElementById(id)||{}).value||'';}
 
 // ── PERFIL via Supabase ──────────────────────────────────────
 async function loadPerfilFromDB(){
