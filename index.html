@@ -2364,78 +2364,151 @@ function calcPedDose(){
   recalcPedMeds();
 }
 
-function recalcPedMeds(){
-  const peso=parseFloat(document.getElementById('p-peso').value);
-  const allMeds=ls(KEYS.meds_ped)||[];
-  let changed=false;
-  pMeds=pMeds.map(entry=>{
-    if(!entry.medId) return entry; // custom — leave as-is
-    const m=allMeds.find(x=>x.id===entry.medId);
-    if(!m) return entry;
-    const apres=m.apresentacao||'';
-    const modo=m.modo||'Tomar';
-    const via=m.via?` (${m.via})`:'';
-    const intervalo=m.intervalo||'';
-    const duracao=m.duracao||'';
-    let desc;
-    if(m.dose_apres_kg&&!isNaN(peso)&&peso>0){
-      let dose=peso*m.dose_apres_kg, ajust=false;
-      if(m.dose_max_apres!=null&&dose>m.dose_max_apres){dose=m.dose_max_apres;ajust=true;}
-      const isGotas=apres==='gotas';
-      const doseRounded=isGotas?Math.round(dose):parseFloat(dose.toFixed(1));
-      const doseStr=doseRounded+' '+apres;
-      desc=`${modo} ${doseStr}${via}`;
+// ── Constrói posologia pediátrica conforme tipo_dose ──────────
+function buildPedPosol(m, peso, idade){
+  const tipo  = m.tipo_dose || 'peso';
+  const apres = m.apresentacao || '';
+  const modo  = m.modo  || 'Dar';
+  const via   = m.via   ? ` ${m.via}` : '';
+  const intv  = m.intervalo || '';
+  const dur   = m.duracao   || '';
+
+  // sufixo comum: de [intervalo] por [duração]
+  function sufixo(iv, dr){
+    let s = '';
+    if(iv) s += ` de ${iv}`;
+    if(dr) s += ` por ${dr}`;
+    return s;
+  }
+
+  // TIPO: PESO ─ [modo] [dose] [apres] [via] de [intervalo] por [duração]
+  if(tipo === 'peso'){
+    if(m.dose_apres_kg && !isNaN(peso) && peso > 0){
+      let dose = peso * m.dose_apres_kg, ajust = false;
+      if(m.dose_max_apres != null && dose > m.dose_max_apres){ dose = m.dose_max_apres; ajust = true; }
+      const isGotas = apres === 'gotas';
+      const doseNum = isGotas ? Math.round(dose) : parseFloat(dose.toFixed(1));
+      const doseStr = `${doseNum} ${apres}`;
+      return {
+        posol: `${modo} ${doseStr}${via ? ' ' + via.trim() : ''}${sufixo(intv, dur)}`,
+        doseStr,
+        doseDetail: `${peso}kg × ${m.dose_apres_kg} ${apres}/kg = ${doseNum} ${apres}` + (ajust ? ` → máx ${m.dose_max_apres} ${apres}` : ''),
+        tipo
+      };
     } else {
-      desc=`${modo} ___ ${apres}${via}`;
+      return {
+        posol: `${modo} ___ ${apres}${via ? ' ' + via.trim() : ''}${sufixo(intv, dur)}`,
+        doseStr: null, doseDetail: null, tipo
+      };
     }
-    if(intervalo) desc+=` de ${intervalo}`;
-    if(duracao) desc+=` por ${duracao}`;
-    changed=true;
-    return {...entry, posol:desc};
+  }
+
+  // TIPO: IDADE ─ [modo] [dose da faixa etária] [apres] [via] de [intervalo faixa] por [duração]
+  if(tipo === 'idade'){
+    const faixas = Array.isArray(m.faixas_idade) ? m.faixas_idade : [];
+    let faixa = null;
+    if(!isNaN(idade) && idade > 0){
+      faixa = faixas.find(f => {
+        const ok_min = (f.idade_min == null || idade >= Number(f.idade_min));
+        const ok_max = (f.idade_max == null || idade <  Number(f.idade_max));
+        return ok_min && ok_max;
+      });
+    }
+    if(faixa){
+      const iv_faixa = faixa.intervalo || intv; // faixa pode ter intervalo próprio
+      return {
+        posol: `${modo} ${faixa.dose} ${apres}${via ? ' ' + via.trim() : ''}${sufixo(iv_faixa, dur)}`,
+        doseStr: faixa.dose, doseDetail: null, tipo,
+        faixaTodas: faixas
+      };
+    } else {
+      // sem idade preenchida ou fora das faixas — mostrar todas as opções
+      const resumo = faixas.map(f => {
+        const amin = f.idade_min != null ? `${f.idade_min}a` : '';
+        const amax = f.idade_max != null ? `${f.idade_max}a` : '';
+        const label = amin && amax ? `${amin}–${amax}` : amin || amax || 'qualquer';
+        return `${label}: ${f.dose}`;
+      }).join(' | ');
+      return {
+        posol: `${modo} ___ ${apres}${via ? ' ' + via.trim() : ''}${sufixo(intv, dur)}`,
+        doseStr: null, doseDetail: resumo || null, tipo,
+        faixaTodas: faixas
+      };
+    }
+  }
+
+  // TIPO: FIXO ─ lê diretamente dose_fixa (descrição livre)
+  if(tipo === 'fixo'){
+    const texto = m.dose_fixa || m.posol || '';
+    return { posol: texto, doseStr: null, doseDetail: null, tipo };
+  }
+
+  return { posol: '', doseStr: null, doseDetail: null, tipo };
+}
+
+function recalcPedMeds(){
+  const peso  = parseFloat(document.getElementById('p-peso').value);
+  const idade = parseFloat(document.getElementById('p-idade').value);
+  const allMeds = ls(KEYS.meds_ped) || [];
+  let changed = false;
+  pMeds = pMeds.map(entry => {
+    if(!entry.medId) return entry;
+    const m = allMeds.find(x => x.id === entry.medId);
+    if(!m) return entry;
+    const r = buildPedPosol(m, peso, idade);
+    changed = true;
+    return {...entry, posol: r.posol};
   });
   if(changed) renderMedList('ped');
 }
+
 function calcPedDoseFromMed(m){
-  const peso=parseFloat(document.getElementById('p-peso').value);
-  const idade=parseFloat(document.getElementById('p-idade').value);
-  const warnEl=document.getElementById('p-restrict-warn');
-  warnEl.style.display='none';
+  const peso  = parseFloat(document.getElementById('p-peso').value);
+  const idade = parseFloat(document.getElementById('p-idade').value);
+
+  // ── alerta de restrição de idade/peso ──
+  const warnEl = document.getElementById('p-restrict-warn');
+  warnEl.style.display = 'none';
   if(!isNaN(idade)){
-    if((m.idade_min!==null&&idade<m.idade_min)||(m.idade_max!==null&&idade>m.idade_max)){
-      warnEl.style.display='flex';
-      document.getElementById('p-restrict-text').textContent=`Atenção: ${m.nome} indicado para ${idadeStr(m.idade_min,m.idade_max)}.`;
+    if((m.idade_min != null && idade < m.idade_min) || (m.idade_max != null && idade > m.idade_max)){
+      warnEl.style.display = 'flex';
+      document.getElementById('p-restrict-text').textContent =
+        `Atenção: ${m.nome} indicado para ${idadeStr(m.idade_min, m.idade_max)}.`;
     }
   }
-  const box=document.getElementById('p-dose-box');
-  const apres=m.apresentacao||'';
-  const intervalo=m.intervalo||'';
-  const duracao=m.duracao||'';
-  if(m.dose_apres_kg&&!isNaN(peso)){
-    let dose=peso*m.dose_apres_kg,ajust=false;
-    if(m.dose_max_apres!=null&&dose>m.dose_max_apres){dose=m.dose_max_apres;ajust=true;}
-    const isGotas=apres==='gotas';
-    const doseRounded=isGotas?Math.round(dose):parseFloat(dose.toFixed(1));
-    const doseStr=doseRounded+' '+apres;
-    box.style.display='block';
-    document.getElementById('p-dose-val').textContent=doseStr;
-    document.getElementById('p-dose-detail').textContent=
-      `${peso}kg × ${m.dose_apres_kg} ${apres}/kg = ${isGotas?Math.round(peso*m.dose_apres_kg):+(peso*m.dose_apres_kg).toFixed(1)} ${apres}`+
-      (ajust?` → máx ${m.dose_max_apres} ${apres}`:'');
-    const modo=m.modo||'Tomar';
-    const via=m.via?` (${m.via})`:'';
-    let desc=`${modo} ${doseStr}${via}`;
-    if(intervalo) desc+=` de ${intervalo}`;
-    if(duracao) desc+=` por ${duracao}`;
-    document.getElementById('p-med-posol').value=desc;
-  } else {
-    box.style.display='none';
-    const modo=m.modo||'Tomar';
-    const via=m.via?` (${m.via})`:'';
-    let desc=`${modo} ___ ${apres}${via}`;
-    if(intervalo) desc+=` de ${intervalo}`;
-    if(duracao) desc+=` por ${duracao}`;
-    document.getElementById('p-med-posol').value=desc;
+  if(m.peso_min != null && !isNaN(peso) && peso < m.peso_min){
+    warnEl.style.display = 'flex';
+    document.getElementById('p-restrict-text').textContent =
+      `Atenção: ${m.nome} indicado para peso ≥ ${m.peso_min}kg.`;
   }
+
+  const r = buildPedPosol(m, peso, idade);
+  const box = document.getElementById('p-dose-box');
+
+  if(r.tipo === 'peso' && r.doseStr){
+    box.style.display = 'block';
+    document.getElementById('p-dose-val').textContent = r.doseStr;
+    document.getElementById('p-dose-detail').textContent = r.doseDetail || '';
+  } else if(r.tipo === 'idade' && r.doseStr){
+    box.style.display = 'block';
+    document.getElementById('p-dose-val').textContent = r.doseStr;
+    // mostra tabela resumida de faixas no detalhe
+    const faixas = r.faixaTodas || [];
+    const resumo = faixas.map(f => {
+      const amin = f.idade_min != null ? `${f.idade_min}a` : '0';
+      const amax = f.idade_max != null ? `${f.idade_max}a` : '∞';
+      return `${amin}–${amax}: ${f.dose}`;
+    }).join(' | ');
+    document.getElementById('p-dose-detail').textContent = resumo;
+  } else if(r.tipo === 'idade' && !r.doseStr && r.doseDetail){
+    box.style.display = 'block';
+    document.getElementById('p-dose-val').textContent = 'Faixas etárias:';
+    document.getElementById('p-dose-detail').textContent = r.doseDetail;
+  } else {
+    box.style.display = r.tipo === 'fixo' ? 'none' : 'none';
+  }
+
+  document.getElementById('p-med-posol').value = r.posol;
 }
 function idadeStr(min,max){
   if(!min&&!max)return'todas as idades';
