@@ -1478,8 +1478,8 @@ function getMedList(tipo){
 function pedAgeFilter(m){
   const idade=parseFloat(document.getElementById('p-idade').value);
   if(isNaN(idade))return true;
-  if(m.idadeMin!==null&&idade<m.idadeMin)return false;
-  if(m.idadeMax!==null&&idade>m.idadeMax)return false;
+  if(m.idade_min!==null&&idade<m.idade_min)return false;
+  if(m.idade_max!==null&&idade>m.idade_max)return false;
   return true;
 }
 function acFilter(tipo){
@@ -1680,9 +1680,9 @@ function recalcPedMeds(){
     const intervalo=m.intervalo||'';
     const duracao=m.duracao||'';
     let desc;
-    if(m.doseApresKg&&!isNaN(peso)&&peso>0){
-      let dose=peso*m.doseApresKg, ajust=false;
-      if(m.doseMaxApres!=null&&dose>m.doseMaxApres){dose=m.doseMaxApres;ajust=true;}
+    if(m.dose_apres_kg&&!isNaN(peso)&&peso>0){
+      let dose=peso*m.dose_apres_kg, ajust=false;
+      if(m.dose_max_apres!=null&&dose>m.dose_max_apres){dose=m.dose_max_apres;ajust=true;}
       const isGotas=apres==='gotas';
       const doseRounded=isGotas?Math.round(dose):parseFloat(dose.toFixed(1));
       const doseStr=doseRounded+' '+apres;
@@ -1703,26 +1703,26 @@ function calcPedDoseFromMed(m){
   const warnEl=document.getElementById('p-restrict-warn');
   warnEl.style.display='none';
   if(!isNaN(idade)){
-    if((m.idadeMin!==null&&idade<m.idadeMin)||(m.idadeMax!==null&&idade>m.idadeMax)){
+    if((m.idade_min!==null&&idade<m.idade_min)||(m.idade_max!==null&&idade>m.idade_max)){
       warnEl.style.display='flex';
-      document.getElementById('p-restrict-text').textContent=`Atenção: ${m.nome} indicado para ${idadeStr(m.idadeMin,m.idadeMax)}.`;
+      document.getElementById('p-restrict-text').textContent=`Atenção: ${m.nome} indicado para ${idadeStr(m.idade_min,m.idade_max)}.`;
     }
   }
   const box=document.getElementById('p-dose-box');
   const apres=m.apresentacao||'';
   const intervalo=m.intervalo||'';
   const duracao=m.duracao||'';
-  if(m.doseApresKg&&!isNaN(peso)){
-    let dose=peso*m.doseApresKg,ajust=false;
-    if(m.doseMaxApres!=null&&dose>m.doseMaxApres){dose=m.doseMaxApres;ajust=true;}
+  if(m.dose_apres_kg&&!isNaN(peso)){
+    let dose=peso*m.dose_apres_kg,ajust=false;
+    if(m.dose_max_apres!=null&&dose>m.dose_max_apres){dose=m.dose_max_apres;ajust=true;}
     const isGotas=apres==='gotas';
     const doseRounded=isGotas?Math.round(dose):parseFloat(dose.toFixed(1));
     const doseStr=doseRounded+' '+apres;
     box.style.display='block';
     document.getElementById('p-dose-val').textContent=doseStr;
     document.getElementById('p-dose-detail').textContent=
-      `${peso}kg × ${m.doseApresKg} ${apres}/kg = ${isGotas?Math.round(peso*m.doseApresKg):+(peso*m.doseApresKg).toFixed(1)} ${apres}`+
-      (ajust?` → máx ${m.doseMaxApres} ${apres}`:'');
+      `${peso}kg × ${m.dose_apres_kg} ${apres}/kg = ${isGotas?Math.round(peso*m.dose_apres_kg):+(peso*m.dose_apres_kg).toFixed(1)} ${apres}`+
+      (ajust?` → máx ${m.dose_max_apres} ${apres}`:'');
     const modo=m.modo||'Tomar';
     const via=m.via?` (${m.via})`:'';
     let desc=`${modo} ${doseStr}${via}`;
@@ -2221,76 +2221,105 @@ function switchAdminTab(tab,btn){
   document.querySelectorAll('#page-admin .admin-tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('admin-'+tab).classList.add('active');btn.classList.add('active');
 }
-function renderAdultoTable(){
+// ── ADMIN: MEDICAMENTOS ADULTO ──
+async function renderAdultoTable(){
   const q=(document.getElementById('search-adulto')||{value:''}).value.toLowerCase();
-  const meds=(ls(KEYS.meds_adulto)||[]).filter(m=>!q||m.nome.toLowerCase().includes(q));
+  const sb=await getSB();
+  const {data}=await sb.from('meds_adulto').select('*').order('nome');
+  cacheSet('meds_adulto',data||[]);
+  const meds=(data||[]).filter(m=>!q||m.nome.toLowerCase().includes(q));
   const colors={Antibiótico:'teal',Analgésico:'amber','Anti-inflamatório':'amber','Anti-hipertensivo':'green',Antidiabético:'green',Gastroprotetor:'teal'};
-  document.getElementById('adulto-tbody').innerHTML=meds.map(m=>`<tr><td><strong>${m.nome}</strong></td><td style="font-size:12.5px;color:var(--ink2);">${m.posol}</td><td><span class="badge badge-${colors[m.cat]||'teal'}">${m.cat}</span></td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline" onclick="editMedAdulto(${m.id})">Editar</button><button class="btn btn-sm btn-danger" onclick="deleteMedAdulto(${m.id})">Excluir</button></div></td></tr>`).join('');
+  document.getElementById('adulto-tbody').innerHTML=meds.map(m=>`<tr>
+    <td><strong>${m.nome}</strong></td>
+    <td style="font-size:12.5px;color:var(--ink2);">${m.posol||''}</td>
+    <td><span class="badge badge-${colors[m.cat]||'teal'}">${m.cat||''}</span></td>
+    <td><div style="display:flex;gap:4px;">
+      <button class="btn btn-sm btn-outline" onclick="editMedAdulto('${m.id}')">Editar</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteMedAdulto('${m.id}')">Excluir</button>
+    </div></td>
+  </tr>`).join('');
 }
-function saveMedAdulto(){
-  const meds=ls(KEYS.meds_adulto)||[];
-  const editId=parseInt(document.getElementById('ma-edit-id').value)||null;
-  const item={id:editId||Date.now(),nome:v('ma-nome'),posol:v('ma-posol'),cat:v('ma-cat')};
-  if(editId){const i=meds.findIndex(m=>m.id===editId);if(i>=0)meds[i]=item;}else meds.push(item);
-  ss(KEYS.meds_adulto,meds);closeModal('modal-adulto');renderAdultoTable();toast('✓ Medicamento salvo!');
+async function saveMedAdulto(){
+  const editId=document.getElementById('ma-edit-id').value||null;
+  const item={nome:v('ma-nome'),posol:v('ma-posol'),cat:v('ma-cat')};
+  if(!item.nome){toast('⚠️ Informe o nome');return;}
+  const sb=await getSB();
+  let error;
+  if(editId){({error}=await sb.from('meds_adulto').update(item).eq('id',editId));}
+  else{({error}=await sb.from('meds_adulto').insert(item));}
+  if(error){toast('Erro: '+error.message);return;}
+  closeModal('modal-adulto');renderAdultoTable();toast('✓ Medicamento salvo!');
 }
 function editMedAdulto(id){
-  const m=(ls(KEYS.meds_adulto)||[]).find(m=>m.id===id);if(!m)return;
-  document.getElementById('ma-edit-id').value=m.id;document.getElementById('ma-nome').value=m.nome;document.getElementById('ma-posol').value=m.posol;document.getElementById('ma-cat').value=m.cat;
-  document.getElementById('modal-adulto-title').textContent='Editar Medicamento';openModal('modal-adulto');
+  const m=(cacheGet('meds_adulto')||[]).find(m=>m.id===id);if(!m)return;
+  document.getElementById('ma-edit-id').value=m.id;
+  document.getElementById('ma-nome').value=m.nome;
+  document.getElementById('ma-posol').value=m.posol||'';
+  document.getElementById('ma-cat').value=m.cat||'Outro';
+  document.getElementById('modal-adulto-title').textContent='Editar Medicamento';
+  openModal('modal-adulto');
 }
-function deleteMedAdulto(id){if(!confirm('Excluir?'))return;ss(KEYS.meds_adulto,(ls(KEYS.meds_adulto)||[]).filter(m=>m.id!==id));renderAdultoTable();}
-function renderPedTable(){
+async function deleteMedAdulto(id){
+  if(!confirm('Excluir?'))return;
+  const sb=await getSB();
+  const {error}=await sb.from('meds_adulto').delete().eq('id',id);
+  if(error){toast('Erro: '+error.message);return;}
+  renderAdultoTable();
+}
+
+// ── ADMIN: MEDICAMENTOS PEDIÁTRICOS ──
+async function renderPedTable(){
   const q=(document.getElementById('search-ped-db')||{value:''}).value.toLowerCase();
-  const meds=(ls(KEYS.meds_ped)||[]).filter(m=>!q||m.nome.toLowerCase().includes(q));
+  const sb=await getSB();
+  const {data}=await sb.from('meds_ped').select('*').order('nome');
+  cacheSet('meds_ped',data||[]);
+  const meds=(data||[]).filter(m=>!q||m.nome.toLowerCase().includes(q));
   document.getElementById('ped-tbody').innerHTML=meds.map(m=>`<tr>
     <td><strong>${m.nome}</strong></td>
-    <td>${m.doseApresKg!=null?m.doseApresKg+' '+(m.apresentacao||'')+'/kg':'—'}</td>
+    <td>${m.dose_apres_kg!=null?m.dose_apres_kg+' '+(m.apresentacao||'')+'/kg':'—'}</td>
     <td>${m.apresentacao||'—'}</td>
     <td>${m.modo||'—'}</td>
     <td>${m.via||'—'}</td>
     <td>${m.intervalo||'—'}</td>
     <td>${m.duracao||'—'}</td>
-    <td>${m.doseMaxApres!=null?m.doseMaxApres+' '+(m.apresentacao||''):'—'}</td>
-    <td style="font-size:12px;">${idadeStr(m.idadeMin,m.idadeMax)}</td>
+    <td>${m.dose_max_apres!=null?m.dose_max_apres+' '+(m.apresentacao||''):'—'}</td>
+    <td style="font-size:12px;">${idadeStr(m.idade_min,m.idade_max)}</td>
     <td><div style="display:flex;gap:4px;">
-      <button class="btn btn-sm btn-outline" onclick="editMedPed(${m.id})">Editar</button>
-      <button class="btn btn-sm btn-danger" onclick="deleteMedPed(${m.id})">Excluir</button>
+      <button class="btn btn-sm btn-outline" onclick="editMedPed('${m.id}')">Editar</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteMedPed('${m.id}')">Excluir</button>
     </div></td>
   </tr>`).join('');
 }
-function saveMedPed(){
-  const meds=ls(KEYS.meds_ped)||[];
-  const editId=parseInt(document.getElementById('mp-edit-id').value)||null;
+async function saveMedPed(){
+  const editId=document.getElementById('mp-edit-id').value||null;
   const apresVal=v('mp-apresentacao');
   const apres=apresVal==='outro'?v('mp-apresentacao-outro'):apresVal;
   const item={
-    id:editId||Date.now(),
-    nome:v('mp-nome'),
-    apresentacao:apres,
-    modo:v('mp-modo')||'Tomar',
-    via:v('mp-via'),
-    doseApresKg:parseFloat(document.getElementById('mp-dose-apres-kg').value)||null,
-    doseMaxApres:parseFloat(document.getElementById('mp-dose-max-apres').value)||null,
-    idadeMin:document.getElementById('mp-idade-min').value!==''?parseFloat(document.getElementById('mp-idade-min').value):null,
-    idadeMax:document.getElementById('mp-idade-max').value!==''?parseFloat(document.getElementById('mp-idade-max').value):null,
-    intervalo:v('mp-intervalo'),
-    duracao:v('mp-duracao'),
+    nome:v('mp-nome'), apresentacao:apres,
+    modo:v('mp-modo')||'Tomar', via:v('mp-via'),
+    dose_apres_kg:parseFloat(document.getElementById('mp-dose-apres-kg').value)||null,
+    dose_max_apres:parseFloat(document.getElementById('mp-dose-max-apres').value)||null,
+    idade_min:document.getElementById('mp-idade-min').value!==''?parseFloat(document.getElementById('mp-idade-min').value):null,
+    idade_max:document.getElementById('mp-idade-max').value!==''?parseFloat(document.getElementById('mp-idade-max').value):null,
+    intervalo:v('mp-intervalo'), duracao:v('mp-duracao'),
   };
-  if(editId){const i=meds.findIndex(m=>m.id===editId);if(i>=0)meds[i]=item;}else meds.push(item);
-  ss(KEYS.meds_ped,meds);closeModal('modal-ped');renderPedTable();toast('✓ Medicamento pediátrico salvo!');
+  if(!item.nome){toast('⚠️ Informe o nome');return;}
+  const sb=await getSB();
+  let error;
+  if(editId){({error}=await sb.from('meds_ped').update(item).eq('id',editId));}
+  else{({error}=await sb.from('meds_ped').insert(item));}
+  if(error){toast('Erro: '+error.message);return;}
+  closeModal('modal-ped');renderPedTable();toast('✓ Medicamento pediátrico salvo!');
 }
 function editMedPed(id){
-  const m=(ls(KEYS.meds_ped)||[]).find(m=>m.id===id);if(!m)return;
+  const m=(cacheGet('meds_ped')||[]).find(m=>m.id===id);if(!m)return;
   document.getElementById('mp-edit-id').value=m.id;
   document.getElementById('mp-nome').value=m.nome;
-  // Apresentação: check if value exists in select options
   const sel=document.getElementById('mp-apresentacao');
   const opts=[...sel.options].map(o=>o.value);
   if(opts.includes(m.apresentacao)){
     sel.value=m.apresentacao;
     document.getElementById('mp-apresentacao-outro').style.display='none';
-    document.getElementById('mp-apresentacao-outro').value='';
   } else {
     sel.value='outro';
     document.getElementById('mp-apresentacao-outro').style.display='block';
@@ -2298,24 +2327,57 @@ function editMedPed(id){
   }
   document.getElementById('mp-modo').value=m.modo||'';
   document.getElementById('mp-via').value=m.via||'';
-  document.getElementById('mp-dose-apres-kg').value=m.doseApresKg!=null?m.doseApresKg:'';
-  document.getElementById('mp-dose-max-apres').value=m.doseMaxApres!=null?m.doseMaxApres:'';
-  document.getElementById('mp-idade-min').value=m.idadeMin!==null?m.idadeMin:'';
-  document.getElementById('mp-idade-max').value=m.idadeMax!==null?m.idadeMax:'';
+  document.getElementById('mp-dose-apres-kg').value=m.dose_apres_kg!=null?m.dose_apres_kg:'';
+  document.getElementById('mp-dose-max-apres').value=m.dose_max_apres!=null?m.dose_max_apres:'';
+  document.getElementById('mp-idade-min').value=m.idade_min!=null?m.idade_min:'';
+  document.getElementById('mp-idade-max').value=m.idade_max!=null?m.idade_max:'';
   document.getElementById('mp-intervalo').value=m.intervalo||'8/8h';
   document.getElementById('mp-duracao').value=m.duracao||'';
   updateModalDoseLabel();
   document.getElementById('modal-ped-title').textContent='Editar Medicamento Pediátrico';
   openModal('modal-ped');
 }
-function deleteMedPed(id){if(!confirm('Excluir?'))return;ss(KEYS.meds_ped,(ls(KEYS.meds_ped)||[]).filter(m=>m.id!==id));renderPedTable();}
-function renderExameDb(){
-  const exs=ls(KEYS.exames_db)||[];
-  const groups={};exs.forEach(e=>{if(!groups[e.grupo])groups[e.grupo]=[];groups[e.grupo].push(e);});
-  document.getElementById('exam-db-list').innerHTML=Object.entries(groups).map(([g,items])=>`<div style="margin-bottom:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">${g}</div><div style="display:flex;flex-wrap:wrap;gap:5px;">${items.map(e=>`<div style="display:flex;align-items:center;gap:5px;background:var(--bg2);border-radius:8px;padding:5px 11px;font-size:13px;">${e.nome}<button onclick="deleteExameDb(${e.id})" style="background:none;border:none;cursor:pointer;color:var(--ink3);font-size:14px;line-height:1;padding:0;">&times;</button></div>`).join('')}</div></div>`).join('');
+async function deleteMedPed(id){
+  if(!confirm('Excluir?'))return;
+  const sb=await getSB();
+  const {error}=await sb.from('meds_ped').delete().eq('id',id);
+  if(error){toast('Erro: '+error.message);return;}
+  renderPedTable();
 }
-function saveExameDb(){const exs=ls(KEYS.exames_db)||[];exs.push({id:Date.now(),nome:v('edb-nome'),grupo:v('edb-grupo')||'Outros'});ss(KEYS.exames_db,exs);closeModal('modal-exame-db');renderExameDb();toast('✓ Exame adicionado!');}
-function deleteExameDb(id){ss(KEYS.exames_db,(ls(KEYS.exames_db)||[]).filter(e=>e.id!==id));renderExameDb();}
+
+// ── ADMIN: EXAMES DB ──
+async function renderExameDb(){
+  const sb=await getSB();
+  const {data}=await sb.from('exames_db').select('*').order('grupo').order('nome');
+  cacheSet('exames_db',data||[]);
+  const exs=data||[];
+  const groups={};exs.forEach(e=>{if(!groups[e.grupo])groups[e.grupo]=[];groups[e.grupo].push(e);});
+  document.getElementById('exam-db-list').innerHTML=Object.entries(groups).map(([g,items])=>`
+    <div style="margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">${g}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;">${items.map(e=>`
+        <div style="display:flex;align-items:center;gap:5px;background:var(--bg2);border-radius:8px;padding:5px 11px;font-size:13px;">
+          ${e.nome}
+          <button onclick="deleteExameDb('${e.id}')" style="background:none;border:none;cursor:pointer;color:var(--ink3);font-size:14px;line-height:1;padding:0;">&times;</button>
+        </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+async function saveExameDb(){
+  const nome=v('edb-nome');const grupo=v('edb-grupo')||'Outros';
+  if(!nome){toast('⚠️ Informe o nome');return;}
+  const sb=await getSB();
+  const {error}=await sb.from('exames_db').insert({nome,grupo});
+  if(error){toast('Erro: '+error.message);return;}
+  closeModal('modal-exame-db');renderExameDb();toast('✓ Exame adicionado!');
+}
+async function deleteExameDb(id){
+  if(!confirm('Excluir?'))return;
+  const sb=await getSB();
+  const {error}=await sb.from('exames_db').delete().eq('id',id);
+  if(error){toast('Erro: '+error.message);return;}
+  renderExameDb();
+}
 
 // ── EXAMES ──
 let selectedExams=[],currentExTab='solicitacao';
@@ -2506,8 +2568,8 @@ function calcInjetavel(drug){
 
     // 1. Dose calculada (massa)
     let dose=peso*drug.dose;
-    let doseMin=drug.doseMin!=null?peso*drug.doseMin:null;
-    let doseMax=drug.doseMax!=null?(isInfusao?drug.doseMax:peso*drug.doseMax):null;
+    let doseMin=drug.dose_min!=null?peso*drug.dose_min:null;
+    let doseMax=drug.dose_max!=null?(isInfusao?drug.dose_max:peso*drug.dose_max):null;
     let ajust=false;
     if(!isInfusao&&doseMax!=null&&dose>doseMax){dose=doseMax;ajust=true;}
     const doseUnit=drug.unidade.replace('/kg','').replace('/kg/min','/min').replace('/kg/h','/h');
@@ -2519,7 +2581,7 @@ function calcInjetavel(drug){
       let doseForML=dose;
       let doseMinForML=doseMin;
       let doseMaxForML=doseMax;
-      if(drug.unidade.startsWith('mcg')&&(drug.concUnidade||'').startsWith('mg')){
+      if(drug.unidade.startsWith('mcg')&&(drug.conc_unidade||'').startsWith('mg')){
         doseForML=dose/1000;
         if(doseMinForML!=null) doseMinForML/=1000;
         if(doseMaxForML!=null) doseMaxForML/=1000;
@@ -2534,7 +2596,7 @@ function calcInjetavel(drug){
         // dose (mcg/kg/min) × peso / conc(mcg/ml) × 60 = ml/h
         let doseRate=drug.dose; // mcg/kg/min ou mg/kg/h
         let concVal=drug.concentracao;
-        if(drug.unidade==='mcg/kg/min'&&(drug.concUnidade||'').startsWith('mg')) concVal*=1000; // mg→mcg
+        if(drug.unidade==='mcg/kg/min'&&(drug.conc_unidade||'').startsWith('mg')) concVal*=1000; // mg→mcg
         volML=(doseRate*peso*60)/concVal; // ml/h para mcg/kg/min
         if(drug.unidade==='mg/kg/h') volML=(doseRate*peso)/drug.concentracao;
         mlLabel='ml/h';
@@ -2555,7 +2617,7 @@ function calcInjetavel(drug){
       // Dose secundária
       html+=`<div style="font-size:12.5px;color:var(--ink2);margin-top:6px;">
         <strong>Dose:</strong> ${fmt(dose)} ${doseUnit}
-        &nbsp;·&nbsp; <strong>Conc.:</strong> ${drug.concentracao} ${drug.concUnidade||'mg/ml'}
+        &nbsp;·&nbsp; <strong>Conc.:</strong> ${drug.concentracao} ${drug.conc_unidade||'mg/ml'}
         ${ajust?' <span style="color:var(--amber);">⚠ limitado ao máx.</span>':''}
       </div>
       <div style="font-size:12px;color:var(--ink3);margin-top:2px;">${peso}kg × ${drug.dose} ${drug.unidade}</div>`;
@@ -2580,7 +2642,7 @@ function calcInjetavel(drug){
     content.innerHTML=`
       <div style="color:var(--ink3);font-size:13px;margin-bottom:8px;">Informe o peso para calcular o volume em ml.</div>
       <div style="font-size:12.5px;color:var(--ink2);"><strong>Dose padrão:</strong> ${drug.dose} ${drug.unidade}</div>
-      ${drug.concentracao?`<div style="font-size:12.5px;color:var(--ink2);margin-top:2px;"><strong>Concentração:</strong> ${drug.concentracao} ${drug.concUnidade||'mg/ml'}</div>`:''}
+      ${drug.concentracao?`<div style="font-size:12.5px;color:var(--ink2);margin-top:2px;"><strong>Concentração:</strong> ${drug.concentracao} ${drug.conc_unidade||'mg/ml'}</div>`:''}
       ${drug.diluicao?`<div style="font-size:12px;color:var(--ink2);margin-top:4px;"><strong>Diluição:</strong> ${drug.diluicao}</div>`:''}
       ${drug.via?`<div style="font-size:12px;color:var(--ink2);margin-top:2px;"><strong>Via:</strong> ${drug.via}</div>`:''}
       ${drug.obs?`<div style="font-size:12px;color:var(--amber);margin-top:6px;">⚠ ${drug.obs}</div>`:''}`;
@@ -2589,9 +2651,12 @@ function calcInjetavel(drug){
 document.addEventListener('click',e=>{if(!e.target.closest('#ac-inj-wrap'))document.getElementById('ac-inj-drop').classList.remove('open');});
 
 // ── INJETÁVEIS DB (ADMIN) ──
-function renderInjTable(){
+async function renderInjTable(){
   const q=(document.getElementById('search-inj-db')||{value:''}).value.toLowerCase();
-  const drugs=(ls(KEYS.injetaveis)||[]).filter(d=>!q||d.nome.toLowerCase().includes(q));
+  const sb=await getSB();
+  const {data}=await sb.from('injetaveis').select('*').order('nome');
+  cacheSet('injetaveis',data||[]);
+  const drugs=(data||[]).filter(d=>!q||d.nome.toLowerCase().includes(q));
   document.getElementById('inj-tbody').innerHTML=drugs.map(d=>`<tr>
     <td><strong>${d.nome}</strong></td>
     <td>${d.dose} ${d.unidade}</td>
@@ -2600,11 +2665,58 @@ function renderInjTable(){
     <td>${d.via||'—'}</td>
     <td style="font-size:11.5px;color:var(--ink3);max-width:160px;">${d.obs||'—'}</td>
     <td><div style="display:flex;gap:4px;">
-      <button class="btn btn-sm btn-outline" onclick="editInj(${d.id})">Editar</button>
-      <button class="btn btn-sm btn-danger" onclick="deleteInj(${d.id})">Excluir</button>
+      <button class="btn btn-sm btn-outline" onclick="editInj('${d.id}')">Editar</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteInj('${d.id}')">Excluir</button>
     </div></td>
   </tr>`).join('');
 }
+async function saveInj(){
+  const editId=document.getElementById('mi-edit-id').value||null;
+  const item={
+    nome:v('mi-nome'), dose:parseFloat(document.getElementById('mi-dose').value)||0,
+    unidade:v('mi-unidade'),
+    dose_min:document.getElementById('mi-dose-min').value!==''?parseFloat(document.getElementById('mi-dose-min').value):null,
+    dose_max:document.getElementById('mi-dose-max').value!==''?parseFloat(document.getElementById('mi-dose-max').value):null,
+    concentracao:document.getElementById('mi-concentracao').value!==''?parseFloat(document.getElementById('mi-concentracao').value):null,
+    conc_unidade:v('mi-conc-unidade'),
+    via:v('mi-via'), diluicao:v('mi-diluicao'), obs:v('mi-obs'),
+  };
+  if(!item.nome){toast('⚠️ Informe o nome');return;}
+  const sb=await getSB();
+  let error;
+  if(editId){({error}=await sb.from('injetaveis').update(item).eq('id',editId));}
+  else{({error}=await sb.from('injetaveis').insert(item));}
+  if(error){toast('Erro: '+error.message);return;}
+  closeModal('modal-inj');renderInjTable();toast('✓ Droga injetável salva!');
+}
+function editInj(id){
+  const d=(cacheGet('injetaveis')||[]).find(d=>d.id===id);if(!d)return;
+  document.getElementById('mi-edit-id').value=d.id;
+  document.getElementById('mi-nome').value=d.nome;
+  document.getElementById('mi-dose').value=d.dose;
+  document.getElementById('mi-unidade').value=d.unidade||'mg/kg';
+  document.getElementById('mi-dose-min').value=d.dose_min!=null?d.dose_min:'';
+  document.getElementById('mi-dose-max').value=d.dose_max!=null?d.dose_max:'';
+  document.getElementById('mi-concentracao').value=d.concentracao!=null?d.concentracao:'';
+  document.getElementById('mi-conc-unidade').value=d.conc_unidade||'mg/ml';
+  document.getElementById('mi-via').value=d.via||'';
+  document.getElementById('mi-diluicao').value=d.diluicao||'';
+  document.getElementById('mi-obs').value=d.obs||'';
+  document.getElementById('modal-inj-title').textContent='Editar Droga Injetável';
+  openModal('modal-inj');
+}
+async function deleteInj(id){
+  if(!confirm('Excluir?'))return;
+  const sb=await getSB();
+  const {error}=await sb.from('injetaveis').delete().eq('id',id);
+  if(error){toast('Erro: '+error.message);return;}
+  renderInjTable();
+}
+  if(tipo==='inj'){
+    document.getElementById('mi-edit-id').value='';
+    ['mi-nome','mi-via','mi-dose','mi-dose-min','mi-dose-max','mi-concentracao','mi-diluicao','mi-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('mi-unidade').value='mg/kg';
+    document.getElementById('mi-conc-unidade').value='mg/ml';
 function openAddModal(tipo){
   if(tipo==='inj'){
     document.getElementById('mi-edit-id').value='';
@@ -2629,39 +2741,6 @@ function openAddModal(tipo){
     document.getElementById('ma-edit-id').value='';['ma-nome','ma-posol'].forEach(id=>document.getElementById(id).value='');document.getElementById('ma-cat').value='Antibiótico';document.getElementById('modal-adulto-title').textContent='Novo Medicamento Adulto';openModal('modal-adulto');
   }
 }
-function saveInj(){
-  const drugs=ls(KEYS.injetaveis)||[];
-  const editId=parseInt(document.getElementById('mi-edit-id').value)||null;
-  const item={
-    id:editId||Date.now(),nome:v('mi-nome'),dose:parseFloat(document.getElementById('mi-dose').value)||0,
-    unidade:v('mi-unidade'),
-    doseMin:document.getElementById('mi-dose-min').value!==''?parseFloat(document.getElementById('mi-dose-min').value):null,
-    doseMax:document.getElementById('mi-dose-max').value!==''?parseFloat(document.getElementById('mi-dose-max').value):null,
-    concentracao:document.getElementById('mi-concentracao').value!==''?parseFloat(document.getElementById('mi-concentracao').value):null,
-    concUnidade:v('mi-conc-unidade'),
-    via:v('mi-via'),diluicao:v('mi-diluicao'),obs:v('mi-obs'),
-  };
-  if(editId){const i=drugs.findIndex(d=>d.id===editId);if(i>=0)drugs[i]=item;}else drugs.push(item);
-  ss(KEYS.injetaveis,drugs);closeModal('modal-inj');renderInjTable();toast('✓ Droga injetável salva!');
-}
-function editInj(id){
-  const d=(ls(KEYS.injetaveis)||[]).find(d=>d.id===id);if(!d)return;
-  document.getElementById('mi-edit-id').value=d.id;
-  document.getElementById('mi-nome').value=d.nome;
-  document.getElementById('mi-dose').value=d.dose;
-  document.getElementById('mi-unidade').value=d.unidade||'mg/kg';
-  document.getElementById('mi-dose-min').value=d.doseMin!=null?d.doseMin:'';
-  document.getElementById('mi-dose-max').value=d.doseMax!=null?d.doseMax:'';
-  document.getElementById('mi-concentracao').value=d.concentracao!=null?d.concentracao:'';
-  document.getElementById('mi-conc-unidade').value=d.concUnidade||'mg/ml';
-  document.getElementById('mi-via').value=d.via||'';
-  document.getElementById('mi-diluicao').value=d.diluicao||'';
-  document.getElementById('mi-obs').value=d.obs||'';
-  document.getElementById('modal-inj-title').textContent='Editar Droga Injetável';
-  openModal('modal-inj');
-}
-function deleteInj(id){if(!confirm('Excluir?'))return;ss(KEYS.injetaveis,(ls(KEYS.injetaveis)||[]).filter(d=>d.id!==id));renderInjTable();}
-
 // ── DOCUMENTOS ──
 let currentDocTab='atestado';
 function switchDocTab(tab,btn){
