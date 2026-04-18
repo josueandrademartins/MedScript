@@ -1474,23 +1474,38 @@ function onLocalChange(id){
 let acState={adulto:{focused:-1,custom:null},ped:{focused:-1,custom:null}};
 
 function getMedList(tipo){
-  return tipo==='ped'
-    ? (ls(KEYS.meds_ped)||[]).filter(m=>pedAgeFilter(m))
-    : (ls(KEYS.meds_adulto)||[]);
+  // Lê direto do cache — populado pelo initData() no boot
+  const list = tipo==='ped'
+    ? (cacheGet('meds_ped')||[])
+    : (cacheGet('meds_adulto')||[]);
+  if(tipo==='ped') return list.filter(m=>pedAgeFilter(m));
+  return list;
 }
 function pedAgeFilter(m){
   const idade=parseFloat(document.getElementById('p-idade').value);
   if(isNaN(idade))return true;
-  if(m.idade_min!==null&&idade<m.idade_min)return false;
-  if(m.idade_max!==null&&idade>m.idade_max)return false;
+  if(m.idade_min!=null&&idade<m.idade_min)return false;
+  if(m.idade_max!=null&&idade>m.idade_max)return false;
   return true;
+}
+// Se cache vazio ao digitar, tenta recarregar do Supabase
+async function ensureMedsLoaded(tipo){
+  const key=tipo==='ped'?'meds_ped':'meds_adulto';
+  if((cacheGet(key)||[]).length>0) return;
+  const sb=await getSB();
+  const {data}=await sb.from(key).select('*').order('nome');
+  if(data&&data.length) cacheSet(key,data);
 }
 function acFilter(tipo){
   const inp=document.getElementById('ac-'+tipo);
   const drop=document.getElementById('ac-'+tipo+'-drop');
   const q=inp.value.trim().toLowerCase();
-  // Require at least 3 characters
   if(q.length<3){drop.classList.remove('open');return;}
+  // Se cache vazio, carrega e re-filtra
+  if(getMedList(tipo).length===0){
+    ensureMedsLoaded(tipo).then(()=>acFilter(tipo));
+    return;
+  }
   const meds=getMedList(tipo);
   const filtered=meds.filter(m=>m.nome.toLowerCase().includes(q));
   acState[tipo].focused=-1;
@@ -1502,7 +1517,7 @@ function acFilter(tipo){
     const sub = tipo==='ped'
       ? [m.apresentacao, m.intervalo, m.duracao].filter(Boolean).join(' · ')
       : (m.posol||m.cat||'');
-    return`<div class="ac-item" data-idx="${i}" data-id="${m.id}" data-tipo="${tipo}" onclick="acSelect(${m.id},'${tipo}')">
+    return`<div class="ac-item" data-idx="${i}" data-id="${m.id}" data-tipo="${tipo}" onclick="acSelect('${m.id}','${tipo}')">
       <span>${highlightMatch(m.nome,q)}</span>
       <span>${sub}</span>
     </div>`;
@@ -1524,12 +1539,11 @@ function highlightMatch(text,q){
   return text.slice(0,idx)+'<strong>'+text.slice(idx,idx+q.length)+'</strong>'+text.slice(idx+q.length);
 }
 function acSelect(id,tipo){
-  const meds=tipo==='ped'?(ls(KEYS.meds_ped)||[]):(ls(KEYS.meds_adulto)||[]);
-  const m=meds.find(x=>x.id===id);
+  const meds=tipo==='ped'?(cacheGet('meds_ped')||[]):(cacheGet('meds_adulto')||[]);
+  const m=meds.find(x=>String(x.id)===String(id));
   if(!m)return;
   document.getElementById('ac-'+tipo).value=m.nome;
   acState[tipo].custom=null;
-  // fill posologia
   if(tipo==='ped'){
     acState.ped.selectedMed=m;
     calcPedDoseFromMed(m);
@@ -2397,7 +2411,13 @@ function acFilterExam(){
   const drop=document.getElementById('ac-exam-drop');
   const q=inp.value.trim().toLowerCase();
   if(q.length<3){drop.classList.remove('open');return;}
-  const exs=ls(KEYS.exames_db)||[];
+  const exs=cacheGet('exames_db')||[];
+  if(exs.length===0){
+    getSB().then(sb=>sb.from('exames_db').select('*').order('nome')).then(({data})=>{
+      if(data&&data.length){cacheSet('exames_db',data);acFilterExam();}
+    });
+    return;
+  }
   const filtered=exs.filter(e=>e.nome.toLowerCase().includes(q));
   acExamFocused=-1;
   if(!filtered.length){drop.innerHTML='<div class="ac-item" style="color:var(--ink3);">Nenhum resultado</div>';drop.classList.add('open');return;}
