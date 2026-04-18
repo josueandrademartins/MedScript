@@ -2549,11 +2549,18 @@ function acFilterInj(){
   const drop=document.getElementById('ac-inj-drop');
   const q=inp.value.trim().toLowerCase();
   if(q.length<3){drop.classList.remove('open');return;}
-  const drugs=(ls(KEYS.injetaveis)||[]).filter(d=>d.nome.toLowerCase().includes(q));
+  let drugs=cacheGet('injetaveis')||[];
+  if(!drugs.length){
+    getSB().then(sb=>sb.from('injetaveis').select('*').order('nome')).then(({data})=>{
+      if(data&&data.length){cacheSet('injetaveis',data);acFilterInj();}
+    });
+    return;
+  }
+  drugs=drugs.filter(d=>d.nome.toLowerCase().includes(q));
   acInjFocused=-1;
   if(!drugs.length){drop.innerHTML='<div class="ac-item" style="color:var(--ink3);">Nenhuma droga encontrada</div>';drop.classList.add('open');return;}
   drop.innerHTML=drugs.map(d=>`
-    <div class="ac-item" onclick="selectInj(${d.id})">
+    <div class="ac-item" onclick="selectInj('${d.id}')">
       <span>${highlightMatch(d.nome,q)}</span>
       <span>${d.unidade} · ${d.via}</span>
     </div>`).join('');
@@ -2569,7 +2576,7 @@ function acKeyInj(e){
 }
 function selectInj(id){
   document.getElementById('ac-inj-drop').classList.remove('open');
-  const d=(ls(KEYS.injetaveis)||[]).find(x=>x.id===id);
+  const d=(cacheGet('injetaveis')||[]).find(x=>String(x.id)===String(id));
   if(!d)return;
   document.getElementById('ac-inj').value=d.nome;
   calcInjetavel(d);
@@ -2578,7 +2585,7 @@ function calcInjetavel(drug){
   const peso=parseFloat(document.getElementById('inj-peso').value);
   if(!drug){
     const nome=document.getElementById('ac-inj').value.trim().toLowerCase();
-    drug=(ls(KEYS.injetaveis)||[]).find(d=>d.nome.toLowerCase()===nome);
+    drug=(cacheGet('injetaveis')||[]).find(d=>d.nome.toLowerCase()===nome);
   }
   if(!drug){document.getElementById('inj-result-box').style.display='none';return;}
   const box=document.getElementById('inj-result-box');
