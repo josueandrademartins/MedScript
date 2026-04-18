@@ -2440,14 +2440,19 @@ function gerarPDF(data, title){
         </div>
 
         <!-- FORNECEDOR (direita) — caixa estilo carimbo -->
-        <div style="padding-left:14px;min-width:170px;display:flex;flex-direction:column;">
+        <div style="padding-left:14px;width:160px;display:flex;flex-direction:column;">
           <div class="ctrl-section-title">IDENTIFICAÇÃO DO FORNECEDOR</div>
-          <div style="flex:1;border:1px solid #bbb;border-radius:4px;padding:6px 8px;display:flex;flex-direction:column;justify-content:flex-end;min-height:52px;">
-            <div style="border-top:1px solid #888;padding-top:4px;margin-top:8px;display:flex;align-items:baseline;gap:8px;">
-              <span class="cf-label" style="font-size:9px;white-space:nowrap;">ASSINATURA DO FARMACÊUTICO</span>
-              <span class="cf-label" style="font-size:9px;">DATA</span>
-              <span class="controlado-field" style="width:20px;"></span><span style="font-size:9px;">/</span>
-              <span class="controlado-field" style="width:20px;"></span>
+          <div style="flex:1;border:1px solid #bbb;border-radius:4px;padding:6px 8px;display:flex;flex-direction:column;justify-content:flex-end;min-height:52px;overflow:hidden;">
+            <div style="border-top:1px solid #888;padding-top:4px;margin-top:8px;display:flex;align-items:baseline;gap:4px;flex-wrap:nowrap;">
+              <span class="cf-label" style="font-size:8.5px;white-space:nowrap;">ASSINATURA DO FARMACÊUTICO</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:3px;margin-top:2px;">
+              <span class="cf-label" style="font-size:8.5px;white-space:nowrap;">DATA</span>
+              <span class="controlado-field" style="width:16px;flex:none;"></span>
+              <span style="font-size:9px;">/</span>
+              <span class="controlado-field" style="width:16px;flex:none;"></span>
+              <span style="font-size:9px;">/</span>
+              <span class="controlado-field" style="width:24px;flex:none;"></span>
             </div>
           </div>
         </div>
