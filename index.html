@@ -458,6 +458,7 @@ body.is-admin .admin-only-block{display:block;}
   <div class="card">
     <div class="card-title">Dados do Paciente</div>
     <div class="fg"><label>Nome completo</label><input id="a-pac-nome" placeholder="Nome do paciente"></div>
+    <div class="fg"><label>Local de atendimento</label><select id="a-local" onchange="onLocalChange('a-local')"><option value="">— selecionar —</option></select></div>
   </div>
 
   <div class="card">
@@ -513,12 +514,12 @@ body.is-admin .admin-only-block{display:block;}
   <div class="page-head"><h2>Receituário Pediátrico</h2><p>Dose calculada automaticamente por peso e idade</p></div>
   <div class="card">
     <div class="card-title">Dados da Criança</div>
+    <div class="fg"><label>Local de atendimento</label><select id="p-local" onchange="onLocalChange('p-local')"><option value="">— selecionar —</option></select></div>
     <div class="gr4">
       <div class="fg" style="grid-column:span 2"><label>Nome completo</label><input id="p-pac-nome" placeholder="Nome da criança"></div>
       <div class="fg"><label>Idade (anos)</label><input type="number" id="p-idade" min="0" max="17" placeholder="Ex: 4" oninput="updatePedMedOptions()"></div>
       <div class="fg"><label>Peso (kg)</label><input type="number" id="p-peso" step="0.1" placeholder="Ex: 18.5" oninput="calcPedDose()"></div>
     </div>
-
   </div>
 
   <div class="card">
@@ -664,7 +665,7 @@ body.is-admin .admin-only-block{display:block;}
       <div class="fg"><label>Nome do paciente</label><input id="ex-pac" placeholder="Nome completo"></div>
       <div class="fg"><label>Data</label><input type="date" id="ex-data"></div>
     </div>
-
+    <div class="fg"><label>Local de atendimento</label><select id="ex-local" onchange="onLocalChange('ex-local')"><option value="">— selecionar —</option></select></div>
   </div>
   <div class="card">
     <div class="card-title">Tipo de documento</div>
@@ -718,7 +719,7 @@ body.is-admin .admin-only-block{display:block;}
       <div class="fg"><label>Nome do paciente</label><input id="doc-pac" placeholder="Nome completo"></div>
       <div class="fg"><label>Data</label><input type="date" id="doc-data"></div>
     </div>
-
+    <div class="fg"><label>Local de atendimento</label><select id="doc-local" onchange="onLocalChange('doc-local')"><option value="">— selecionar —</option></select></div>
   </div>
   <div class="card">
     <div class="card-title">Tipo de documento</div>
@@ -1701,10 +1702,10 @@ async function removeLocal(id){
   renderLocais();
 }
 function populateLocalSelects(){
-  const locs=ls(KEYS.locais)||[];
+  const locs=cacheGet('locais')||[];
   const lastIdx=ls('ms_last_local')||'';
   const opts='<option value="">— selecionar —</option>'+locs.map((l,i)=>`<option value="${i}" ${String(i)===String(lastIdx)?'selected':''}>${l.nome}</option>`).join('');
-  ['a-local','p-local','ex-local','doc-local'].forEach(id=>{const el=document.getElementById(id);if(el){el.innerHTML=opts;}});
+  ['a-local','p-local','ex-local','doc-local'].forEach(id=>{const el=document.getElementById(id);if(el) el.innerHTML=opts;});
 }
 function onLocalChange(id){
   const el=document.getElementById(id);
@@ -1751,7 +1752,12 @@ function acFilter(tipo){
   const filtered=meds.filter(m=>m.nome.toLowerCase().includes(q));
   acState[tipo].focused=-1;
   if(!filtered.length){
-    drop.innerHTML='<div class="ac-item" style="color:var(--ink3);">Nenhum resultado</div>';
+    drop.innerHTML=`
+      <div class="ac-item" style="color:var(--ink3);">Nenhum resultado na base</div>
+      <div class="ac-add-row" onclick="acAddCustom('${tipo}')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        Adicionar "<strong>${inp.value}</strong>" como personalizado
+      </div>`;
     drop.classList.add('open');return;
   }
   let html=filtered.map((m,i)=>{
@@ -2016,7 +2022,6 @@ function gerarRx(tipo,formato){
   if(!meds.length){toast('⚠️ Adicione ao menos 1 medicamento');return;}
   const perfil=ls(KEYS.perfil)||{};
   const locais=cacheGet('locais')||[];
-  // Usa o local selecionado no select (se existir) ou o primeiro local do perfil
   const locIdxEl=document.getElementById(tipo==='ped'?'p-local':'a-local');
   const locIdx=locIdxEl?locIdxEl.value:'';
   const local=locIdx!==''?locais[parseInt(locIdx)]:(locais[0]||null);
@@ -2718,7 +2723,8 @@ function gerarDocExame(){
   const pac=v('ex-pac');if(!pac){toast('⚠️ Informe o paciente');return;}
   const perfil=ls(KEYS.perfil)||{};
   const locais=cacheGet('locais')||[];
-  const local=locais[0]||null;
+  const locIdxEx=document.getElementById('ex-local');
+  const local=locIdxEx&&locIdxEx.value!==''?locais[parseInt(locIdxEx.value)]:(locais[0]||null);
   const hoje=document.getElementById('ex-data').value?new Date(document.getElementById('ex-data').value+'T00:00:00').toLocaleDateString('pt-BR'):new Date().toLocaleDateString('pt-BR');
   let titulo='',corpo='';
   if(currentExTab==='solicitacao'){
@@ -2747,7 +2753,8 @@ function gerarDocumento(){
   const pac=v('doc-pac');if(!pac){toast('⚠️ Informe o paciente');return;}
   const perfil=ls(KEYS.perfil)||{};
   const locais=cacheGet('locais')||[];
-  const local=locais[0]||null;
+  const locIdxDoc=document.getElementById('doc-local');
+  const local=locIdxDoc&&locIdxDoc.value!==''?locais[parseInt(locIdxDoc.value)]:(locais[0]||null);
   const hoje=document.getElementById('doc-data').value?new Date(document.getElementById('doc-data').value+'T00:00:00').toLocaleDateString('pt-BR'):new Date().toLocaleDateString('pt-BR');
   let titulo='',corpo='';
   if(currentDocTab==='atestado'){
