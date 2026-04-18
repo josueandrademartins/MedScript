@@ -504,6 +504,10 @@ body.is-admin .admin-only-block{display:block;}
         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         Receituário Controlado
       </button>
+      <button class="btn btn-soft" onclick="salvarModeloDireto('adulto')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+        Salvar Modelo
+      </button>
       <button class="btn btn-outline" onclick="limparRx('adulto')">Limpar</button>
     </div>
   </div>
@@ -579,6 +583,10 @@ body.is-admin .admin-only-block{display:block;}
       <button class="btn btn-amber" onclick="gerarRx('ped','controlado')">
         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         Receituário Controlado
+      </button>
+      <button class="btn btn-soft" onclick="salvarModeloDireto('ped')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+        Salvar Modelo
       </button>
       <button class="btn btn-outline" onclick="limparRx('ped')">Limpar</button>
     </div>
@@ -1601,7 +1609,28 @@ async function boot(){
 })();
 
 // ── NAVIGATION ──
+function clearPageRx(tipo){
+  if(tipo==='adulto'){
+    const local=v('a-local');
+    ['a-pac-nome','a-obs','a-model-name','ac-adulto','a-med-posol'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    aMeds=[];renderMedList('adulto');
+    if(local){const el=document.getElementById('a-local');if(el)el.value=local;}
+  } else {
+    const local=v('p-local');
+    ['p-pac-nome','p-idade','p-peso','p-obs','p-model-name','p-med-posol','ac-ped'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    pMeds=[];renderMedList('ped');
+    document.getElementById('p-dose-box').style.display='none';
+    if(local){const el=document.getElementById('p-local');if(el)el.value=local;}
+  }
+}
 function nav(id,btn){
+  // Limpa receituário anterior ao sair
+  const currentPage=document.querySelector('.page.active');
+  if(currentPage){
+    const pid=currentPage.id;
+    if(pid==='page-rx-adulto'&&id!=='rx-adulto') clearPageRx('adulto');
+    if(pid==='page-rx-ped'&&id!=='rx-ped') clearPageRx('ped');
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
@@ -2015,7 +2044,7 @@ function idadeStr(min,max){
 }
 
 // ── GERAR RECEITA ──
-function gerarRx(tipo,formato){
+async function gerarRx(tipo,formato){
   const pac=v(tipo==='ped'?'p-pac-nome':'a-pac-nome');
   const meds=tipo==='ped'?pMeds:aMeds;
   if(!pac){toast('⚠️ Informe o nome do paciente');return;}
@@ -2029,19 +2058,7 @@ function gerarRx(tipo,formato){
   // salvar modelo
   const mnKey=tipo==='ped'?'p-model-name':'a-model-name';
   const mn=v(mnKey);
-  if(mn){
-    const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
-    const modelos=ls(key)||[];
-    // For ped models: strip calculated posol from entries that have medId
-    // so that dose is always recalculated from weight when model is loaded
-    const medsToSave=tipo==='ped'
-      ? meds.map(m=>m.medId?{nome:m.nome,medId:m.medId,custom:false}:{...m})
-      : [...meds];
-    modelos.push({id:Date.now(),nome:mn,medicamentos:medsToSave,tipo});
-    ss(key,modelos);
-    toast('✓ Modelo "'+mn+'" salvo!');
-    document.getElementById(mnKey).value='';
-  }
+  if(mn) await _salvarModeloNoBanco(tipo, mn, meds);
   const extra=tipo==='ped'?[v('p-idade')?'Idade: '+v('p-idade')+' anos':'',v('p-peso')?'Peso: '+v('p-peso')+' kg':''].filter(Boolean).join(' · '):'';
   const html=formato==='controlado'
     ? buildControladoHtml({perfil,local,hoje,pac,meds,tipo,extra})
@@ -2049,6 +2066,36 @@ function gerarRx(tipo,formato){
 
   const title=formato==='controlado'?'Receituário Controlado':'Prévia da Receita';
   openRxModal(html, title);
+}
+
+async function _salvarModeloNoBanco(tipo, nome, meds){
+  const sb=await getSB();
+  const {data:{user}}=await sb.auth.getUser();
+  const medsToSave=tipo==='ped'
+    ? meds.map(m=>m.medId?{nome:m.nome,medId:m.medId,custom:false}:{...m})
+    : [...meds];
+  const {data,error}=await sb.from('modelos').insert({
+    user_id:user.id, nome, tipo, medicamentos:medsToSave, exames:[]
+  }).select().single();
+  if(error){toast('Erro ao salvar modelo: '+error.message);return;}
+  const cacheKey=tipo==='ped'?'modelos_ped':'modelos_adulto';
+  cacheSet(cacheKey,[...(cacheGet(cacheKey)||[]),data]);
+  toast('✓ Modelo "'+nome+'" salvo!');
+  const mnEl=document.getElementById(tipo==='ped'?'p-model-name':'a-model-name');
+  if(mnEl) mnEl.value='';
+}
+
+async function salvarModeloDireto(tipo){
+  const meds=tipo==='ped'?pMeds:aMeds;
+  if(!meds.length){toast('⚠️ Adicione pelo menos 1 medicamento');return;}
+  const mnKey=tipo==='ped'?'p-model-name':'a-model-name';
+  let nome=v(mnKey).trim();
+  if(!nome){
+    nome=prompt('Nome do modelo:');
+    if(!nome||!nome.trim())return;
+    nome=nome.trim();
+  }
+  await _salvarModeloNoBanco(tipo, nome, meds);
 }
 
 function openRxModal(html, title){
@@ -2485,10 +2532,13 @@ function saveEditModelo(){
   renderModelosGrid(tipo);
   toast('✓ Modelo atualizado!');
 }
-function deleteModelo(id,tipo){
+async function deleteModelo(id,tipo){
   if(!confirm('Excluir este modelo?'))return;
-  const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
-  ss(key,(ls(key)||[]).filter(m=>m.id!==id));
+  const sb=await getSB();
+  const {error}=await sb.from('modelos').delete().eq('id',id);
+  if(error){toast('Erro: '+error.message);return;}
+  const cacheKey=tipo==='ped'?'modelos_ped':'modelos_adulto';
+  cacheSet(cacheKey,(cacheGet(cacheKey)||[]).filter(m=>String(m.id)!==String(id)));
   renderModelosGrid(tipo);
   toast('Modelo removido.');
 }
@@ -2796,10 +2846,14 @@ function usarModeloExames(id){
   nav('exames',document.querySelectorAll('.sb-item')[4]);
   toast('✓ Modelo "'+m.nome+'" carregado!');
 }
-function deleteModeloExames(id){
+async function deleteModeloExames(id){
   if(!confirm('Excluir este modelo?'))return;
-  ss(KEYS.modelos_exames,(ls(KEYS.modelos_exames)||[]).filter(m=>m.id!==id));
+  const sb=await getSB();
+  const {error}=await sb.from('modelos').delete().eq('id',id);
+  if(error){toast('Erro: '+error.message);return;}
+  cacheSet('modelos_exames',(cacheGet('modelos_exames')||[]).filter(m=>String(m.id)!==String(id)));
   renderModelosExamesGrid();
+  toast('Modelo removido.');
 }
 
 // ── DROGAS INJETÁVEIS ──
