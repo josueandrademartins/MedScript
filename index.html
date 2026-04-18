@@ -2426,7 +2426,7 @@ function gerarPDF(data, title){
 
   const tplCtrl = data.controlado ? `
     <template id="tpl-ctrl"><div class="controlado-box">
-      <div style="display:grid;grid-template-columns:1fr auto;gap:0;align-items:stretch;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:stretch;">
 
         <!-- COMPRADOR (esquerda) -->
         <div style="padding-right:14px;border-right:1.5px solid #C0392B;">
@@ -2440,7 +2440,7 @@ function gerarPDF(data, title){
         </div>
 
         <!-- FORNECEDOR (direita) — caixa estilo carimbo -->
-        <div style="padding-left:14px;width:160px;display:flex;flex-direction:column;">
+        <div style="padding-left:14px;display:flex;flex-direction:column;">
           <div class="ctrl-section-title">IDENTIFICAÇÃO DO FORNECEDOR</div>
           <div style="flex:1;border:1px solid #bbb;border-radius:4px;padding:6px 8px;display:flex;flex-direction:column;justify-content:flex-end;min-height:52px;overflow:hidden;">
             <div style="border-top:1px solid #888;padding-top:5px;margin-top:8px;">
