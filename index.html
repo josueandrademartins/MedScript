@@ -1998,18 +1998,51 @@ async function ensureMedsLoaded(tipo){
   const {data}=await sb.from(key).select('*').order('nome');
   if(data&&data.length) cacheSet(key,data);
 }
+// ── Normalização de acentos para busca ───────────────────────
+function norm(s){
+  return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+// Formata intervalo/duração: "8/8h" → "8/8 horas", "12/12h" → "12/12 horas" etc.
+function fmtIntervalo(s){
+  if(!s) return '';
+  return s.replace(/(\d+\/\d+)h\b/g,'$1 horas')
+          .replace(/(\d+)h\b/g,'$1 horas')
+          .replace(/\b1x\/dia\b/g,'1x ao dia')
+          .replace(/\b2x\/dia\b/g,'2x ao dia')
+          .replace(/\b3x\/dia\b/g,'3x ao dia');
+}
+
 function acFilter(tipo){
   const inp=document.getElementById('ac-'+tipo);
   const drop=document.getElementById('ac-'+tipo+'-drop');
-  const q=inp.value.trim().toLowerCase();
+  const q=norm(inp.value.trim());
   if(q.length<3){drop.classList.remove('open');return;}
-  // Se cache vazio, carrega e re-filtra
   if(getMedList(tipo).length===0){
     ensureMedsLoaded(tipo).then(()=>acFilter(tipo));
     return;
   }
-  const meds=getMedList(tipo);
-  const filtered=meds.filter(m=>m.nome.toLowerCase().includes(q));
+  let meds=getMedList(tipo);
+
+  // Filtro por idade para pediátrico
+  if(tipo==='ped'){
+    const idade=parseFloat(document.getElementById('p-idade').value);
+    const peso =parseFloat(document.getElementById('p-peso').value);
+    if(!isNaN(idade)){
+      meds=meds.filter(m=>{
+        if(m.idade_min!=null && idade < m.idade_min) return false;
+        if(m.idade_max!=null && idade > m.idade_max) return false;
+        return true;
+      });
+    }
+    if(!isNaN(peso)){
+      meds=meds.filter(m=>{
+        if(m.peso_min!=null && peso < m.peso_min) return false;
+        return true;
+      });
+    }
+  }
+
+  const filtered=meds.filter(m=>norm(m.nome).includes(q));
   acState[tipo].focused=-1;
   if(!filtered.length){
     drop.innerHTML=`
@@ -2021,16 +2054,60 @@ function acFilter(tipo){
     drop.classList.add('open');return;
   }
   let html=filtered.map((m,i)=>{
-    const sub = tipo==='ped'
-      ? [m.apresentacao, m.intervalo, m.duracao].filter(Boolean).join(' · ')
-      : (m.posol||m.cat||'');
+    let sub='';
+    if(tipo==='ped'){
+      const tipo_dose=m.tipo_dose||'peso';
+      const peso=parseFloat(document.getElementById('p-peso').value);
+      const idade=parseFloat(document.getElementById('p-idade').value);
+      if(tipo_dose==='fixo'){
+        // dose fixa: mostra a descrição truncada
+        sub=(m.dose_fixa||m.posol||'').slice(0,60);
+      } else if(tipo_dose==='peso'){
+        // monta prévia da dose
+        const apres=m.apresentacao||'';
+        const intv=fmtIntervalo(m.intervalo||'');
+        const dur=m.duracao||'';
+        if(m.dose_apres_kg && !isNaN(peso) && peso>0){
+          let dose=peso*m.dose_apres_kg;
+          if(m.dose_max_apres!=null&&dose>m.dose_max_apres) dose=m.dose_max_apres;
+          const doseNum=apres==='gotas'?Math.round(dose):parseFloat(dose.toFixed(1));
+          sub=`${doseNum} ${apres}` + (intv?` · ${intv}`:'') + (dur?` · ${dur}`:'');
+        } else {
+          sub=`${apres}` + (intv?` · ${intv}`:'') + (dur?` · ${dur}`:'');
+        }
+      } else if(tipo_dose==='idade'){
+        const faixas=Array.isArray(m.faixas_idade)?m.faixas_idade:[];
+        let faixa=null;
+        if(!isNaN(idade) && idade>0){
+          faixa=faixas.find(f=>{
+            const ok_min=(f.idade_min==null||idade>=Number(f.idade_min));
+            const ok_max=(f.idade_max==null||idade< Number(f.idade_max));
+            return ok_min&&ok_max;
+          });
+        }
+        const apres=m.apresentacao||'';
+        const intv=fmtIntervalo(m.intervalo||'');
+        const dur=m.duracao||'';
+        if(faixa){
+          sub=`${faixa.dose} ${apres}` + (intv?` · ${intv}`:'') + (dur?` · ${dur}`:'');
+        } else {
+          sub=faixas.map(f=>{
+            const a=f.idade_min!=null?`${f.idade_min}a`:'';
+            const b=f.idade_max!=null?`${f.idade_max}a`:'∞';
+            return `${a||'0'}–${b}: ${f.dose}`;
+          }).join(' | ');
+        }
+      }
+    } else {
+      sub=m.posol||m.cat||'';
+    }
     const badge=m._custom?`<span style="font-size:10px;background:var(--amber-light);color:var(--amber);border-radius:4px;padding:1px 5px;margin-left:4px;">pessoal</span>`:'';
     return`<div class="ac-item" data-idx="${i}" data-id="${m.id}" data-tipo="${tipo}" onclick="acSelect('${m.id}','${tipo}')">
-      <span>${highlightMatch(m.nome,q)}${badge}</span>
-      <span>${sub}</span>
+      <span>${highlightMatch(m.nome,norm(q))}${badge}</span>
+      <span style="max-width:280px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</span>
     </div>`;
   }).join('');
-  const exactMatch=meds.some(m=>m.nome.toLowerCase()===q);
+  const exactMatch=meds.some(m=>norm(m.nome)===q);
   if(!exactMatch){
     html+=`<div class="ac-add-row" onclick="acAddCustom('${tipo}')">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
@@ -2042,7 +2119,7 @@ function acFilter(tipo){
 }
 function highlightMatch(text,q){
   if(!q)return text;
-  const idx=text.toLowerCase().indexOf(q);
+  const idx=norm(text).indexOf(norm(q));
   if(idx<0)return text;
   return text.slice(0,idx)+'<strong>'+text.slice(idx,idx+q.length)+'</strong>'+text.slice(idx+q.length);
 }
@@ -2370,7 +2447,7 @@ function buildPedPosol(m, peso, idade){
   const apres = m.apresentacao || '';
   const modo  = m.modo  || 'Dar';
   const via   = m.via   ? ` ${m.via}` : '';
-  const intv  = m.intervalo || '';
+  const intv  = fmtIntervalo(m.intervalo || '');
   const dur   = m.duracao   || '';
 
   // sufixo comum: de [intervalo] por [duração]
@@ -2415,7 +2492,7 @@ function buildPedPosol(m, peso, idade){
       });
     }
     if(faixa){
-      const iv_faixa = faixa.intervalo || intv; // faixa pode ter intervalo próprio
+      const iv_faixa = fmtIntervalo(faixa.intervalo || intv);
       return {
         posol: `${modo} ${faixa.dose} ${apres}${via ? ' ' + via.trim() : ''}${sufixo(iv_faixa, dur)}`,
         doseStr: faixa.dose, doseDetail: null, tipo,
@@ -2963,9 +3040,9 @@ function renderModelos(){
 }
 function renderModelosGrid(tipo){
   const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
-  const q=(document.getElementById('modelo-busca')||{value:''}).value.toLowerCase().trim();
+  const q=(document.getElementById('modelo-busca')||{value:''}).value.trim();
   let mods=cacheGet(tipo==='ped'?'modelos_ped':'modelos_adulto')||ls(key)||[];
-  if(q) mods=mods.filter(m=>m.nome.toLowerCase().includes(q)||(m.medicamentos||[]).some(x=>x.nome.toLowerCase().includes(q)));
+  if(q) mods=mods.filter(m=>norm(m.nome).includes(norm(q))||(m.medicamentos||[]).some(x=>norm(x.nome).includes(norm(q))));
   const favs=_favModelos;
   // Sort: favorites first
   mods=[...mods.filter(m=>favs.includes(String(m.id))),...mods.filter(m=>!favs.includes(String(m.id)))];
@@ -3075,11 +3152,11 @@ function switchAdminTab(tab,btn){
 }
 // ── ADMIN: MEDICAMENTOS ADULTO ──
 async function renderAdultoTable(){
-  const q=(document.getElementById('search-adulto')||{value:''}).value.toLowerCase();
+  const q=(document.getElementById('search-adulto')||{value:''}).value;
   const sb=await getSB();
   const {data}=await sb.from('meds_adulto').select('*').order('nome');
   cacheSet('meds_adulto',data||[]);
-  const meds=(data||[]).filter(m=>!q||m.nome.toLowerCase().includes(q));
+  const meds=(data||[]).filter(m=>!q||norm(m.nome).includes(norm(q)));
   const colors={Antibiótico:'teal',Analgésico:'amber','Anti-inflamatório':'amber','Anti-hipertensivo':'green',Antidiabético:'green',Gastroprotetor:'teal'};
   document.getElementById('adulto-tbody').innerHTML=meds.map(m=>`<tr>
     <td><strong>${m.nome}</strong></td>
@@ -3121,11 +3198,11 @@ async function deleteMedAdulto(id){
 
 // ── ADMIN: MEDICAMENTOS PEDIÁTRICOS ──
 async function renderPedTable(){
-  const q=(document.getElementById('search-ped-db')||{value:''}).value.toLowerCase();
+  const q=(document.getElementById('search-ped-db')||{value:''}).value;
   const sb=await getSB();
   const {data}=await sb.from('meds_ped').select('*').order('nome');
   cacheSet('meds_ped',data||[]);
-  const meds=(data||[]).filter(m=>!q||m.nome.toLowerCase().includes(q));
+  const meds=(data||[]).filter(m=>!q||norm(m.nome).includes(norm(q)));
 
   const byTipo={peso:[],idade:[],fixo:[]};
   meds.forEach(m=>{ const t=m.tipo_dose||'peso'; if(byTipo[t])byTipo[t].push(m); else byTipo.fixo.push(m); });
@@ -3339,7 +3416,7 @@ let acExamFocused=-1;
 function acFilterExam(){
   const inp=document.getElementById('ac-exam');
   const drop=document.getElementById('ac-exam-drop');
-  const q=inp.value.trim().toLowerCase();
+  const q=norm(inp.value.trim());
   if(q.length<3){drop.classList.remove('open');return;}
   const exs=cacheGet('exames_db')||[];
   if(exs.length===0){
@@ -3348,7 +3425,7 @@ function acFilterExam(){
     });
     return;
   }
-  const filtered=exs.filter(e=>e.nome.toLowerCase().includes(q));
+  const filtered=exs.filter(e=>norm(e.nome).includes(q));
   acExamFocused=-1;
   if(!filtered.length){drop.innerHTML='<div class="ac-item" style="color:var(--ink3);">Nenhum resultado</div>';drop.classList.add('open');return;}
   drop.innerHTML=filtered.map(e=>`
@@ -3441,9 +3518,9 @@ function gerarDocumento(){
 
 // ── MODELOS EXAMES ──
 function renderModelosExamesGrid(){
-  const q=(document.getElementById('modelo-busca')||{value:''}).value.toLowerCase().trim();
+  const q=(document.getElementById('modelo-busca')||{value:''}).value.trim();
   let mods=ls(KEYS.modelos_exames)||[];
-  if(q) mods=mods.filter(m=>m.nome.toLowerCase().includes(q)||(m.exames||[]).some(e=>e.toLowerCase().includes(q)));
+  if(q) mods=mods.filter(m=>norm(m.nome).includes(norm(q))||(m.exames||[]).some(e=>norm(e).includes(norm(q))));
   const grid=document.getElementById('modelos-exames-grid');
   if(!mods.length){grid.innerHTML=`<div class="model-empty">${q?'Nenhum modelo encontrado.':'Nenhum modelo de exames salvo ainda.<br>Crie uma solicitação e salve como modelo.'}</div>`;return;}
   grid.innerHTML=mods.map(m=>`
@@ -3481,7 +3558,7 @@ function renderInjAc(){}  // placeholder, just clears state
 function acFilterInj(){
   const inp=document.getElementById('ac-inj');
   const drop=document.getElementById('ac-inj-drop');
-  const q=inp.value.trim().toLowerCase();
+  const q=norm(inp.value.trim());
   if(q.length<3){drop.classList.remove('open');return;}
   let drugs=cacheGet('injetaveis')||[];
   if(!drugs.length){
@@ -3490,7 +3567,7 @@ function acFilterInj(){
     });
     return;
   }
-  drugs=drugs.filter(d=>d.nome.toLowerCase().includes(q));
+  drugs=drugs.filter(d=>norm(d.nome).includes(q));
   acInjFocused=-1;
   if(!drugs.length){drop.innerHTML='<div class="ac-item" style="color:var(--ink3);">Nenhuma droga encontrada</div>';drop.classList.add('open');return;}
   drop.innerHTML=drugs.map(d=>`
@@ -3619,11 +3696,11 @@ document.addEventListener('click',e=>{if(!e.target.closest('#ac-inj-wrap'))docum
 
 // ── INJETÁVEIS DB (ADMIN) ──
 async function renderInjTable(){
-  const q=(document.getElementById('search-inj-db')||{value:''}).value.toLowerCase();
+  const q=(document.getElementById('search-inj-db')||{value:''}).value;
   const sb=await getSB();
   const {data}=await sb.from('injetaveis').select('*').order('nome');
   cacheSet('injetaveis',data||[]);
-  const drugs=(data||[]).filter(d=>!q||d.nome.toLowerCase().includes(q));
+  const drugs=(data||[]).filter(d=>!q||norm(d.nome).includes(norm(q)));
   document.getElementById('inj-tbody').innerHTML=drugs.map(d=>`<tr>
     <td><strong>${d.nome}</strong></td>
     <td>${d.dose} ${d.unidade}</td>
