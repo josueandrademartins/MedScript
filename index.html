@@ -1862,7 +1862,16 @@ function nav(id,btn){
   if(id==='usuarios'){if(!isAdmin()){toast('⚠️ Acesso restrito');return;}renderUsersList();}
   if(id==='rx-adulto'){populateLocalSelects();}
   if(id==='rx-ped'){updatePedMedOptions();populateLocalSelects();}
-  if(id==='injetaveis'){renderInjAc();}
+  if(id==='injetaveis'){
+    renderInjAc();
+    // Pré-preenche o peso do campo de injetáveis com o peso do receituário ped se disponível
+    const injPesoEl=document.getElementById('inj-peso');
+    if(injPesoEl && !injPesoEl.value){
+      const pedPeso=document.getElementById('p-peso');
+      if(pedPeso && pedPeso.value) injPesoEl.value=pedPeso.value;
+    }
+    renderFavInjetaveis();
+  }
   if(id==='perfil'){loadPerfil();}
   if(id==='dashboard'){updateDash();}
   if(id==='exames'){selectedExams=[];renderSelectedExams();populateLocalSelects();}
