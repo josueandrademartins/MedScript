@@ -2904,8 +2904,7 @@ function gerarPDF(data, title){
       <button class="pb-btn pb-btn-primary" onclick="window.print()">⎙ Imprimir / Salvar PDF</button>
       <button class="pb-btn pb-btn-close" onclick="window.close()">Fechar</button>
     </div>
-  </div><div class="print-bar-spacer" style="height:52px;display:block;"></div>
-  <script>window.addEventListener('load',function(){setTimeout(function(){window.print();},900);});<\/script>`;
+  </div><div class="print-bar-spacer" style="height:52px;display:block;"></div>`;
 
   const sheetClass = `rx-sheet${data.controlado?' controlado':''}`;
 
@@ -2932,7 +2931,7 @@ function gerarPDF(data, title){
       document.body.appendChild(iframe);
       iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>{iframe.remove();URL.revokeObjectURL(url);},1500);},400);};
     } else {
-      setTimeout(()=>URL.revokeObjectURL(url),60000);
+      win.addEventListener('unload',()=>URL.revokeObjectURL(url));
     }
     return;
   }
@@ -2993,7 +2992,7 @@ function gerarPDF(data, title){
     document.body.appendChild(iframe);
     iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>{iframe.remove();URL.revokeObjectURL(url);},1500);},400);};
   } else {
-    setTimeout(()=>URL.revokeObjectURL(url),60000);
+    win.addEventListener('unload',()=>URL.revokeObjectURL(url));
   }
 }
 
