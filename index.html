@@ -2901,10 +2901,11 @@ function gerarPDF(data, title){
   const bar=`<div class="print-bar">
     <h4>${title||'Receita Médica'}</h4>
     <div class="pb-btns">
-      <button class="pb-btn pb-btn-primary" onclick="window.print()">Imprimir / Salvar PDF</button>
+      <button class="pb-btn pb-btn-primary" onclick="window.print()">⎙ Imprimir / Salvar PDF</button>
       <button class="pb-btn pb-btn-close" onclick="window.close()">Fechar</button>
     </div>
-  </div><div class="print-bar-spacer" style="height:52px;display:block;"></div>`;
+  </div><div class="print-bar-spacer" style="height:52px;display:block;"></div>
+  <script>window.addEventListener('load',function(){setTimeout(function(){window.print();},900);});<\/script>`;
 
   const sheetClass = `rx-sheet${data.controlado?' controlado':''}`;
 
