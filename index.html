@@ -2029,8 +2029,22 @@ function acFilter(tipo){
     const peso =parseFloat(document.getElementById('p-peso').value);
     if(!isNaN(idade)){
       meds=meds.filter(m=>{
+        // Restrição simples de idade_min/max da linha
         if(m.idade_min!=null && idade < m.idade_min) return false;
         if(m.idade_max!=null && idade > m.idade_max) return false;
+        // Para tipo=idade: verificar se a idade cabe em alguma faixa do JSONB
+        // Se não couber em nenhuma faixa, não sugerir
+        if((m.tipo_dose||'peso')==='idade'){
+          const faixas=Array.isArray(m.faixas_idade)?m.faixas_idade:[];
+          if(faixas.length>0){
+            const coubeEmFaixa=faixas.some(f=>{
+              const ok_min=(f.idade_min==null||idade>=Number(f.idade_min));
+              const ok_max=(f.idade_max==null||idade< Number(f.idade_max));
+              return ok_min&&ok_max;
+            });
+            if(!coubeEmFaixa) return false;
+          }
+        }
         return true;
       });
     }
