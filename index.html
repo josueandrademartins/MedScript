@@ -1621,6 +1621,25 @@ async function toggleFavModelo(id){
   renderModelos();
 }
 
+// ── Cálculo de volume injetável (usado tanto pelo card quanto pelo painel) ──
+function calcVolInj(drug, peso){
+  if(isNaN(peso)||peso<=0||!drug.concentracao) return null;
+  const isInfusao=drug.unidade.includes('/min')||drug.unidade.includes('/h');
+  let dose=peso*drug.dose;
+  let doseMax=drug.dose_max!=null?(isInfusao?drug.dose_max:peso*drug.dose_max):null;
+  if(!isInfusao && doseMax!=null && dose>doseMax) dose=doseMax;
+  let doseForML=dose;
+  if(drug.unidade.startsWith('mcg')&&(drug.conc_unidade||'').startsWith('mg')) doseForML=dose/1000;
+  if(!isInfusao){
+    return {vol: doseForML/drug.concentracao, label:'ml'};
+  } else {
+    let concVal=drug.concentracao;
+    if(drug.unidade==='mcg/kg/min'&&(drug.conc_unidade||'').startsWith('mg')) concVal*=1000;
+    const vol=drug.unidade==='mg/kg/h'?(drug.dose*peso)/drug.concentracao:(drug.dose*peso*60)/concVal;
+    return {vol, label:'ml/h'};
+  }
+}
+
 function renderFavInjetaveis(){
   const wrap=document.getElementById('inj-favoritos-wrap');
   if(!wrap) return;
@@ -1634,22 +1653,9 @@ function renderFavInjetaveis(){
   const fmt=n=>n<0.1?parseFloat(n.toFixed(3)):n<10?parseFloat(n.toFixed(2)):parseFloat(n.toFixed(1));
   wrap.innerHTML=favDrugs.map(d=>{
     let resultado='';
-    if(!isNaN(peso)&&peso>0&&d.concentracao){
-      const isInfusao=d.unidade.includes('/min')||d.unidade.includes('/h');
-      let dose=peso*d.dose;
-      if(d.dose_max!=null&&!isInfusao&&dose>d.dose_max) dose=d.dose_max;
-      let volML;
-      let concVal=d.concentracao;
-      if(d.unidade.startsWith('mcg')&&(d.conc_unidade||'').startsWith('mg')) concVal*=1000;
-      if(!isInfusao){
-        let doseForML=dose;
-        if(d.unidade.startsWith('mcg')&&(d.conc_unidade||'').startsWith('mg')) doseForML=dose/1000;
-        volML=doseForML/d.concentracao;
-        resultado=`<span style="font-family:'Lora',serif;font-size:18px;font-weight:700;color:var(--teal);">${fmt(volML)} ml</span>`;
-      } else {
-        volML=(d.dose*peso*60)/concVal;
-        resultado=`<span style="font-family:'Lora',serif;font-size:18px;font-weight:700;color:var(--teal);">${fmt(volML)} ml/h</span>`;
-      }
+    const r=calcVolInj(d, peso);
+    if(r){
+      resultado=`<span style="font-family:'Lora',serif;font-size:18px;font-weight:700;color:var(--teal);">${fmt(r.vol)} ${r.label}</span>`;
     } else if(!isNaN(peso)&&peso>0){
       resultado=`<span style="font-size:13px;color:var(--ink2);">${fmt(peso*d.dose)} ${d.unidade.replace('/kg','')}</span>`;
     } else {
