@@ -1827,12 +1827,12 @@ async function boot(){
     // Escuta mudanças de sessão (ex: expiração de token)
     // IMPORTANTE: ignorar TOKEN_REFRESHED e INITIAL_SESSION para não resetar a página
     sb.auth.onAuthStateChange(async(event,session)=>{
+      console.log('[AUTH]', event, session?.user?.email);
       if(event==='SIGNED_OUT'||event==='USER_DELETED'){
         _currentProfile=null;
         document.getElementById('login-screen').classList.remove('hidden');
         document.body.classList.remove('is-admin');
       }
-      // TOKEN_REFRESHED, INITIAL_SESSION, USER_UPDATED: ignorar — não reiniciar o app
     });
   }catch(e){
     console.warn('Supabase não configurado ainda:',e.message);
@@ -2925,15 +2925,14 @@ function gerarPDF(data, title){
       ${footHtml}
     </div>`;
     const fullDocHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Documento'}</title>${fonts}${style}</head><body>${bar}${docSheet}</body></html>`;
-    const blob=new Blob([fullDocHtml],{type:'text/html;charset=utf-8'});
-    const url=URL.createObjectURL(blob);
+    const url='data:text/html;charset=utf-8,'+encodeURIComponent(fullDocHtml);
     const win=window.open(url,'_blank');
     if(!win){
       const iframe=document.createElement('iframe');
       iframe.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;';
       iframe.srcdoc=fullDocHtml;
       document.body.appendChild(iframe);
-      iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>{iframe.remove();URL.revokeObjectURL(url);},1500);},400);};
+      iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>iframe.remove(),1500)},400);};
     }
     return;
   }
@@ -2984,15 +2983,14 @@ function gerarPDF(data, title){
 
   const fullHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Receita'}</title>${fonts}${style}</head><body>${bar}${tplSheet}${tplCtrl}<div id="rx-pages"></div>${layoutScript}</body></html>`;
 
-  const blob=new Blob([fullHtml],{type:'text/html;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
+  const url='data:text/html;charset=utf-8,'+encodeURIComponent(fullHtml);
   const win=window.open(url,'_blank');
   if(!win){
     const iframe=document.createElement('iframe');
     iframe.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;';
     iframe.srcdoc=fullHtml;
     document.body.appendChild(iframe);
-    iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>{iframe.remove();URL.revokeObjectURL(url);},1500);},400);};
+    iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>iframe.remove(),1500)},400);};
   }
 }
 
