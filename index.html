@@ -1825,12 +1825,14 @@ async function boot(){
       applyAuth();
     }
     // Escuta mudanças de sessão (ex: expiração de token)
+    // IMPORTANTE: ignorar TOKEN_REFRESHED e INITIAL_SESSION para não resetar a página
     sb.auth.onAuthStateChange(async(event,session)=>{
-      if(event==='SIGNED_OUT'||!session){
+      if(event==='SIGNED_OUT'||event==='USER_DELETED'){
         _currentProfile=null;
         document.getElementById('login-screen').classList.remove('hidden');
         document.body.classList.remove('is-admin');
       }
+      // TOKEN_REFRESHED, INITIAL_SESSION, USER_UPDATED: ignorar — não reiniciar o app
     });
   }catch(e){
     console.warn('Supabase não configurado ainda:',e.message);
