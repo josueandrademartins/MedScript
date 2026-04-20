@@ -2634,13 +2634,17 @@ async function gerarRx(tipo,formato){
   const meds=tipo==='ped'?pMeds:aMeds;
   if(!pac){toast('⚠️ Informe o nome do paciente');return;}
   if(!meds.length){toast('⚠️ Adicione ao menos 1 medicamento');return;}
+  // Abre a janela IMEDIATAMENTE no contexto do clique (antes de qualquer await)
+  // Safari bloqueia window.open se chamado após await
+  const previewWin=window.open('','_blank');
+  if(previewWin) previewWin.document.write('<html><body style="font-family:sans-serif;padding:40px;color:#555;">Gerando receita...</body></html>');
+
   const perfil=ls(KEYS.perfil)||{};
   const locais=cacheGet('locais')||[];
   const locIdxEl=document.getElementById(tipo==='ped'?'p-local':'a-local');
   const locIdx=locIdxEl?locIdxEl.value:'';
   const local=locIdx!==''?locais[parseInt(locIdx)]:(locais[0]||null);
   const hoje=new Date().toLocaleDateString('pt-BR');
-  // salvar modelo
   const mnKey=tipo==='ped'?'p-model-name':'a-model-name';
   const mn=v(mnKey);
   if(mn) await _salvarModeloNoBanco(tipo, mn, meds);
@@ -2650,7 +2654,7 @@ async function gerarRx(tipo,formato){
     : buildRxHtml({perfil,local,hoje,pac,meds,obs:v(tipo==='ped'?'p-obs':'a-obs'),tipo,extra});
 
   const title=formato==='controlado'?'Receituário Controlado':'Prévia da Receita';
-  openRxModal(html, title);
+  openRxModal(html, title, previewWin);
 }
 
 async function _salvarModeloNoBanco(tipo, nome, meds){
@@ -2683,14 +2687,13 @@ async function salvarModeloDireto(tipo){
   await _salvarModeloNoBanco(tipo, nome, meds);
 }
 
-function openRxModal(html, title){
-  // Generate PDF directly — open in new tab as print-ready A4 page
-  gerarPDF(html, title);
+function openRxModal(html, title, previewWin){
+  gerarPDF(html, title, previewWin);
 }
 function closeRxModal(){}  // kept for safety, no-op
 function printRx(){}       // kept for safety, no-op
 
-function gerarPDF(data, title){
+function gerarPDF(data, title, previewWin){
   const fonts=`<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">`;
   const style=`<style>
     @page{size:210mm 270mm portrait;margin:15mm;}
@@ -2926,11 +2929,9 @@ function gerarPDF(data, title){
       ${footHtml}
     </div>`;
     const fullDocHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Documento'}</title>${fonts}${style}</head><body>${bar}${docSheet}</body></html>`;
-    const blob=new Blob([fullDocHtml],{type:'text/html;charset=utf-8'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url; a.target='_blank'; a.rel='noopener';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    const _writeDoc=(w,h)=>{w.document.open();w.document.write(h);w.document.close();};
+    if(previewWin&&!previewWin.closed){_writeDoc(previewWin,fullDocHtml);}
+    else{const w=window.open('','_blank');if(w)_writeDoc(w,fullDocHtml);}
     return;
   }
 
@@ -2980,11 +2981,9 @@ function gerarPDF(data, title){
 
   const fullHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Receita'}</title>${fonts}${style}</head><body>${bar}${tplSheet}${tplCtrl}<div id="rx-pages"></div>${layoutScript}</body></html>`;
 
-  const blob=new Blob([fullHtml],{type:'text/html;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.target='_blank'; a.rel='noopener';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  const _writeRx=(w,h)=>{w.document.open();w.document.write(h);w.document.close();};
+  if(previewWin&&!previewWin.closed){_writeRx(previewWin,fullHtml);}
+  else{const w=window.open('','_blank');if(w)_writeRx(w,fullHtml);}
 }
 
 // Close modal on overlay click (kept for legacy, no-op)
@@ -3524,7 +3523,8 @@ function gerarDocExame(){
     corpo=`<p style="font-size:12.5px;margin-bottom:6px;"><strong>Para:</strong> ${v('enc-destino')||'—'} &nbsp;·&nbsp; <strong>Urgência:</strong> ${urg}</p><hr style="border:none;border-top:1px solid #ccc;margin:8px 0;"><p style="font-size:12.5px;font-weight:600;margin-bottom:4px;">Motivo clínico:</p><p style="font-size:12.5px;line-height:1.7;">${texto}</p>`;
   }
   const data=buildDocData({perfil,local,hoje,pac,titulo,corpo});
-  gerarPDF(data,titulo);
+  const _pw=window.open('','_blank');
+  gerarPDF(data,titulo,_pw);
 }
 
 function gerarDocumento(){
@@ -3545,7 +3545,8 @@ function gerarDocumento(){
     corpo=`<p style="font-size:12.5px;line-height:1.8;">Declaramos que o(a) paciente acima compareceu a esta unidade para <strong>${fin}</strong> no dia ${hoje}${hin?' das '+hin:''}${hout?' às '+hout:''}.</p>`;
   }
   const data=buildDocData({perfil,local,hoje,pac,titulo,corpo});
-  gerarPDF(data,titulo);
+  const _pw=window.open('','_blank');
+  gerarPDF(data,titulo,_pw);
 }
 
 // ── MODELOS EXAMES ──
