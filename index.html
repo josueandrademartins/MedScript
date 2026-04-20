@@ -1801,6 +1801,11 @@ function addExamFromInput(){
   toast('✓ Exame adicionado!');
 }
 async function boot(){
+  // Limpa chaves de modelos do localStorage para evitar dados antigos
+  // Os dados reais vêm do Supabase via initData()
+  ['ms_modelos_adulto','ms_modelos_ped','ms_modelos_exames'].forEach(k=>{
+    try{localStorage.removeItem(k);}catch(e){}
+  });
   await Promise.all([initData(), loadPerfilFromDB(), loadFavoritos()]);
   updateSidebarDoctor();
   updateDash();
@@ -2635,7 +2640,6 @@ async function gerarRx(tipo,formato){
   const locIdx=locIdxEl?locIdxEl.value:'';
   const local=locIdx!==''?locais[parseInt(locIdx)]:(locais[0]||null);
   const hoje=new Date().toLocaleDateString('pt-BR');
-  // salvar modelo
   const mnKey=tipo==='ped'?'p-model-name':'a-model-name';
   const mn=v(mnKey);
   if(mn) await _salvarModeloNoBanco(tipo, mn, meds);
@@ -2643,7 +2647,6 @@ async function gerarRx(tipo,formato){
   const html=formato==='controlado'
     ? buildControladoHtml({perfil,local,hoje,pac,meds,tipo,extra})
     : buildRxHtml({perfil,local,hoje,pac,meds,obs:v(tipo==='ped'?'p-obs':'a-obs'),tipo,extra});
-
   const title=formato==='controlado'?'Receituário Controlado':'Prévia da Receita';
   openRxModal(html, title);
 }
@@ -2679,11 +2682,10 @@ async function salvarModeloDireto(tipo){
 }
 
 function openRxModal(html, title){
-  // Generate PDF directly — open in new tab as print-ready A4 page
   gerarPDF(html, title);
 }
-function closeRxModal(){}  // kept for safety, no-op
-function printRx(){}       // kept for safety, no-op
+function closeRxModal(){}
+function printRx(){}
 
 function gerarPDF(data, title){
   const fonts=`<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">`;
@@ -2930,8 +2932,6 @@ function gerarPDF(data, title){
       iframe.srcdoc=fullDocHtml;
       document.body.appendChild(iframe);
       iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>{iframe.remove();URL.revokeObjectURL(url);},1500);},400);};
-    } else {
-      setTimeout(()=>URL.revokeObjectURL(url),60000);
     }
     return;
   }
@@ -2991,8 +2991,6 @@ function gerarPDF(data, title){
     iframe.srcdoc=fullHtml;
     document.body.appendChild(iframe);
     iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>{iframe.remove();URL.revokeObjectURL(url);},1500);},400);};
-  } else {
-    setTimeout(()=>URL.revokeObjectURL(url),60000);
   }
 }
 
@@ -3070,7 +3068,19 @@ function renderModelos(){
 function renderModelosGrid(tipo){
   const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
   const q=(document.getElementById('modelo-busca')||{value:''}).value.trim();
-  let mods=cacheGet(tipo==='ped'?'modelos_ped':'modelos_adulto')||ls(key)||[];
+  const cacheKey=tipo==='ped'?'modelos_ped':'modelos_adulto';
+  // Se cache vazio, busca do Supabase e re-renderiza
+  if(cacheGet(cacheKey)===null){
+    getSB().then(async sb=>{
+      const {data:{user}}=await sb.auth.getUser().catch(()=>({data:{user:null}}));
+      if(!user) return;
+      const {data}=await sb.from('modelos').select('*').eq('user_id',user.id).eq('tipo',tipo==='ped'?'ped':'adulto');
+      if(data) cacheSet(cacheKey,data);
+      renderModelosGrid(tipo);
+    });
+    return;
+  }
+  let mods=cacheGet(cacheKey)||[];
   if(q) mods=mods.filter(m=>norm(m.nome).includes(norm(q))||(m.medicamentos||[]).some(x=>norm(x.nome).includes(norm(q))));
   const favs=_favModelos;
   // Sort: favorites first
