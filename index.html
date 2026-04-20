@@ -2907,17 +2907,18 @@ async function gerarPDF(data, title){
     const prefix = data.docCorpo!==undefined ? (data.tipoLabel||'documento').toLowerCase().replace(/\s+/g,'_') : 'receituario';
     const filename = `${prefix}-${pacName}.pdf`;
 
-    // Open in new tab AND offer download
+    // Open in new tab
     const pdfBlob = pdf.output('blob');
     const blobUrl = URL.createObjectURL(pdfBlob);
 
-    // Open in new tab for preview
-    const previewWin = window.open(blobUrl, '_blank');
-
-    // If popup blocked, do direct download
-    if(!previewWin){
-      pdf.save(filename);
-    }
+    // Cria link <a> e clica — Safari permite isso em contexto async
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 
     toast('✓ PDF gerado!');
 
