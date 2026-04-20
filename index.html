@@ -2629,32 +2629,31 @@ function idadeStr(min,max){
 }
 
 // ── GERAR RECEITA ──
-async function gerarRx(tipo,formato){
+function gerarRx(tipo,formato){
   const pac=v(tipo==='ped'?'p-pac-nome':'a-pac-nome');
   const meds=tipo==='ped'?pMeds:aMeds;
   if(!pac){toast('⚠️ Informe o nome do paciente');return;}
   if(!meds.length){toast('⚠️ Adicione ao menos 1 medicamento');return;}
-  // Abre a janela IMEDIATAMENTE no contexto do clique (antes de qualquer await)
-  // Safari bloqueia window.open se chamado após await
-  const previewWin=window.open('','_blank');
-  if(previewWin) previewWin.document.write('<html><body style="font-family:sans-serif;padding:40px;color:#555;">Gerando receita...</body></html>');
 
+  // ── Tudo síncrono: coleta dados, monta HTML, abre e escreve na aba ──
   const perfil=ls(KEYS.perfil)||{};
   const locais=cacheGet('locais')||[];
   const locIdxEl=document.getElementById(tipo==='ped'?'p-local':'a-local');
   const locIdx=locIdxEl?locIdxEl.value:'';
   const local=locIdx!==''?locais[parseInt(locIdx)]:(locais[0]||null);
   const hoje=new Date().toLocaleDateString('pt-BR');
-  const mnKey=tipo==='ped'?'p-model-name':'a-model-name';
-  const mn=v(mnKey);
-  if(mn) await _salvarModeloNoBanco(tipo, mn, meds);
   const extra=tipo==='ped'?[v('p-idade')?'Idade: '+v('p-idade')+' anos':'',v('p-peso')?'Peso: '+v('p-peso')+' kg':''].filter(Boolean).join(' · '):'';
   const html=formato==='controlado'
     ? buildControladoHtml({perfil,local,hoje,pac,meds,tipo,extra})
     : buildRxHtml({perfil,local,hoje,pac,meds,obs:v(tipo==='ped'?'p-obs':'a-obs'),tipo,extra});
-
   const title=formato==='controlado'?'Receituário Controlado':'Prévia da Receita';
-  openRxModal(html, title, previewWin);
+
+  // Abre e escreve imediatamente — 100% síncrono, Safari não bloqueia
+  openRxModal(html, title, null);
+
+  // Salva modelo em background sem bloquear a abertura da aba
+  const mn=v(tipo==='ped'?'p-model-name':'a-model-name');
+  if(mn) _salvarModeloNoBanco(tipo, mn, meds).catch(e=>console.warn('modelo:',e));
 }
 
 async function _salvarModeloNoBanco(tipo, nome, meds){
@@ -2690,8 +2689,8 @@ async function salvarModeloDireto(tipo){
 function openRxModal(html, title, previewWin){
   gerarPDF(html, title, previewWin);
 }
-function closeRxModal(){}  // kept for safety, no-op
-function printRx(){}       // kept for safety, no-op
+function closeRxModal(){}
+function printRx(){}
 
 function gerarPDF(data, title, previewWin){
   const fonts=`<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">`;
@@ -2929,7 +2928,7 @@ function gerarPDF(data, title, previewWin){
       ${footHtml}
     </div>`;
     const fullDocHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Documento'}</title>${fonts}${style}</head><body>${bar}${docSheet}</body></html>`;
-    const _writeDoc=(w,h)=>{w.document.open();w.document.write(h);w.document.close();};
+    const _writeDoc=(w,h)=>{w.document.open();w.document.write(h);w.document.close();w.focus();};
     if(previewWin&&!previewWin.closed){_writeDoc(previewWin,fullDocHtml);}
     else{const w=window.open('','_blank');if(w)_writeDoc(w,fullDocHtml);}
     return;
@@ -2981,7 +2980,7 @@ function gerarPDF(data, title, previewWin){
 
   const fullHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Receita'}</title>${fonts}${style}</head><body>${bar}${tplSheet}${tplCtrl}<div id="rx-pages"></div>${layoutScript}</body></html>`;
 
-  const _writeRx=(w,h)=>{w.document.open();w.document.write(h);w.document.close();};
+  const _writeRx=(w,h)=>{w.document.open();w.document.write(h);w.document.close();w.focus();};
   if(previewWin&&!previewWin.closed){_writeRx(previewWin,fullHtml);}
   else{const w=window.open('','_blank');if(w)_writeRx(w,fullHtml);}
 }
