@@ -855,7 +855,7 @@ body.is-admin .admin-only-block{display:block;}
       <div class="search-wrap"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input id="search-inj-db" placeholder="Buscar droga..." oninput="renderInjTable()"></div>
       <div style="overflow-x:auto;">
         <table class="med-table">
-          <thead><tr><th>Droga</th><th>Dose padrão</th><th>Unidade dose</th><th>Diluição</th><th>Via</th><th>Obs.</th><th></th></tr></thead>
+          <thead><tr><th>Droga</th><th>Classe</th><th>Via</th><th>Dose</th><th>Dose máx</th><th>Concentração</th><th>Uso clínico</th><th></th></tr></thead>
           <tbody id="inj-tbody"></tbody>
         </table>
       </div>
@@ -1165,43 +1165,119 @@ body.is-admin .admin-only-block{display:block;}
 
 <!-- Modal Droga Injetável -->
 <div class="modal-overlay" id="modal-inj">
-  <div class="modal" style="max-width:560px;">
+  <div class="modal" style="max-width:680px;max-height:92vh;overflow-y:auto;">
     <h3 id="modal-inj-title">Nova Droga Injetável</h3>
     <input type="hidden" id="mi-edit-id">
+
+    <!-- Identificação -->
     <div class="gr2">
-      <div class="fg"><label>Nome da droga</label><input id="mi-nome" placeholder="Ex: Midazolam, Morfina"></div>
-      <div class="fg"><label>Via de administração</label><input id="mi-via" placeholder="Ex: IV, IM, SC"></div>
-    </div>
-    <div class="gr2">
-      <div class="fg"><label>Dose padrão (por kg)</label><input type="number" id="mi-dose" step="0.001" placeholder="Ex: 0.1"></div>
-      <div class="fg"><label>Unidade da dose</label>
-        <select id="mi-unidade">
-          <option value="mg/kg">mg/kg</option>
-          <option value="mcg/kg">mcg/kg</option>
-          <option value="mcg/kg/min">mcg/kg/min</option>
-          <option value="mg/kg/h">mg/kg/h</option>
-          <option value="UI/kg">UI/kg</option>
-          <option value="mEq/kg">mEq/kg</option>
+      <div class="fg"><label>Nome da droga *</label><input id="mi-nome" placeholder="Ex: Midazolam, Morfina"></div>
+      <div class="fg"><label>Via de administração *</label>
+        <select id="mi-via">
+          <option value="">Selecione…</option>
+          <option value="EV">EV (endovenosa)</option>
+          <option value="IM">IM (intramuscular)</option>
+          <option value="EV ou IM">EV ou IM</option>
+          <option value="SC">SC (subcutânea)</option>
+          <option value="IO">IO (intraóssea)</option>
+          <option value="EV lenta">EV lenta</option>
+          <option value="EV bolus">EV bolus</option>
+          <option value="EV infusão">EV infusão contínua</option>
         </select>
       </div>
     </div>
+
+    <!-- Dose padrão por kg -->
     <div class="gr2">
-      <div class="fg"><label>Dose mínima</label><input type="number" id="mi-dose-min" step="0.001" placeholder="Opcional"></div>
-      <div class="fg"><label>Dose máxima</label><input type="number" id="mi-dose-max" step="0.001" placeholder="Opcional"></div>
+      <div class="fg"><label>Dose padrão (por kg) *</label><input type="number" id="mi-dose" step="0.001" placeholder="Ex: 0.1"></div>
+      <div class="fg"><label>Unidade da dose *</label>
+        <select id="mi-unidade">
+          <option value="mg/kg">mg/kg</option>
+          <option value="mcg/kg">mcg/kg</option>
+          <option value="mcg/kg/min">mcg/kg/min (infusão)</option>
+          <option value="mg/kg/h">mg/kg/h (infusão)</option>
+          <option value="UI/kg">UI/kg</option>
+          <option value="mEq/kg">mEq/kg</option>
+          <option value="mL/kg">mL/kg</option>
+        </select>
+      </div>
     </div>
+
+    <!-- Faixa de dose -->
     <div class="gr2">
-      <div class="fg"><label>Concentração disponível (mg/ml ou mcg/ml)</label><input type="number" id="mi-concentracao" step="0.001" placeholder="Ex: 5 (para 5mg/ml)"></div>
-      <div class="fg"><label>Unidade da concentração</label>
+      <div class="fg"><label>Dose mínima por kg</label><input type="number" id="mi-dose-min" step="0.001" placeholder="Opcional"></div>
+      <div class="fg"><label>Dose máxima por kg</label><input type="number" id="mi-dose-max-kg" step="0.001" placeholder="Opcional"></div>
+    </div>
+
+    <!-- Dose máxima absoluta -->
+    <div class="gr2">
+      <div class="fg"><label>Dose máxima absoluta (teto total)</label><input type="number" id="mi-dose-max-abs" step="0.001" placeholder="Ex: 10 (máx 10mg por dose)"></div>
+      <div class="fg"><label>Unidade do teto absoluto</label>
+        <select id="mi-dose-max-unidade">
+          <option value="">—</option>
+          <option value="mg">mg</option>
+          <option value="mcg">mcg</option>
+          <option value="g">g</option>
+          <option value="UI">UI</option>
+          <option value="mEq">mEq</option>
+          <option value="mL">mL</option>
+        </select>
+      </div>
+    </div>
+    <p class="text-muted" style="font-size:11.5px;margin:-6px 0 10px;padding-left:2px;">💡 O menor valor entre dose×peso e teto absoluto será aplicado.</p>
+
+    <!-- Concentração da apresentação -->
+    <div class="gr2">
+      <div class="fg"><label>Concentração disponível *</label><input type="number" id="mi-concentracao" step="0.001" placeholder="Ex: 5 (para 5mg/ml)"></div>
+      <div class="fg"><label>Unidade da concentração *</label>
         <select id="mi-conc-unidade">
           <option value="mg/ml">mg/ml</option>
           <option value="mcg/ml">mcg/ml</option>
           <option value="UI/ml">UI/ml</option>
           <option value="mEq/ml">mEq/ml</option>
+          <option value="g/ml">g/ml</option>
         </select>
       </div>
     </div>
-    <div class="fg"><label>Diluição / Concentração disponível</label><input id="mi-diluicao" placeholder="Ex: 5mg/ml, diluir em SF 0.9%"></div>
-    <div class="fg"><label>Observações clínicas</label><input id="mi-obs" placeholder="Ex: monitorar FC, ter antagonista disponível"></div>
+
+    <!-- Diluição e observações -->
+    <div class="fg"><label>Diluição / preparo</label><input id="mi-diluicao" placeholder="Ex: Diluir em 20ml de SF 0,9% em 2 min"></div>
+    <div class="fg"><label>Observações clínicas</label><textarea id="mi-obs" rows="3" placeholder="Ex: monitorar FC; ter antagonista disponível; macete: peso × 0,04 ml"></textarea></div>
+
+    <!-- Classificação -->
+    <div class="gr2">
+      <div class="fg"><label>Classe do medicamento</label>
+        <select id="mi-classe" onchange="document.getElementById('mi-classe-outro-wrap').style.display=this.value==='Outros'?'block':'none'">
+          <option value="">Selecione…</option>
+          <option value="Antibiótico">Antibiótico</option>
+          <option value="Antiemético">Antiemético</option>
+          <option value="Corticosteroide">Corticosteroide</option>
+          <option value="Anti-inflamatório">Anti-inflamatório (AINE)</option>
+          <option value="Analgésico">Analgésico</option>
+          <option value="Opioide">Opioide</option>
+          <option value="Sedativo">Sedativo</option>
+          <option value="Anestésico">Anestésico</option>
+          <option value="Anticonvulsivante">Anticonvulsivante</option>
+          <option value="Bloqueador neuromuscular">Bloqueador neuromuscular</option>
+          <option value="Broncodilatador">Broncodilatador</option>
+          <option value="Antiarrítmico">Antiarrítmico</option>
+          <option value="Vasopressor">Vasopressor</option>
+          <option value="Anti-hipertensivo">Anti-hipertensivo</option>
+          <option value="Anti-histamínico">Anti-histamínico</option>
+          <option value="Antídoto">Antídoto</option>
+          <option value="Eletrólito">Eletrólito</option>
+          <option value="Anticoagulante">Anticoagulante</option>
+          <option value="Antifúngico">Antifúngico</option>
+          <option value="Antiviral">Antiviral</option>
+          <option value="Emergência / RCP">Emergência / RCP</option>
+          <option value="Outros">Outros (especificar)</option>
+        </select>
+      </div>
+      <div class="fg" id="mi-classe-outro-wrap" style="display:none;"><label>Especificar classe</label><input id="mi-classe-outro" placeholder="Digite a classe"></div>
+    </div>
+
+    <div class="fg"><label>Uso clínico / indicação</label><input id="mi-uso-clinico" placeholder="Ex: Infecção bacteriana grave; sedação em SRI; anafilaxia"></div>
+
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-inj')">Cancelar</button>
       <button class="btn btn-primary" onclick="saveInj()">Salvar</button>
@@ -1626,19 +1702,51 @@ async function toggleFavModelo(id){
 // ── Cálculo de volume injetável (usado tanto pelo card quanto pelo painel) ──
 function calcVolInj(drug, peso){
   if(isNaN(peso)||peso<=0||!drug.concentracao) return null;
-  const isInfusao=drug.unidade.includes('/min')||drug.unidade.includes('/h');
-  let dose=peso*drug.dose;
-  let doseMax=drug.dose_max!=null?(isInfusao?drug.dose_max:peso*drug.dose_max):null;
-  if(!isInfusao && doseMax!=null && dose>doseMax) dose=doseMax;
-  let doseForML=dose;
-  if(drug.unidade.startsWith('mcg')&&(drug.conc_unidade||'').startsWith('mg')) doseForML=dose/1000;
+
+  // Compat: aceita tanto schema novo (dose_unidade, concentracao_unidade) quanto antigo (unidade, conc_unidade)
+  const doseUnidade = drug.dose_unidade || drug.unidade || 'mg/kg';
+  const concUnidade = drug.concentracao_unidade || drug.conc_unidade || 'mg/ml';
+  const isInfusao = doseUnidade.includes('/min') || doseUnidade.includes('/h');
+
+  let dose = peso * drug.dose;
+
+  // Aplica limites: o MENOR valor entre (dose × peso) vs (dose_max_kg × peso) vs dose_max_abs vence
+  const limits = [];
+  if(drug.dose_max_kg != null) limits.push(peso * drug.dose_max_kg);
+  if(drug.dose_max_abs != null){
+    // Se unidade do teto bate com unidade da dose/kg, usa direto
+    const doseMassUnit = doseUnidade.replace('/kg','').replace('/min','').replace('/h','');
+    const maxMassUnit = drug.dose_max_unidade || doseMassUnit;
+    let absInDoseUnit = drug.dose_max_abs;
+    // Conversões básicas mg↔mcg↔g
+    if(maxMassUnit === 'g' && doseMassUnit === 'mg') absInDoseUnit *= 1000;
+    else if(maxMassUnit === 'mg' && doseMassUnit === 'mcg') absInDoseUnit *= 1000;
+    else if(maxMassUnit === 'mcg' && doseMassUnit === 'mg') absInDoseUnit /= 1000;
+    else if(maxMassUnit === 'g' && doseMassUnit === 'mcg') absInDoseUnit *= 1000000;
+    limits.push(absInDoseUnit);
+  }
+  // Compat antigo: dose_max usado como mg/kg
+  if(drug.dose_max_kg == null && drug.dose_max_abs == null && drug.dose_max != null){
+    limits.push(isInfusao ? drug.dose_max : peso * drug.dose_max);
+  }
+
+  let limitedDose = dose;
+  let wasLimited = false;
+  if(!isInfusao && limits.length > 0){
+    const minLimit = Math.min(...limits);
+    if(dose > minLimit){ limitedDose = minLimit; wasLimited = true; }
+  }
+
+  let doseForML = limitedDose;
+  if(doseUnidade.startsWith('mcg') && concUnidade.startsWith('mg')) doseForML = limitedDose/1000;
+
   if(!isInfusao){
-    return {vol: doseForML/drug.concentracao, label:'ml'};
+    return {vol: doseForML/drug.concentracao, label:'ml', dose: limitedDose, limited: wasLimited};
   } else {
-    let concVal=drug.concentracao;
-    if(drug.unidade==='mcg/kg/min'&&(drug.conc_unidade||'').startsWith('mg')) concVal*=1000;
-    const vol=drug.unidade==='mg/kg/h'?(drug.dose*peso)/drug.concentracao:(drug.dose*peso*60)/concVal;
-    return {vol, label:'ml/h'};
+    let concVal = drug.concentracao;
+    if(doseUnidade === 'mcg/kg/min' && concUnidade.startsWith('mg')) concVal *= 1000;
+    const vol = doseUnidade === 'mg/kg/h' ? (drug.dose*peso)/drug.concentracao : (drug.dose*peso*60)/concVal;
+    return {vol, label:'ml/h', dose: drug.dose*peso, limited: false};
   }
 }
 
@@ -3677,51 +3785,114 @@ async function renderInjTable(){
   const {data}=await sb.from('injetaveis').select('*').order('nome');
   cacheSet('injetaveis',data||[]);
   const drugs=(data||[]).filter(d=>!q||norm(d.nome).includes(norm(q)));
-  document.getElementById('inj-tbody').innerHTML=drugs.map(d=>`<tr>
-    <td><strong>${d.nome}</strong></td>
-    <td>${d.dose} ${d.unidade}</td>
-    <td>${d.unidade}</td>
-    <td>${d.diluicao||'—'}</td>
-    <td>${d.via||'—'}</td>
-    <td style="font-size:11.5px;color:var(--ink3);max-width:160px;">${d.obs||'—'}</td>
-    <td><div style="display:flex;gap:4px;">
-      <button class="btn btn-sm btn-outline" onclick="editInj('${d.id}')">Editar</button>
-      <button class="btn btn-sm btn-danger" onclick="deleteInj('${d.id}')">Excluir</button>
-    </div></td>
-  </tr>`).join('');
+
+  const doseMaxTxt=d=>{
+    const parts=[];
+    if(d.dose_max_kg!=null) parts.push(`${d.dose_max_kg} ${d.dose_unidade||d.unidade||''}`);
+    if(d.dose_max_abs!=null) parts.push(`máx ${d.dose_max_abs} ${d.dose_max_unidade||''}`);
+    // compat antigo
+    if(!parts.length && d.dose_max!=null) parts.push(`${d.dose_max} ${d.unidade||''}`);
+    return parts.length?parts.join(' · '):'—';
+  };
+
+  document.getElementById('inj-tbody').innerHTML=drugs.map(d=>{
+    const doseUn=d.dose_unidade||d.unidade||'';
+    const concUn=d.concentracao_unidade||d.conc_unidade||'';
+    return `<tr>
+      <td><strong>${d.nome}</strong></td>
+      <td style="font-size:12px;color:var(--ink2);">${d.classe||'—'}</td>
+      <td>${d.via||'—'}</td>
+      <td>${d.dose} ${doseUn}</td>
+      <td style="font-size:11.5px;">${doseMaxTxt(d)}</td>
+      <td>${d.concentracao} ${concUn}</td>
+      <td style="font-size:11.5px;color:var(--ink3);max-width:180px;">${d.uso_clinico||'—'}</td>
+      <td><div style="display:flex;gap:4px;">
+        <button class="btn btn-sm btn-outline" onclick="editInj('${d.id}')">Editar</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteInj('${d.id}')">Excluir</button>
+      </div></td>
+    </tr>`;
+  }).join('');
 }
 async function saveInj(){
   const editId=document.getElementById('mi-edit-id').value||null;
+  const g=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
+  const gNum=id=>{const x=g(id);return x!==''?parseFloat(x):null;};
+
+  // Classe: usa "outro" se for "Outros"
+  let classe=g('mi-classe');
+  if(classe==='Outros') classe=g('mi-classe-outro')||'Outros';
+
   const item={
-    nome:v('mi-nome'), dose:parseFloat(document.getElementById('mi-dose').value)||0,
-    unidade:v('mi-unidade'),
-    dose_min:document.getElementById('mi-dose-min').value!==''?parseFloat(document.getElementById('mi-dose-min').value):null,
-    dose_max:document.getElementById('mi-dose-max').value!==''?parseFloat(document.getElementById('mi-dose-max').value):null,
-    concentracao:document.getElementById('mi-concentracao').value!==''?parseFloat(document.getElementById('mi-concentracao').value):null,
-    conc_unidade:v('mi-conc-unidade'),
-    via:v('mi-via'), diluicao:v('mi-diluicao'), obs:v('mi-obs'),
+    nome: g('mi-nome'),
+    via: g('mi-via'),
+    dose: gNum('mi-dose')||0,
+    dose_unidade: g('mi-unidade'),
+    dose_min: gNum('mi-dose-min'),
+    dose_max_kg: gNum('mi-dose-max-kg'),
+    dose_max_abs: gNum('mi-dose-max-abs'),
+    dose_max_unidade: g('mi-dose-max-unidade')||null,
+    concentracao: gNum('mi-concentracao')||0,
+    concentracao_unidade: g('mi-conc-unidade'),
+    diluicao: g('mi-diluicao')||null,
+    obs_clinicas: g('mi-obs')||null,
+    classe: classe||null,
+    uso_clinico: g('mi-uso-clinico')||null,
   };
+
   if(!item.nome){toast('⚠️ Informe o nome');return;}
+  if(!item.via){toast('⚠️ Selecione a via');return;}
+  if(!item.dose){toast('⚠️ Informe a dose');return;}
+  if(!item.concentracao){toast('⚠️ Informe a concentração');return;}
+
   const sb=await getSB();
   let error;
   if(editId){({error}=await sb.from('injetaveis').update(item).eq('id',editId));}
   else{({error}=await sb.from('injetaveis').insert(item));}
   if(error){toast('Erro: '+error.message);return;}
-  closeModal('modal-inj');renderInjTable();toast('✓ Droga injetável salva!');
+
+  // Atualiza cache
+  const {data:fresh}=await sb.from('injetaveis').select('*').order('nome');
+  if(fresh) cacheSet('injetaveis',fresh);
+
+  closeModal('modal-inj');
+  renderInjTable();
+  toast('✓ Droga injetável salva!');
 }
 function editInj(id){
-  const d=(cacheGet('injetaveis')||[]).find(d=>d.id===id);if(!d)return;
-  document.getElementById('mi-edit-id').value=d.id;
-  document.getElementById('mi-nome').value=d.nome;
-  document.getElementById('mi-dose').value=d.dose;
-  document.getElementById('mi-unidade').value=d.unidade||'mg/kg';
-  document.getElementById('mi-dose-min').value=d.dose_min!=null?d.dose_min:'';
-  document.getElementById('mi-dose-max').value=d.dose_max!=null?d.dose_max:'';
-  document.getElementById('mi-concentracao').value=d.concentracao!=null?d.concentracao:'';
-  document.getElementById('mi-conc-unidade').value=d.conc_unidade||'mg/ml';
-  document.getElementById('mi-via').value=d.via||'';
-  document.getElementById('mi-diluicao').value=d.diluicao||'';
-  document.getElementById('mi-obs').value=d.obs||'';
+  const d=(cacheGet('injetaveis')||[]).find(d=>String(d.id)===String(id));
+  if(!d)return;
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val==null?'':val;};
+
+  set('mi-edit-id', d.id);
+  set('mi-nome', d.nome);
+  set('mi-via', d.via||'');
+  set('mi-dose', d.dose);
+  set('mi-unidade', d.dose_unidade||d.unidade||'mg/kg');
+  set('mi-dose-min', d.dose_min);
+  set('mi-dose-max-kg', d.dose_max_kg);
+  set('mi-dose-max-abs', d.dose_max_abs);
+  set('mi-dose-max-unidade', d.dose_max_unidade||'');
+  set('mi-concentracao', d.concentracao);
+  set('mi-conc-unidade', d.concentracao_unidade||d.conc_unidade||'mg/ml');
+  set('mi-diluicao', d.diluicao||'');
+  set('mi-obs', d.obs_clinicas||d.obs||'');
+  set('mi-uso-clinico', d.uso_clinico||'');
+
+  // Classe: se valor não está na lista fixa, vira "Outros"
+  const classeSel=document.getElementById('mi-classe');
+  const classesList=Array.from(classeSel.options).map(o=>o.value);
+  if(d.classe && classesList.includes(d.classe)){
+    classeSel.value=d.classe;
+    document.getElementById('mi-classe-outro-wrap').style.display='none';
+  } else if(d.classe){
+    classeSel.value='Outros';
+    document.getElementById('mi-classe-outro-wrap').style.display='block';
+    set('mi-classe-outro', d.classe);
+  } else {
+    classeSel.value='';
+    document.getElementById('mi-classe-outro-wrap').style.display='none';
+  }
+
   document.getElementById('modal-inj-title').textContent='Editar Droga Injetável';
   openModal('modal-inj');
 }
@@ -3734,10 +3905,16 @@ async function deleteInj(id){
 }
 function openAddModal(tipo){
   if(tipo==='inj'){
-    document.getElementById('mi-edit-id').value='';
-    ['mi-nome','mi-via','mi-dose','mi-dose-min','mi-dose-max','mi-concentracao','mi-diluicao','mi-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    const clearIds=['mi-edit-id','mi-nome','mi-dose','mi-dose-min','mi-dose-max-kg',
+                    'mi-dose-max-abs','mi-concentracao','mi-diluicao','mi-obs',
+                    'mi-uso-clinico','mi-classe-outro'];
+    clearIds.forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('mi-via').value='';
     document.getElementById('mi-unidade').value='mg/kg';
+    document.getElementById('mi-dose-max-unidade').value='';
     document.getElementById('mi-conc-unidade').value='mg/ml';
+    document.getElementById('mi-classe').value='';
+    document.getElementById('mi-classe-outro-wrap').style.display='none';
     document.getElementById('modal-inj-title').textContent='Nova Droga Injetável';
     openModal('modal-inj');
     return;
