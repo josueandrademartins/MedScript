@@ -1801,6 +1801,11 @@ function addExamFromInput(){
   toast('✓ Exame adicionado!');
 }
 async function boot(){
+  // Limpa chaves de modelos do localStorage para evitar dados antigos
+  // Os dados reais vêm do Supabase via initData()
+  ['ms_modelos_adulto','ms_modelos_ped','ms_modelos_exames'].forEach(k=>{
+    try{localStorage.removeItem(k);}catch(e){}
+  });
   await Promise.all([initData(), loadPerfilFromDB(), loadFavoritos()]);
   updateSidebarDoctor();
   updateDash();
@@ -2921,17 +2926,17 @@ function gerarPDF(data, title){
       ${footHtml}
     </div>`;
     const fullDocHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Documento'}</title>${fonts}${style}</head><body>${bar}${docSheet}</body></html>`;
-    const blob=new Blob([fullDocHtml],{type:'text/html;charset=utf-8'});
-    const url=URL.createObjectURL(blob);
-    const win=window.open(url,'_blank');
-    if(!win){
-      const iframe=document.createElement('iframe');
-      iframe.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;';
-      iframe.srcdoc=fullDocHtml;
-      document.body.appendChild(iframe);
-      iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>{iframe.remove();URL.revokeObjectURL(url);},1500);},400);};
+    const win=window.open('','_blank','noopener');
+    if(win){
+      win.document.open('text/html','replace');
+      win.document.write(fullDocHtml);
+      win.document.close();
     } else {
-      setTimeout(()=>URL.revokeObjectURL(url),60000);
+      const fr=document.createElement('iframe');
+      fr.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;';
+      fr.srcdoc=fullDocHtml;
+      document.body.appendChild(fr);
+      fr.onload=()=>{setTimeout(()=>{fr.contentWindow.print();setTimeout(()=>fr.remove(),1500);},400);};
     }
     return;
   }
@@ -2982,17 +2987,17 @@ function gerarPDF(data, title){
 
   const fullHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Receita'}</title>${fonts}${style}</head><body>${bar}${tplSheet}${tplCtrl}<div id="rx-pages"></div>${layoutScript}</body></html>`;
 
-  const blob=new Blob([fullHtml],{type:'text/html;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const win=window.open(url,'_blank');
-  if(!win){
-    const iframe=document.createElement('iframe');
-    iframe.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;';
-    iframe.srcdoc=fullHtml;
-    document.body.appendChild(iframe);
-    iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>{iframe.remove();URL.revokeObjectURL(url);},1500);},400);};
+  const win=window.open('','_blank','noopener');
+  if(win){
+    win.document.open('text/html','replace');
+    win.document.write(fullHtml);
+    win.document.close();
   } else {
-    setTimeout(()=>URL.revokeObjectURL(url),60000);
+    const fr=document.createElement('iframe');
+    fr.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;';
+    fr.srcdoc=fullHtml;
+    document.body.appendChild(fr);
+    fr.onload=()=>{setTimeout(()=>{fr.contentWindow.print();setTimeout(()=>fr.remove(),1500);},400);};
   }
 }
 
@@ -3070,7 +3075,19 @@ function renderModelos(){
 function renderModelosGrid(tipo){
   const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
   const q=(document.getElementById('modelo-busca')||{value:''}).value.trim();
-  let mods=cacheGet(tipo==='ped'?'modelos_ped':'modelos_adulto')||ls(key)||[];
+  const cacheKey=tipo==='ped'?'modelos_ped':'modelos_adulto';
+  // Se cache vazio, busca do Supabase e re-renderiza
+  if(cacheGet(cacheKey)===null){
+    getSB().then(async sb=>{
+      const {data:{user}}=await sb.auth.getUser().catch(()=>({data:{user:null}}));
+      if(!user) return;
+      const {data}=await sb.from('modelos').select('*').eq('user_id',user.id).eq('tipo',tipo==='ped'?'ped':'adulto');
+      if(data) cacheSet(cacheKey,data);
+      renderModelosGrid(tipo);
+    });
+    return;
+  }
+  let mods=cacheGet(cacheKey)||[];
   if(q) mods=mods.filter(m=>norm(m.nome).includes(norm(q))||(m.medicamentos||[]).some(x=>norm(x.nome).includes(norm(q))));
   const favs=_favModelos;
   // Sort: favorites first
