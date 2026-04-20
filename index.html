@@ -2925,9 +2925,12 @@ function gerarPDF(data, title){
       ${footHtml}
     </div>`;
     const fullDocHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Documento'}</title>${fonts}${style}</head><body>${bar}${docSheet}</body></html>`;
-    const url='data:text/html;charset=utf-8,'+encodeURIComponent(fullDocHtml);
-    const win=window.open(url,'_blank');
-    if(!win){
+    const win=window.open('about:blank','_blank');
+    if(win){
+      win.document.open();
+      win.document.write(fullDocHtml);
+      win.document.close();
+    } else {
       const iframe=document.createElement('iframe');
       iframe.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;';
       iframe.srcdoc=fullDocHtml;
@@ -2983,9 +2986,12 @@ function gerarPDF(data, title){
 
   const fullHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Receita'}</title>${fonts}${style}</head><body>${bar}${tplSheet}${tplCtrl}<div id="rx-pages"></div>${layoutScript}</body></html>`;
 
-  const url='data:text/html;charset=utf-8,'+encodeURIComponent(fullHtml);
-  const win=window.open(url,'_blank');
-  if(!win){
+  const win=window.open('about:blank','_blank');
+  if(win){
+    win.document.open();
+    win.document.write(fullHtml);
+    win.document.close();
+  } else {
     const iframe=document.createElement('iframe');
     iframe.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;';
     iframe.srcdoc=fullHtml;
