@@ -6,6 +6,8 @@
 <title>MedScript</title>
 <!-- Supabase SDK carregado antes de tudo -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MedScript</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -2644,13 +2646,21 @@ async function gerarRx(tipo,formato){
   const hoje=new Date().toLocaleDateString('pt-BR');
   const mnKey=tipo==='ped'?'p-model-name':'a-model-name';
   const mn=v(mnKey);
-  if(mn) await _salvarModeloNoBanco(tipo, mn, meds);
+  if(mn) _salvarModeloNoBanco(tipo, mn, meds).catch(e=>console.warn(e));
   const extra=tipo==='ped'?[v('p-idade')?'Idade: '+v('p-idade')+' anos':'',v('p-peso')?'Peso: '+v('p-peso')+' kg':''].filter(Boolean).join(' · '):'';
-  const html=formato==='controlado'
-    ? buildControladoHtml({perfil,local,hoje,pac,meds,tipo,extra})
-    : buildRxHtml({perfil,local,hoje,pac,meds,obs:v(tipo==='ped'?'p-obs':'a-obs'),tipo,extra});
-  const title=formato==='controlado'?'Receituário Controlado':'Prévia da Receita';
-  openRxModal(html, title);
+
+  // Monta CRM
+  const crmStr = perfil.crm ? `CRM ${perfil.crm}${perfil.estado?'/'+perfil.estado:''}` : '';
+
+  // Passa dados estruturados para gerarPDF
+  const data = {
+    pac, meds, perfil, local, hoje, extra, crmStr,
+    obs: v(tipo==='ped'?'p-obs':'a-obs'),
+    tipo,
+    controlado: formato==='controlado'
+  };
+  const title = formato==='controlado' ? 'Receituário Controlado' : 'Receituário';
+  gerarPDF(data, title);
 }
 
 async function _salvarModeloNoBanco(tipo, nome, meds){
@@ -2689,176 +2699,58 @@ function openRxModal(html, title){
 function closeRxModal(){}
 function printRx(){}
 
-function gerarPDF(data, title){
+
+function _sanitizeFilename(name){
+  return (name||'receituario').toString().trim().replace(/[^a-zA-Z0-9\-_À-ÿ ]/g,'').replace(/\s+/g,'_').slice(0,50)||'receituario';
+}
+
+async function gerarPDF(data, title){
+  // Toast de carregamento
+  toast('⏳ Gerando PDF...');
+
   const fonts=`<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">`;
   const style=`<style>
-    @page{size:210mm 270mm portrait;margin:15mm;}
-    html,body{margin:0;padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    *{box-sizing:border-box;font-family:'Outfit',sans-serif;}
-    body{color:#111;font-size:13px;line-height:1.5;}
-    /* Each sheet = one physical page. Flex column keeps footer at bottom. */
-    .rx-sheet{
-      width:100%;
-      /* 270mm - 2×15mm = 240mm usable */
-      height:240mm;
-      display:flex;
-      flex-direction:column;
-      page-break-after:always;
-      overflow:hidden;
-    }
+    *{box-sizing:border-box;font-family:'Outfit',sans-serif;margin:0;padding:0;}
+    body{color:#111;font-size:13px;line-height:1.5;background:#fff;padding:15mm;width:210mm;min-height:270mm;}
+    .rx-sheet{width:100%;display:flex;flex-direction:column;min-height:240mm;page-break-after:always;}
     .rx-sheet:last-child{page-break-after:auto;}
     .rx-spacer{flex:1;min-height:8px;}
-    /* — Header — */
-    .rx-sh-head{display:flex;align-items:center;gap:12px;padding-bottom:10px;flex-shrink:0;}
-    .rx-sh-logo{max-width:110px;max-height:60px;flex-shrink:0;display:flex;align-items:center;}
+    .rx-sh-head{display:flex;align-items:center;gap:12px;padding-bottom:10px;}
+    .rx-sh-logo{max-width:110px;max-height:60px;display:flex;align-items:center;}
     .rx-sh-logo img{max-width:110px;max-height:60px;width:auto;height:auto;object-fit:contain;display:block;}
     .rx-sh-logo-placeholder{font-family:'Lora',serif;font-size:20px;font-weight:700;color:#aaa;}
     .rx-sh-local-info h3{font-size:13px;font-weight:600;margin:0;color:#111;}
     .rx-sh-local-info p{font-size:10.5px;color:#555;margin-top:1px;line-height:1.45;}
-    /* — Dividers — */
-    .rx-divider{border:none;border-top:1.5px solid #111;margin:0;flex-shrink:0;}
-    .rx-divider-light{border:none;border-top:1px solid #ccc;margin:0;flex-shrink:0;}
-    /* — Patient — */
-    .rx-sh-patient{padding:8px 0;font-size:12.5px;color:#111;flex-shrink:0;}
-    /* — Title — */
-    .rx-sh-title{text-align:center;font-family:'Lora',serif;font-size:15px;font-weight:600;padding:10px 0 4px;color:#111;flex-shrink:0;}
-    /* — Meds — */
-    .rx-sh-meds{padding:4px 0 6px;overflow:hidden;}
+    .rx-divider{border:none;border-top:1.5px solid #111;margin:0;}
+    .rx-divider-light{border:none;border-top:1px solid #ccc;margin:0;}
+    .rx-sh-patient{padding:8px 0;font-size:12.5px;color:#111;}
+    .rx-sh-title{text-align:center;font-family:'Lora',serif;font-size:15px;font-weight:600;padding:10px 0 4px;color:#111;}
+    .rx-sh-meds{padding:4px 0 6px;}
     .rx-sh-med{padding:6px 0;border-bottom:1px dashed #ccc;}
     .rx-sh-med:last-child{border-bottom:none;}
     .rx-sh-med strong{font-size:12.5px;display:block;color:#111;}
     .rx-sh-med p{font-size:11.5px;color:#444;margin-top:2px;}
-    /* — Obs — */
-    .rx-sh-obs{background:#f7f5f0;border-radius:5px;padding:7px 10px;font-size:11.5px;color:#444;margin:6px 0 8px;flex-shrink:0;}
-    /* — Footer — */
-    .rx-sh-foot{text-align:center;padding:10px 0 0;flex-shrink:0;}
+    .rx-sh-obs{background:#f7f5f0;border-radius:5px;padding:7px 10px;font-size:11.5px;color:#444;margin:6px 0 8px;}
+    .rx-sh-foot{text-align:center;padding:10px 0 0;}
     .rx-sh-foot-name{font-family:'Lora',serif;font-size:13.5px;font-weight:600;color:#111;}
     .rx-sh-foot-espec,.rx-sh-foot-crm{font-size:11px;color:#555;margin-top:2px;}
     .rx-sh-foot-date{font-size:11px;color:#888;margin-top:2px;}
-    .rx-divider-foot{border:none;border-top:1.5px solid #111;margin-top:12px;flex-shrink:0;}
-    /* — Controlado — */
-    .controlado-header{background:#fdeceb;border:1px solid #C0392B;border-radius:5px;padding:6px 11px;margin-bottom:8px;font-size:11px;font-weight:600;color:#C0392B;display:flex;align-items:center;gap:5px;flex-shrink:0;}
-    .controlado-box{border:1.5px solid #C0392B;border-radius:5px;padding:9px 11px;margin-top:8px;font-size:10.5px;color:#444;flex-shrink:0;}
+    .rx-divider-foot{border:none;border-top:1.5px solid #111;margin-top:12px;}
+    .controlado-header{background:#fdeceb;border:1px solid #C0392B;border-radius:5px;padding:6px 11px;margin-bottom:8px;font-size:11px;font-weight:600;color:#C0392B;display:flex;align-items:center;gap:5px;}
+    .controlado-box{border:1.5px solid #C0392B;border-radius:5px;padding:9px 11px;margin-top:8px;font-size:10.5px;color:#444;}
     .controlado-field{display:inline-block;border-bottom:1px solid #aaa;min-width:80px;flex:1;height:12px;margin:0 3px;}
     .ctrl-section-title{font-size:9.5px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;border-bottom:1px solid #fdd;padding-bottom:2px;}
     .cf-field-row{display:flex;align-items:baseline;gap:3px;font-size:10.5px;}
-    .controlado-ficha{border:1px solid #ddd;border-radius:5px;padding:7px 10px;margin:6px 0 8px;font-size:10.5px;background:#fafafa;flex-shrink:0;}
+    .controlado-ficha{border:1px solid #ddd;border-radius:5px;padding:7px 10px;margin:6px 0 8px;font-size:10.5px;background:#fafafa;}
     .cf-label{font-weight:600;color:#555;white-space:nowrap;}
     .cf-val{color:#111;margin-left:3px;}
     .cf-row{display:flex;align-items:baseline;gap:5px;margin-bottom:3px;}
     .cf-row2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:3px;}
     .rx-sheet.controlado .rx-divider{border-top-color:#C0392B;}
     .rx-sheet.controlado .rx-divider-foot{border-top-color:#C0392B;}
-    /* — Screen preview — */
-    @media screen{
-      body{padding:60px 24px 24px;background:#e8e4dd;}
-      .rx-sheet{background:#fff;padding:15mm;box-shadow:0 4px 32px rgba(0,0,0,.18);width:210mm;height:270mm;margin:0 auto 24px;font-size:14px;}
-      .rx-sh-local-info h3{font-size:14px;}
-      .rx-sh-local-info p{font-size:11.5px;}
-      .rx-sh-patient{padding:10px 0;font-size:13.5px;}
-      .rx-sh-title{font-size:17px;padding:12px 0 5px;}
-      .rx-sh-med{padding:8px 0;}
-      .rx-sh-med strong{font-size:13.5px;}
-      .rx-sh-med p{font-size:12.5px;}
-      .rx-sh-foot{padding:12px 0 0;}
-      .rx-sh-foot-name{font-size:15px;}
-      .rx-sh-foot-espec,.rx-sh-foot-crm{font-size:12px;}
-      .rx-sh-foot-date{font-size:12px;}
-      .print-bar{position:fixed;top:0;left:0;right:0;background:#1C1C2A;color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;z-index:10;font-family:'Outfit',sans-serif;}
-      .print-bar h4{font-size:14px;font-weight:500;}
-      .print-bar .pb-btns{display:flex;gap:10px;}
-      .pb-btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'Outfit',sans-serif;}
-      .pb-btn-primary{background:#2C7A7B;color:#fff;}
-      .pb-btn-close{background:rgba(255,255,255,.12);color:#fff;}
-    }
-    @media print{
-      .print-bar,.print-bar-spacer{display:none!important;}
-      body{padding:0;background:#fff;}
-      .rx-sheet{box-shadow:none;padding:0;width:100%;}
-    }
   </style>`;
 
-  // Auto-print removed — user sees preview and clicks "Imprimir / Salvar PDF"
-
-  // — Page layout engine (runs in the new window after DOM is ready) —
-  // Heights in mm at print resolution. 240mm usable = 680px at 96dpi (1mm ≈ 2.835px → 240mm ≈ 680px)
-  // We use mm units directly in the script that runs inside the iframe.
-  const layoutScript=`<script>
-  (function(){
-    var PG_H = 240; // mm usable per page
-    // Measure fixed elements (mm, approximate at 13px/96dpi)
-    var HEAD_H   = ${data.local ? 22 : 0};  // logo row + padding-bottom
-    var DIV1_H   = 0.5; // rx-divider
-    var PAT_H    = 10;  // patient row + padding
-    var DIV2_H   = 0.3;
-    var TITLE_H  = 14;  // title + padding
-    var FOOT_H   = 24;  // footer block (name+espec+crm+date)
-    var FDIV_H   = 3;   // footer divider + margin
-    var CTRLHDR  = ${data.controlado ? 12 : 0}; // controlado-header
-    var FICHAMD  = ${data.controlado ? 28 : 0}; // ficha médica block
-    var CTRLBOX  = ${data.controlado ? 52 : 0}; // controlado-box (last page only — comprador+fornecedor)
-    var OBS_H    = ${data.obs ? Math.max(10, Math.ceil(data.obs.length/60)*5 + 8) : 0};
-    var SPACER_H = 4;
-
-    var FIXED_H = HEAD_H + DIV1_H + PAT_H + DIV2_H + TITLE_H + FOOT_H + FDIV_H + SPACER_H + CTRLHDR + FICHAMD;
-
-    // Per-med height (strong line + p line + border + padding) ≈ 11mm
-    function medH(m){
-      var lines = Math.ceil((m.posol||'').length / 55) + 1;
-      return 7 + lines * 4.5;
-    }
-
-    var meds = ${JSON.stringify(data.meds)};
-    var pages = [];
-    var remaining = meds.slice();
-    var pageNum = 0;
-
-    while(remaining.length > 0){
-      pageNum++;
-      var isLast = false;
-      var budget = PG_H - FIXED_H;
-      // On last page: subtract obs and controlado-box
-      // We'll check after distributing
-
-      var bucket = [];
-      var used = 0;
-      while(remaining.length > 0){
-        var mh = medH(remaining[0]);
-        // Check if adding obs+ctrlbox would still fit
-        var extraIfLast = (remaining.length === 1 ? OBS_H + CTRLBOX : 0);
-        if(used + mh + extraIfLast <= budget){
-          bucket.push(remaining.shift());
-          used += mh;
-        } else {
-          // If nothing fits yet, force at least one med
-          if(bucket.length === 0){ bucket.push(remaining.shift()); }
-          break;
-        }
-      }
-      isLast = remaining.length === 0;
-      pages.push({meds: bucket, isLast: isLast});
-    }
-    if(pages.length === 0) pages.push({meds:[], isLast:true});
-
-    // Render pages into #rx-pages
-    var container = document.getElementById('rx-pages');
-    var html = '';
-    pages.forEach(function(pg){
-      html += buildSheet(pg.meds, pg.isLast);
-    });
-    container.innerHTML = html;
-  })();
-
-  function buildSheet(meds, isLast){
-    return document.getElementById('tpl-sheet').innerHTML
-      .replace('__MEDS__', meds.map(function(m){
-        return '<div class="rx-sh-med"><strong>'+m.nome+'</strong><p>'+m.posol+'</p></div>';
-      }).join(''))
-      .replace('__OBS__', isLast && ${JSON.stringify(data.obs||'')} ? '<div class="rx-sh-obs"><strong>Observações:</strong> '+${JSON.stringify(data.obs||'')}+'</div>' : '')
-      .replace('__CTRL__', isLast && ${data.controlado} ? document.getElementById('tpl-ctrl').innerHTML : '');
-  }
-  <\/script>`;
-
+  // --- Build the sheets HTML (same logic as antes) ---
   const headHtml = data.local ? `
     <div class="rx-sh-head">
       <div class="rx-sh-logo">${data.local.logo?`<img src="${data.local.logo}" alt="logo">`:`<span class="rx-sh-logo-placeholder">${data.local.nome[0].toUpperCase()}</span>`}</div>
@@ -2869,29 +2761,22 @@ function gerarPDF(data, title){
       </div>
     </div>` : '';
 
-  // Ficha médica — só aparece no controlado, abaixo do cabeçalho
   const fichaHtml = data.controlado ? `
     <div class="controlado-ficha">
-      <div class="cf-row"><span class="cf-label">Médico:</span><span class="cf-val">${data.perfil.nome||'—'}</span></div>
-      <div class="cf-row2">
-        <div><span class="cf-label">CRM:</span><span class="cf-val">${data.perfil.crm||'—'}</span></div>
-        <div><span class="cf-label">UF:</span><span class="cf-val">${data.perfil.estado||'—'}</span></div>
-        <div><span class="cf-label">Especialidade:</span><span class="cf-val">${data.perfil.espec||'—'}</span></div>
-      </div>
-      ${data.local?`<div class="cf-row2">
-        <div style="grid-column:span 2"><span class="cf-label">Endereço:</span><span class="cf-val">${[data.local.endereco,data.local.cidade].filter(Boolean).join(', ')||'—'}</span></div>
-        <div><span class="cf-label">Tel:</span><span class="cf-val">${data.local.tel||'—'}</span></div>
-      </div>`:''}
+      <div class="cf-row"><span class="cf-label">Paciente:</span><span class="cf-val">${data.pac}</span></div>
+      ${data.extra?`<div class="cf-row"><span class="cf-label">Dados:</span><span class="cf-val">${data.extra}</span></div>`:''}
     </div>` : '';
 
-  const footHtml = data.controlado ? `
-    <hr class="rx-divider-foot">
-    <div class="rx-sh-foot" style="text-align:center;padding:10px 0 8px;">
+  const footHtml = data.doctorSignature ? `
+    <div class="rx-sh-foot">
+      <div style="height:40px;"></div>
+      <div style="border-top:1px solid #111;width:260px;margin:0 auto;"></div>
       <div class="rx-sh-foot-name">${data.perfil.nome||'—'}</div>
       ${data.perfil.espec?`<div class="rx-sh-foot-espec">${data.perfil.espec}</div>`:''}
       ${data.crmStr?`<div class="rx-sh-foot-crm">${data.crmStr}</div>`:''}
       <div class="rx-sh-foot-date">${data.hoje}</div>
-    </div>` : `
+    </div>
+    <hr class="rx-divider-foot">` : `
     <div class="rx-sh-foot">
       <div class="rx-sh-foot-name">${data.perfil.nome||'—'}</div>
       ${data.perfil.espec?`<div class="rx-sh-foot-espec">${data.perfil.espec}</div>`:''}
@@ -2900,21 +2785,14 @@ function gerarPDF(data, title){
     </div>
     <hr class="rx-divider-foot">`;
 
-  const ctrlHdr = data.controlado ? `<div class="controlado-header"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>RECEITUÁRIO DE CONTROLE ESPECIAL — 2 VIAS</div>` : '';
-
-  const bar=`<div class="print-bar">
-    <h4>${title||'Receita Médica'}</h4>
-    <div class="pb-btns">
-      <button class="pb-btn pb-btn-primary" onclick="window.print()">Imprimir / Salvar PDF</button>
-      <button class="pb-btn pb-btn-close" onclick="window.close()">Fechar</button>
-    </div>
-  </div><div class="print-bar-spacer" style="height:52px;display:block;"></div>`;
-
+  const ctrlHdr = data.controlado ? `<div class="controlado-header">⚕ RECEITUÁRIO DE CONTROLE ESPECIAL — 2 VIAS</div>` : '';
   const sheetClass = `rx-sheet${data.controlado?' controlado':''}`;
 
-  // For documents (exames/encaminhamentos/atestados): single page with free-form body
+  let bodyHtml = '';
+
+  // Document mode (exames, atestados, encaminhamentos)
   if(data.docCorpo!==undefined){
-    const docSheet=`<div class="${sheetClass}">
+    bodyHtml = `<div class="${sheetClass}">
       ${headHtml}
       <hr class="rx-divider">
       <div class="rx-sh-patient"><strong>Paciente:</strong> ${data.pac}</div>
@@ -2924,81 +2802,133 @@ function gerarPDF(data, title){
       <div class="rx-spacer"></div>
       ${footHtml}
     </div>`;
-    const fullDocHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Documento'}</title>${fonts}${style}</head><body>${bar}${docSheet}</body></html>`;
-    const win=window.open('about:blank','_blank');
-    if(win){
-      win.document.open();
-      win.document.write(fullDocHtml);
-      win.document.close();
-    } else {
-      const iframe=document.createElement('iframe');
-      iframe.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;';
-      iframe.srcdoc=fullDocHtml;
-      document.body.appendChild(iframe);
-      iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>iframe.remove(),1500)},400);};
-    }
-    return;
-  }
-
-  const tplSheet = `
-    <template id="tpl-sheet"><div class="${sheetClass}">
+  } else {
+    // Prescription mode
+    const medsHtml = (data.meds||[]).map(m=>`<div class="rx-sh-med"><strong>${m.nome}</strong><p>${m.posol||''}</p></div>`).join('');
+    const obsHtml = data.obs?`<div class="rx-sh-obs"><strong>Observações:</strong> ${data.obs}</div>`:'';
+    bodyHtml = `<div class="${sheetClass}">
       ${ctrlHdr}
       ${headHtml}
-      ${fichaHtml}
       <hr class="rx-divider">
-      <div class="rx-sh-patient"><strong>Paciente:</strong> ${data.pac}${data.extra?` &nbsp;·&nbsp; ${data.extra}`:''}</div>
+      ${fichaHtml}
+      <div class="rx-sh-patient"><strong>Paciente:</strong> ${data.pac}${data.extra?' · '+data.extra:''}</div>
       <hr class="rx-divider-light">
-      <div class="rx-sh-title">${data.tipoLabel}</div>
-      <div class="rx-sh-meds">__MEDS__</div>
-      __OBS__
+      <div class="rx-sh-title">Receituário Médico</div>
+      <div class="rx-sh-meds">${medsHtml}</div>
+      ${obsHtml}
       <div class="rx-spacer"></div>
-      ${data.controlado ? footHtml + '__CTRL__' : footHtml}
-    </div></template>`;
+      ${footHtml}
+    </div>`;
+  }
 
-  const tplCtrl = data.controlado ? `
-    <template id="tpl-ctrl"><div class="controlado-box">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:stretch;">
+  const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">${fonts}${style}</head><body>${bodyHtml}</body></html>`;
 
-        <!-- COMPRADOR (esquerda) -->
-        <div style="padding-right:14px;border-right:1.5px solid #C0392B;">
-          <div class="ctrl-section-title">IDENTIFICAÇÃO DO COMPRADOR</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;">
-            <div class="cf-field-row"><span class="cf-label">Nome:</span><span class="controlado-field" style="flex:1;"></span></div>
-            <div class="cf-field-row"><span class="cf-label">CPF / RG:</span><span class="controlado-field" style="flex:1;"></span></div>
-            <div class="cf-field-row"><span class="cf-label">Endereço:</span><span class="controlado-field" style="flex:1;"></span></div>
-            <div class="cf-field-row"><span class="cf-label">Telefone:</span><span class="controlado-field" style="flex:1;"></span></div>
-          </div>
-        </div>
+  // --- Render to off-screen iframe and capture as canvas ---
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText='position:fixed;left:-9999px;top:0;width:210mm;background:#fff;z-index:-1;';
+  document.body.appendChild(wrapper);
 
-        <!-- FORNECEDOR (direita) — caixa estilo carimbo -->
-        <div style="padding-left:14px;display:flex;flex-direction:column;">
-          <div class="ctrl-section-title">IDENTIFICAÇÃO DO FORNECEDOR</div>
-          <div style="flex:1;border:1px solid #bbb;border-radius:4px;padding:6px 8px;display:flex;flex-direction:column;justify-content:flex-end;min-height:52px;overflow:hidden;">
-            <div style="border-top:1px solid #888;padding-top:5px;margin-top:8px;">
-              <div style="font-size:8.5px;font-weight:700;color:#555;margin-bottom:6px;">ASSINATURA DO FARMACÊUTICO</div>
-              <div style="font-size:8.5px;font-weight:700;color:#555;">DATA _____ / _____ / _________</div>
-            </div>
-          </div>
-        </div>
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText='width:210mm;min-height:297mm;border:none;background:#fff;';
+  wrapper.appendChild(iframe);
 
-      </div>
-    </div></template>` : '<template id="tpl-ctrl"></template>';
+  // Write content to iframe
+  iframe.srcdoc = fullHtml;
 
-  const fullHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Receita'}</title>${fonts}${style}</head><body>${bar}${tplSheet}${tplCtrl}<div id="rx-pages"></div>${layoutScript}</body></html>`;
+  // Wait for iframe to load + fonts
+  await new Promise(resolve=>{
+    iframe.onload = ()=>{
+      // Give fonts time to render
+      setTimeout(resolve, 800);
+    };
+  });
 
-  const win=window.open('about:blank','_blank');
-  if(win){
-    win.document.open();
-    win.document.write(fullHtml);
-    win.document.close();
-  } else {
-    const iframe=document.createElement('iframe');
-    iframe.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;';
-    iframe.srcdoc=fullHtml;
-    document.body.appendChild(iframe);
-    iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>iframe.remove(),1500)},400);};
+  try {
+    const contentEl = iframe.contentDocument.body;
+
+    // Capture as canvas
+    const canvas = await html2canvas(contentEl, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      windowWidth: contentEl.scrollWidth,
+      windowHeight: contentEl.scrollHeight
+    });
+
+    // Create PDF with jsPDF
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();   // 210mm
+    const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+    heightLeft -= pdfHeight;
+
+    while(heightLeft > 0){
+      position -= pdfHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfHeight;
+    }
+
+    // If controlado, duplicate all pages (2 vias)
+    if(data.controlado){
+      const totalPages = pdf.internal.getNumberOfPages();
+      for(let i=1;i<=totalPages;i++){
+        pdf.setPage(i);
+      }
+      // Add 2nd via
+      heightLeft = imgHeight;
+      position = 0;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfHeight;
+      while(heightLeft > 0){
+        position -= pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+    }
+
+    // Generate filename
+    const pacName = _sanitizeFilename(data.pac);
+    const prefix = data.docCorpo!==undefined ? (data.tipoLabel||'documento').toLowerCase().replace(/\s+/g,'_') : 'receituario';
+    const filename = `${prefix}-${pacName}.pdf`;
+
+    // Open in new tab AND offer download
+    const pdfBlob = pdf.output('blob');
+    const blobUrl = URL.createObjectURL(pdfBlob);
+
+    // Open in new tab for preview
+    const previewWin = window.open(blobUrl, '_blank');
+
+    // If popup blocked, do direct download
+    if(!previewWin){
+      pdf.save(filename);
+    }
+
+    toast('✓ PDF gerado!');
+
+  } catch(err){
+    console.error('Erro ao gerar PDF:', err);
+    toast('❌ Erro ao gerar PDF: '+err.message);
+  } finally {
+    wrapper.remove();
   }
 }
+
 
 // Close modal on overlay click (kept for legacy, no-op)
 document.addEventListener('DOMContentLoaded',()=>{
