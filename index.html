@@ -1766,8 +1766,10 @@ function renderFavInjetaveis(){
     const r=calcVolInj(d, peso);
     if(r){
       resultado=`<span style="font-family:'Lora',serif;font-size:18px;font-weight:700;color:var(--teal);">${fmt(r.vol)} ${r.label}</span>`;
+      if(r.limited) resultado+=`<br><span style="font-size:10px;color:var(--amber);">⚠ limitado ao máx</span>`;
     } else if(!isNaN(peso)&&peso>0){
-      resultado=`<span style="font-size:13px;color:var(--ink2);">${fmt(peso*d.dose)} ${d.unidade.replace('/kg','')}</span>`;
+      const du = (d.dose_unidade||d.unidade||'mg/kg').replace('/kg','');
+      resultado=`<span style="font-size:13px;color:var(--ink2);">${fmt(peso*d.dose)} ${du}</span>`;
     } else {
       resultado=`<span style="font-size:12px;color:var(--ink3);">informe o peso</span>`;
     }
@@ -3690,43 +3692,80 @@ function calcInjetavel(drug){
   const content=document.getElementById('inj-result-content');
   box.style.display='block';
 
+  // Compat: aceita schema novo (dose_unidade, concentracao_unidade, obs_clinicas) e antigo (unidade, conc_unidade, obs)
+  const doseUnidade = drug.dose_unidade || drug.unidade || 'mg/kg';
+  const concUnidade = drug.concentracao_unidade || drug.conc_unidade || 'mg/ml';
+  const obsText = drug.obs_clinicas || drug.obs || '';
+  const usoClinico = drug.uso_clinico || '';
+
   if(!isNaN(peso)&&peso>0){
-    const isInfusao=drug.unidade.includes('/min')||drug.unidade.includes('/h');
+    const isInfusao=doseUnidade.includes('/min')||doseUnidade.includes('/h');
     const fmt=n=>n<0.1?parseFloat(n.toFixed(3)):n<10?parseFloat(n.toFixed(2)):parseFloat(n.toFixed(1));
 
     // 1. Dose calculada (massa)
     let dose=peso*drug.dose;
     let doseMin=drug.dose_min!=null?peso*drug.dose_min:null;
-    let doseMax=drug.dose_max!=null?(isInfusao?drug.dose_max:peso*drug.dose_max):null;
-    let ajust=false;
-    if(!isInfusao&&doseMax!=null&&dose>doseMax){dose=doseMax;ajust=true;}
-    const doseUnit=drug.unidade.replace('/kg','').replace('/kg/min','/min').replace('/kg/h','/h');
+
+    // dose_max_kg (por peso)
+    let doseMaxKg = drug.dose_max_kg!=null ? peso*drug.dose_max_kg : null;
+
+    // dose_max_abs (teto absoluto) — com conversão de unidades
+    let doseMaxAbs = null;
+    if(drug.dose_max_abs!=null){
+      const doseMassUnit = doseUnidade.replace('/kg','').replace('/min','').replace('/h','');
+      const maxMassUnit = drug.dose_max_unidade || doseMassUnit;
+      doseMaxAbs = drug.dose_max_abs;
+      if(maxMassUnit==='g' && doseMassUnit==='mg') doseMaxAbs *= 1000;
+      else if(maxMassUnit==='mg' && doseMassUnit==='mcg') doseMaxAbs *= 1000;
+      else if(maxMassUnit==='mcg' && doseMassUnit==='mg') doseMaxAbs /= 1000;
+      else if(maxMassUnit==='g' && doseMassUnit==='mcg') doseMaxAbs *= 1000000;
+    }
+
+    // Compat antigo: dose_max usado como /kg
+    if(doseMaxKg==null && doseMaxAbs==null && drug.dose_max!=null){
+      doseMaxKg = isInfusao ? drug.dose_max : peso*drug.dose_max;
+    }
+
+    // O menor teto vence
+    const limits = [dose];
+    if(doseMaxKg!=null) limits.push(doseMaxKg);
+    if(doseMaxAbs!=null) limits.push(doseMaxAbs);
+    const effectiveMax = Math.min(...limits);
+    let ajust = false;
+    if(!isInfusao && effectiveMax < dose){ dose = effectiveMax; ajust = true; }
+
+    const doseUnit=doseUnidade.replace('/kg','').replace('/kg/min','/min').replace('/kg/h','/h');
+
+    // Mostrar o teto na interface
+    let maxLabel = '';
+    if(drug.dose_max_abs!=null) maxLabel = `Máx ${drug.dose_max_abs}${drug.dose_max_unidade||''}/dose`;
+    else if(drug.dose_max_kg!=null) maxLabel = `Máx ${drug.dose_max_kg}${doseUnidade}/dose`;
 
     // 2. Converter para ml
     let volML=null, volMLMin=null, volMLMax=null, mlLabel='';
     if(drug.concentracao&&drug.concentracao>0){
-      // Handle unit mismatch: se dose em mcg e conc em mg/ml → converter mcg→mg
       let doseForML=dose;
       let doseMinForML=doseMin;
-      let doseMaxForML=doseMax;
-      if(drug.unidade.startsWith('mcg')&&(drug.conc_unidade||'').startsWith('mg')){
+      if(doseUnidade.startsWith('mcg')&&concUnidade.startsWith('mg')){
         doseForML=dose/1000;
         if(doseMinForML!=null) doseMinForML/=1000;
-        if(doseMaxForML!=null) doseMaxForML/=1000;
       }
       if(!isInfusao){
         volML=doseForML/drug.concentracao;
         if(doseMinForML!=null) volMLMin=doseMinForML/drug.concentracao;
-        if(doseMaxForML!=null) volMLMax=doseMaxForML/drug.concentracao;
+        // Max volume: use effectiveMax
+        if(effectiveMax < Infinity){
+          let maxForML = effectiveMax;
+          if(doseUnidade.startsWith('mcg')&&concUnidade.startsWith('mg')) maxForML/=1000;
+          volMLMax = maxForML/drug.concentracao;
+        }
         mlLabel='ml';
       } else {
-        // Infusão: ml/h usando regra de 3 com concentração
-        // dose (mcg/kg/min) × peso / conc(mcg/ml) × 60 = ml/h
-        let doseRate=drug.dose; // mcg/kg/min ou mg/kg/h
+        let doseRate=drug.dose;
         let concVal=drug.concentracao;
-        if(drug.unidade==='mcg/kg/min'&&(drug.conc_unidade||'').startsWith('mg')) concVal*=1000; // mg→mcg
-        volML=(doseRate*peso*60)/concVal; // ml/h para mcg/kg/min
-        if(drug.unidade==='mg/kg/h') volML=(doseRate*peso)/drug.concentracao;
+        if(doseUnidade==='mcg/kg/min'&&concUnidade.startsWith('mg')) concVal*=1000;
+        volML=(doseRate*peso*60)/concVal;
+        if(doseUnidade==='mg/kg/h') volML=(doseRate*peso)/drug.concentracao;
         mlLabel='ml/h';
       }
     }
@@ -3734,46 +3773,45 @@ function calcInjetavel(drug){
     let html='';
 
     if(volML!=null){
-      // ⭐ ESTRELA: volume em ml
       html+=`<div style="text-align:center;padding:12px 0 8px;">
         <div style="font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:4px;">Volume a administrar</div>
         <div style="font-family:'Lora',serif;font-size:42px;font-weight:700;color:var(--teal);line-height:1;">${fmt(volML)}</div>
         <div style="font-size:18px;font-weight:600;color:var(--teal);margin-top:2px;">${mlLabel}</div>
-        ${volMLMin!=null||volMLMax!=null?`<div style="font-size:12px;color:var(--ink3);margin-top:4px;">Faixa: ${volMLMin!=null?fmt(volMLMin):'?'} – ${volMLMax!=null?fmt(volMLMax):'?'} ${mlLabel}</div>`:''}
+        ${doseMin!=null&&volMLMin!=null?`<div style="font-size:12px;color:var(--ink3);margin-top:4px;">Faixa: ${fmt(volMLMin)} – ${volMLMax!=null?fmt(volMLMax):'?'} ${mlLabel}</div>`:''}
       </div>
       <hr style="border:none;border-top:1px solid var(--line);margin:6px 0;">`;
-      // Dose secundária
       html+=`<div style="font-size:12.5px;color:var(--ink2);margin-top:6px;">
         <strong>Dose:</strong> ${fmt(dose)} ${doseUnit}
-        &nbsp;·&nbsp; <strong>Conc.:</strong> ${drug.concentracao} ${drug.conc_unidade||'mg/ml'}
-        ${ajust?' <span style="color:var(--amber);">⚠ limitado ao máx.</span>':''}
+        &nbsp;·&nbsp; <strong>Conc.:</strong> ${drug.concentracao} ${concUnidade}
+        ${ajust?` <span style="color:var(--amber);">⚠ limitado ao máx.</span>`:''}
+        ${maxLabel?` <span style="font-size:11px;color:var(--ink3);">(${maxLabel})</span>`:''}
       </div>
-      <div style="font-size:12px;color:var(--ink3);margin-top:2px;">${peso}kg × ${drug.dose} ${drug.unidade}</div>`;
+      <div style="font-size:12px;color:var(--ink3);margin-top:2px;">${peso}kg × ${drug.dose} ${doseUnidade}</div>`;
     } else {
-      // Sem concentração cadastrada — mostra dose como principal
       html+=`<div style="font-family:'Lora',serif;font-size:32px;font-weight:700;color:var(--teal);line-height:1;">${fmt(dose)}</div>
       <div style="font-size:14px;color:var(--teal);font-weight:600;margin-top:2px;">${doseUnit}</div>
-      <div style="font-size:12px;color:var(--ink3);margin-top:4px;">${peso}kg × ${drug.dose} ${drug.unidade}${ajust?' → limitado ao máx.':''}</div>
+      <div style="font-size:12px;color:var(--ink3);margin-top:4px;">${peso}kg × ${drug.dose} ${doseUnidade}${ajust?' → limitado ao máx.':''}</div>
       <div style="font-size:11.5px;color:var(--amber);margin-top:6px;">Cadastre a concentração na Base de Dados para calcular o volume em ml.</div>`;
     }
 
-    if(doseMin!=null||doseMax!=null){
-      html+=`<div style="font-size:12px;color:var(--ink3);margin-top:4px;">Faixa de dose: ${doseMin!=null?fmt(doseMin):'?'} – ${doseMax!=null?fmt(doseMax):'?'} ${doseUnit}</div>`;
-    }
     if(drug.diluicao) html+=`<div style="font-size:12px;color:var(--ink2);margin-top:8px;"><strong>Diluição:</strong> ${drug.diluicao}</div>`;
     if(drug.via) html+=`<div style="font-size:12px;color:var(--ink2);margin-top:2px;"><strong>Via:</strong> ${drug.via}</div>`;
-    if(drug.obs) html+=`<div style="font-size:12px;color:var(--amber);margin-top:6px;">⚠ ${drug.obs}</div>`;
+    if(drug.classe) html+=`<div style="font-size:12px;color:var(--ink2);margin-top:2px;"><strong>Classe:</strong> ${drug.classe}</div>`;
+    if(usoClinico) html+=`<div style="font-size:12px;color:var(--ink2);margin-top:2px;"><strong>Indicação:</strong> ${usoClinico}</div>`;
+    if(obsText) html+=`<div style="font-size:12px;color:var(--amber);margin-top:6px;">⚠ ${obsText}</div>`;
     content.innerHTML=html;
 
   } else {
     // Sem peso
     content.innerHTML=`
       <div style="color:var(--ink3);font-size:13px;margin-bottom:8px;">Informe o peso para calcular o volume em ml.</div>
-      <div style="font-size:12.5px;color:var(--ink2);"><strong>Dose padrão:</strong> ${drug.dose} ${drug.unidade}</div>
-      ${drug.concentracao?`<div style="font-size:12.5px;color:var(--ink2);margin-top:2px;"><strong>Concentração:</strong> ${drug.concentracao} ${drug.conc_unidade||'mg/ml'}</div>`:''}
+      <div style="font-size:12.5px;color:var(--ink2);"><strong>Dose padrão:</strong> ${drug.dose} ${doseUnidade}</div>
+      ${drug.concentracao?`<div style="font-size:12.5px;color:var(--ink2);margin-top:2px;"><strong>Concentração:</strong> ${drug.concentracao} ${concUnidade}</div>`:''}
       ${drug.diluicao?`<div style="font-size:12px;color:var(--ink2);margin-top:4px;"><strong>Diluição:</strong> ${drug.diluicao}</div>`:''}
       ${drug.via?`<div style="font-size:12px;color:var(--ink2);margin-top:2px;"><strong>Via:</strong> ${drug.via}</div>`:''}
-      ${drug.obs?`<div style="font-size:12px;color:var(--amber);margin-top:6px;">⚠ ${drug.obs}</div>`:''}`;
+      ${drug.classe?`<div style="font-size:12px;color:var(--ink2);margin-top:2px;"><strong>Classe:</strong> ${drug.classe}</div>`:''}
+      ${usoClinico?`<div style="font-size:12px;color:var(--ink2);margin-top:2px;"><strong>Indicação:</strong> ${usoClinico}</div>`:''}
+      ${obsText?`<div style="font-size:12px;color:var(--amber);margin-top:6px;">⚠ ${obsText}</div>`:''}`;
   }
 }
 document.addEventListener('click',e=>{if(!e.target.closest('#ac-inj-wrap'))document.getElementById('ac-inj-drop').classList.remove('open');});
