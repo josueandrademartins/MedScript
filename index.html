@@ -1882,7 +1882,27 @@ function nav(id,btn){
   if(id==='dashboard'){updateDash();}
   if(id==='exames'){selectedExams=[];renderSelectedExams();populateLocalSelects();}
   if(id==='documentos'){populateLocalSelects();}
-  if(id==='modelos'){renderModelos();}
+  if(id==='modelos'){
+    // Se cache vazio (primeira visita antes do boot terminar), carrega do Supabase
+    const hasCache=cacheGet('modelos_adulto')||cacheGet('modelos_ped')||cacheGet('modelos_exames');
+    if(!hasCache){
+      getSB().then(async sb=>{
+        const {data:{user}}=await sb.auth.getUser();
+        if(!user) return;
+        const [ma,mp,me]=await Promise.all([
+          sb.from('modelos').select('*').eq('user_id',user.id).eq('tipo','adulto'),
+          sb.from('modelos').select('*').eq('user_id',user.id).eq('tipo','ped'),
+          sb.from('modelos').select('*').eq('user_id',user.id).eq('tipo','exames'),
+        ]);
+        if(ma.data) cacheSet('modelos_adulto',ma.data);
+        if(mp.data) cacheSet('modelos_ped',mp.data);
+        if(me.data) cacheSet('modelos_exames',me.data);
+        renderModelos();
+      });
+    } else {
+      renderModelos();
+    }
+  }
 }
 
 // ── DASHBOARD ──
@@ -2921,17 +2941,17 @@ function gerarPDF(data, title){
       ${footHtml}
     </div>`;
     const fullDocHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Documento'}</title>${fonts}${style}</head><body>${bar}${docSheet}</body></html>`;
-    const blob=new Blob([fullDocHtml],{type:'text/html;charset=utf-8'});
-    const url=URL.createObjectURL(blob);
-    const win=window.open(url,'_blank');
-    if(!win){
+    const win=window.open('','_blank');
+    if(win){
+      win.document.open();
+      win.document.write(fullDocHtml);
+      win.document.close();
+    } else {
       const iframe=document.createElement('iframe');
       iframe.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;';
       iframe.srcdoc=fullDocHtml;
       document.body.appendChild(iframe);
-      iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>{iframe.remove();URL.revokeObjectURL(url);},1500);},400);};
-    } else {
-      win.addEventListener('unload',()=>URL.revokeObjectURL(url));
+      iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>{iframe.remove();},1500);},400);};
     }
     return;
   }
@@ -2982,17 +3002,17 @@ function gerarPDF(data, title){
 
   const fullHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Receita'}</title>${fonts}${style}</head><body>${bar}${tplSheet}${tplCtrl}<div id="rx-pages"></div>${layoutScript}</body></html>`;
 
-  const blob=new Blob([fullHtml],{type:'text/html;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const win=window.open(url,'_blank');
-  if(!win){
+  const win=window.open('','_blank');
+  if(win){
+    win.document.open();
+    win.document.write(fullHtml);
+    win.document.close();
+  } else {
     const iframe=document.createElement('iframe');
     iframe.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;';
     iframe.srcdoc=fullHtml;
     document.body.appendChild(iframe);
-    iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>{iframe.remove();URL.revokeObjectURL(url);},1500);},400);};
-  } else {
-    win.addEventListener('unload',()=>URL.revokeObjectURL(url));
+    iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>{iframe.remove();},1500);},400);};
   }
 }
 
@@ -3070,7 +3090,7 @@ function renderModelos(){
 function renderModelosGrid(tipo){
   const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
   const q=(document.getElementById('modelo-busca')||{value:''}).value.trim();
-  let mods=cacheGet(tipo==='ped'?'modelos_ped':'modelos_adulto')||ls(key)||[];
+  let mods=cacheGet(tipo==='ped'?'modelos_ped':'modelos_adulto')||[];
   if(q) mods=mods.filter(m=>norm(m.nome).includes(norm(q))||(m.medicamentos||[]).some(x=>norm(x.nome).includes(norm(q))));
   const favs=_favModelos;
   // Sort: favorites first
