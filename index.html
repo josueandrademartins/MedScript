@@ -1801,11 +1801,6 @@ function addExamFromInput(){
   toast('✓ Exame adicionado!');
 }
 async function boot(){
-  // Limpa chaves de modelos do localStorage para evitar dados antigos
-  // Os dados reais vêm do Supabase via initData()
-  ['ms_modelos_adulto','ms_modelos_ped','ms_modelos_exames'].forEach(k=>{
-    try{localStorage.removeItem(k);}catch(e){}
-  });
   await Promise.all([initData(), loadPerfilFromDB(), loadFavoritos()]);
   updateSidebarDoctor();
   updateDash();
@@ -2629,31 +2624,28 @@ function idadeStr(min,max){
 }
 
 // ── GERAR RECEITA ──
-function gerarRx(tipo,formato){
+async function gerarRx(tipo,formato){
   const pac=v(tipo==='ped'?'p-pac-nome':'a-pac-nome');
   const meds=tipo==='ped'?pMeds:aMeds;
   if(!pac){toast('⚠️ Informe o nome do paciente');return;}
   if(!meds.length){toast('⚠️ Adicione ao menos 1 medicamento');return;}
-
-  // ── Tudo síncrono: coleta dados, monta HTML, abre e escreve na aba ──
   const perfil=ls(KEYS.perfil)||{};
   const locais=cacheGet('locais')||[];
   const locIdxEl=document.getElementById(tipo==='ped'?'p-local':'a-local');
   const locIdx=locIdxEl?locIdxEl.value:'';
   const local=locIdx!==''?locais[parseInt(locIdx)]:(locais[0]||null);
   const hoje=new Date().toLocaleDateString('pt-BR');
+  // salvar modelo
+  const mnKey=tipo==='ped'?'p-model-name':'a-model-name';
+  const mn=v(mnKey);
+  if(mn) await _salvarModeloNoBanco(tipo, mn, meds);
   const extra=tipo==='ped'?[v('p-idade')?'Idade: '+v('p-idade')+' anos':'',v('p-peso')?'Peso: '+v('p-peso')+' kg':''].filter(Boolean).join(' · '):'';
   const html=formato==='controlado'
     ? buildControladoHtml({perfil,local,hoje,pac,meds,tipo,extra})
     : buildRxHtml({perfil,local,hoje,pac,meds,obs:v(tipo==='ped'?'p-obs':'a-obs'),tipo,extra});
+
   const title=formato==='controlado'?'Receituário Controlado':'Prévia da Receita';
-
-  // Abre e escreve imediatamente — 100% síncrono, Safari não bloqueia
-  openRxModal(html, title, null);
-
-  // Salva modelo em background sem bloquear a abertura da aba
-  const mn=v(tipo==='ped'?'p-model-name':'a-model-name');
-  if(mn) _salvarModeloNoBanco(tipo, mn, meds).catch(e=>console.warn('modelo:',e));
+  openRxModal(html, title);
 }
 
 async function _salvarModeloNoBanco(tipo, nome, meds){
@@ -2686,13 +2678,14 @@ async function salvarModeloDireto(tipo){
   await _salvarModeloNoBanco(tipo, nome, meds);
 }
 
-function openRxModal(html, title, previewWin){
-  gerarPDF(html, title, previewWin);
+function openRxModal(html, title){
+  // Generate PDF directly — open in new tab as print-ready A4 page
+  gerarPDF(html, title);
 }
-function closeRxModal(){}
-function printRx(){}
+function closeRxModal(){}  // kept for safety, no-op
+function printRx(){}       // kept for safety, no-op
 
-function gerarPDF(data, title, previewWin){
+function gerarPDF(data, title){
   const fonts=`<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">`;
   const style=`<style>
     @page{size:210mm 270mm portrait;margin:15mm;}
@@ -2928,9 +2921,18 @@ function gerarPDF(data, title, previewWin){
       ${footHtml}
     </div>`;
     const fullDocHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Documento'}</title>${fonts}${style}</head><body>${bar}${docSheet}</body></html>`;
-    const _writeDoc=(w,h)=>{w.document.open();w.document.write(h);w.document.close();w.focus();};
-    if(previewWin&&!previewWin.closed){_writeDoc(previewWin,fullDocHtml);}
-    else{const w=window.open('','_blank');if(w)_writeDoc(w,fullDocHtml);}
+    const blob=new Blob([fullDocHtml],{type:'text/html;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const win=window.open(url,'_blank');
+    if(!win){
+      const iframe=document.createElement('iframe');
+      iframe.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;';
+      iframe.srcdoc=fullDocHtml;
+      document.body.appendChild(iframe);
+      iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>{iframe.remove();URL.revokeObjectURL(url);},1500);},400);};
+    } else {
+      setTimeout(()=>URL.revokeObjectURL(url),60000);
+    }
     return;
   }
 
@@ -2980,9 +2982,18 @@ function gerarPDF(data, title, previewWin){
 
   const fullHtml=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title||'Receita'}</title>${fonts}${style}</head><body>${bar}${tplSheet}${tplCtrl}<div id="rx-pages"></div>${layoutScript}</body></html>`;
 
-  const _writeRx=(w,h)=>{w.document.open();w.document.write(h);w.document.close();w.focus();};
-  if(previewWin&&!previewWin.closed){_writeRx(previewWin,fullHtml);}
-  else{const w=window.open('','_blank');if(w)_writeRx(w,fullHtml);}
+  const blob=new Blob([fullHtml],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const win=window.open(url,'_blank');
+  if(!win){
+    const iframe=document.createElement('iframe');
+    iframe.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;';
+    iframe.srcdoc=fullHtml;
+    document.body.appendChild(iframe);
+    iframe.onload=()=>{setTimeout(()=>{iframe.contentWindow.print();setTimeout(()=>{iframe.remove();URL.revokeObjectURL(url);},1500);},400);};
+  } else {
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+  }
 }
 
 // Close modal on overlay click (kept for legacy, no-op)
@@ -3059,19 +3070,7 @@ function renderModelos(){
 function renderModelosGrid(tipo){
   const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
   const q=(document.getElementById('modelo-busca')||{value:''}).value.trim();
-  const cacheKey=tipo==='ped'?'modelos_ped':'modelos_adulto';
-  // Se cache vazio, busca do Supabase e re-renderiza
-  if(cacheGet(cacheKey)===null){
-    getSB().then(async sb=>{
-      const {data:{user}}=await sb.auth.getUser().catch(()=>({data:{user:null}}));
-      if(!user) return;
-      const {data}=await sb.from('modelos').select('*').eq('user_id',user.id).eq('tipo',tipo==='ped'?'ped':'adulto');
-      if(data) cacheSet(cacheKey,data);
-      renderModelosGrid(tipo);
-    });
-    return;
-  }
-  let mods=cacheGet(cacheKey)||[];
+  let mods=cacheGet(tipo==='ped'?'modelos_ped':'modelos_adulto')||ls(key)||[];
   if(q) mods=mods.filter(m=>norm(m.nome).includes(norm(q))||(m.medicamentos||[]).some(x=>norm(x.nome).includes(norm(q))));
   const favs=_favModelos;
   // Sort: favorites first
@@ -3522,8 +3521,7 @@ function gerarDocExame(){
     corpo=`<p style="font-size:12.5px;margin-bottom:6px;"><strong>Para:</strong> ${v('enc-destino')||'—'} &nbsp;·&nbsp; <strong>Urgência:</strong> ${urg}</p><hr style="border:none;border-top:1px solid #ccc;margin:8px 0;"><p style="font-size:12.5px;font-weight:600;margin-bottom:4px;">Motivo clínico:</p><p style="font-size:12.5px;line-height:1.7;">${texto}</p>`;
   }
   const data=buildDocData({perfil,local,hoje,pac,titulo,corpo});
-  const _pw=window.open('','_blank');
-  gerarPDF(data,titulo,_pw);
+  gerarPDF(data,titulo);
 }
 
 function gerarDocumento(){
@@ -3544,8 +3542,7 @@ function gerarDocumento(){
     corpo=`<p style="font-size:12.5px;line-height:1.8;">Declaramos que o(a) paciente acima compareceu a esta unidade para <strong>${fin}</strong> no dia ${hoje}${hin?' das '+hin:''}${hout?' às '+hout:''}.</p>`;
   }
   const data=buildDocData({perfil,local,hoje,pac,titulo,corpo});
-  const _pw=window.open('','_blank');
-  gerarPDF(data,titulo,_pw);
+  gerarPDF(data,titulo);
 }
 
 // ── MODELOS EXAMES ──
