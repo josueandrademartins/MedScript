@@ -360,29 +360,11 @@ body.is-admin .admin-only-block{display:block;}
     <!-- Painel Cadastro -->
     <div id="panel-register" style="display:none;">
       <p style="font-size:12px;color:var(--ink3);margin:0 0 12px;text-align:center;">Esses dados serão usados nas suas receitas e documentos</p>
-
-      <!-- Tipo de profissional -->
-      <div class="login-field">
-        <label>Tipo de profissional</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
-          <label id="tipo-medico-btn" onclick="setTipoProfissional('medico')" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border:1.5px solid var(--teal);border-radius:var(--radius-sm);cursor:pointer;background:var(--teal-light);font-size:11.5px;font-weight:600;color:var(--teal);text-align:center;">
-            <span style="font-size:18px;">🩺</span>Médico
-          </label>
-          <label id="tipo-enfermagem-btn" onclick="setTipoProfissional('enfermagem')" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border:1.5px solid var(--line);border-radius:var(--radius-sm);cursor:pointer;background:var(--card);font-size:11.5px;font-weight:500;color:var(--ink2);text-align:center;">
-            <span style="font-size:18px;">💉</span>Enfermagem
-          </label>
-          <label id="tipo-odonto-btn" onclick="setTipoProfissional('odonto')" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border:1.5px solid var(--line);border-radius:var(--radius-sm);cursor:pointer;background:var(--card);font-size:11.5px;font-weight:500;color:var(--ink2);text-align:center;">
-            <span style="font-size:18px;">🦷</span>Odontologia
-          </label>
-        </div>
-        <input type="hidden" id="reg-tipo" value="medico">
-      </div>
-
       <div class="login-field"><label>Nome completo</label><input id="reg-nome" type="text" placeholder="Dr. Nome Sobrenome"></div>
       <div class="login-field"><label>CPF</label><input id="reg-cpf" type="text" placeholder="000.000.000-00" oninput="fmtCPF(this)"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div class="login-field" style="margin:0;"><label id="reg-conselho-label">CRM</label><input id="reg-crm" type="text" placeholder="Ex: 12345"></div>
-        <div class="login-field" style="margin:0;"><label id="reg-estado-label">Estado</label>
+        <div class="login-field" style="margin:0;"><label>CRM</label><input id="reg-crm" type="text" placeholder="Ex: 12345"></div>
+        <div class="login-field" style="margin:0;"><label>Estado (CRM)</label>
           <select id="reg-estado" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;background:var(--card);color:var(--ink);outline:none;">
             <option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
           </select>
@@ -393,15 +375,6 @@ body.is-admin .admin-only-block{display:block;}
       <div class="login-field"><label>Senha</label><input id="reg-pass" type="password" placeholder="Mínimo 6 caracteres"></div>
       <div class="login-field"><label>Confirmar senha</label><input id="reg-pass2" type="password" placeholder="Repita a senha"></div>
       <button class="login-btn" onclick="doRegister()">Criar conta</button>
-      <div style="display:flex;align-items:flex-start;gap:8px;margin-top:12px;">
-        <input type="checkbox" id="reg-aceite" style="margin-top:3px;flex-shrink:0;accent-color:var(--teal);">
-        <label for="reg-aceite" style="font-size:12px;color:var(--ink3);line-height:1.5;cursor:pointer;">
-          Li e aceito os
-          <a href="#" onclick="openTermos('uso');return false;" style="color:var(--teal);text-decoration:none;">Termos de Uso</a>,
-          a <a href="#" onclick="openTermos('privacidade');return false;" style="color:var(--teal);text-decoration:none;">Política de Privacidade</a>
-          e o <a href="#" onclick="openTermos('responsabilidade');return false;" style="color:var(--teal);text-decoration:none;">Termo de Responsabilidade Médica</a>
-        </label>
-      </div>
       <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--ink3);">
         Já tem cadastro? <a href="#" onclick="showPanel('login');return false;" style="color:var(--teal);text-decoration:none;font-weight:500;">Entrar</a>
       </p>
@@ -466,14 +439,6 @@ body.is-admin .admin-only-block{display:block;}
     </button>
   </nav>
   <div class="sb-footer">
-    <!-- Links legais -->
-    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:8px;flex-wrap:wrap;">
-      <button onclick="openTermos('uso')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.35);font-size:10px;padding:0;font-family:'Outfit',sans-serif;">Termos de Uso</button>
-      <span style="color:rgba(255,255,255,.2);font-size:10px;">·</span>
-      <button onclick="openTermos('privacidade')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.35);font-size:10px;padding:0;font-family:'Outfit',sans-serif;">Privacidade</button>
-      <span style="color:rgba(255,255,255,.2);font-size:10px;">·</span>
-      <button onclick="openTermos('responsabilidade')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.35);font-size:10px;padding:0;font-family:'Outfit',sans-serif;">Responsabilidade</button>
-    </div>
     <!-- Banner de assinatura -->
     <div id="sb-sub-banner" style="margin-bottom:8px;"></div>
     <div class="sb-doctor">
@@ -741,16 +706,6 @@ body.is-admin .admin-only-block{display:block;}
 <!-- ===== EXAMES ===== -->
 <div class="page" id="page-exames">
   <div class="page-head"><h2>Exames / Encaminhamentos</h2><p>Solicitações e encaminhamentos médicos</p></div>
-
-  <!-- Sub-abas principais -->
-  <div class="admin-tabs" style="margin-bottom:16px;">
-    <button class="admin-tab active" id="extab-btn-normal" onclick="switchExMainTab('normal',this)">Solicitação / Encaminhamento</button>
-    <button class="admin-tab" id="extab-btn-apac" onclick="switchExMainTab('apac',this)">APAC Geral</button>
-    <button class="admin-tab" id="extab-btn-mamografia" onclick="switchExMainTab('mamografia',this)">Requisição de Mamografia</button>
-  </div>
-
-  <!-- ── CONTEÚDO: Solicitação / Encaminhamento (original) ── -->
-  <div id="ex-main-normal">
   <div class="card">
     <div class="card-title">Dados do Paciente</div>
     <div class="gr2">
@@ -800,207 +755,7 @@ body.is-admin .admin-only-block{display:block;}
       Gerar Documento
     </button>
   </div>
-  </div><!-- /ex-main-normal -->
-
-  <!-- ── CONTEÚDO: APAC GERAL ── -->
-  <div id="ex-main-apac" style="display:none;">
-  <div class="card">
-    <div class="card-title">APAC — Laudo para Solicitação/Autorização de Procedimento Ambulatorial</div>
-    <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;">Campos numerados conforme formulário oficial SIA/SUS · Ministério da Saúde</p>
-
-    <!-- Estabelecimento -->
-    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">Identificação do Estabelecimento</div>
-    <div class="gr2">
-      <div class="fg"><label>1 - CNES do Estabelecimento Solicitante</label><input id="apac-cnes-sol" placeholder="0000000"></div>
-      <div class="fg"><label>2 - Nome do Estabelecimento Solicitante</label><input id="apac-estab-sol" placeholder="Nome da unidade de saúde"></div>
-    </div>
-    <div class="gr2">
-      <div class="fg"><label>3 - CNES do Estabelecimento Executante</label><input id="apac-cnes-exec" placeholder="0000000"></div>
-      <div class="fg"><label>4 - Nome do Estabelecimento Executante</label><input id="apac-estab-exec" placeholder="Nome da unidade executante"></div>
-    </div>
-
-    <!-- Paciente -->
-    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;">Identificação do Paciente</div>
-    <div class="gr2">
-      <div class="fg"><label>5 - Nome do Paciente *</label><input id="apac-pac-nome" placeholder="Nome completo"></div>
-      <div class="fg"><label>6 - Cartão Nacional de Saúde (CNS) *</label><input id="apac-cns" placeholder="000 0000 0000 0000"></div>
-    </div>
-    <div class="gr2">
-      <div class="fg"><label>7 - Data de Nascimento *</label><input type="date" id="apac-nasc"></div>
-      <div class="fg"><label>8 - Sexo *</label>
-        <select id="apac-sexo"><option value="">—</option><option value="M">Masculino</option><option value="F">Feminino</option></select>
-      </div>
-    </div>
-    <div class="fg"><label>9 - Nome da Mãe *</label><input id="apac-mae" placeholder="Nome completo da mãe"></div>
-    <div class="fg"><label>10 - Endereço (Rua, Nº, Bairro)</label><input id="apac-end" placeholder="Rua, número, bairro"></div>
-    <div class="gr2">
-      <div class="fg"><label>11 - Município de Residência</label><input id="apac-municipio" placeholder="Município"></div>
-      <div class="fg"><label>12 - UF</label><select id="apac-uf" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-size:13px;background:var(--card);color:var(--ink);">
-        <option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
-      </select></div>
-    </div>
-    <div class="gr2">
-      <div class="fg"><label>13 - CEP</label><input id="apac-cep" placeholder="00000-000"></div>
-      <div class="fg"><label>14 - DDD + Telefone</label><input id="apac-tel" placeholder="(00) 00000-0000"></div>
-    </div>
-
-    <!-- Procedimento -->
-    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;">Procedimento Solicitado</div>
-    <div class="gr2">
-      <div class="fg"><label>15 - Código do Procedimento (SIGTAP) *</label><input id="apac-proc-cod" placeholder="Ex: 0201010429"></div>
-      <div class="fg"><label>16 - Nome do Procedimento *</label><input id="apac-proc-nome" placeholder="Nome do procedimento SUS"></div>
-    </div>
-    <div class="gr2">
-      <div class="fg"><label>17 - CID Principal *</label><input id="apac-cid" placeholder="Ex: C50.1"></div>
-      <div class="fg"><label>18 - CID Secundário</label><input id="apac-cid2" placeholder="Opcional"></div>
-    </div>
-
-    <!-- Clínico -->
-    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;">Dados Clínicos</div>
-    <div class="fg"><label>19 - Hipótese / Diagnóstico *</label><input id="apac-diag" placeholder="Descrição do diagnóstico ou hipótese diagnóstica"></div>
-    <div class="fg"><label>20 - Motivo do Procedimento *</label><textarea id="apac-motivo" style="min-height:90px;" placeholder="Justificativa clínica para solicitação do procedimento"></textarea></div>
-    <div class="fg"><label>21 - Observações / Dados Complementares</label><textarea id="apac-obs" style="min-height:70px;" placeholder="Informações adicionais relevantes"></textarea></div>
-
-    <!-- Validade -->
-    <div class="gr2">
-      <div class="fg"><label>22 - Início da Validade *</label><input type="date" id="apac-val-ini"></div>
-      <div class="fg"><label>23 - Fim da Validade *</label><input type="date" id="apac-val-fim"></div>
-    </div>
-
-    <!-- Solicitante -->
-    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;">Solicitação</div>
-    <div class="gr2">
-      <div class="fg"><label>41 - Nome do Profissional Solicitante</label><input id="apac-sol-nome" placeholder="Nome do médico/profissional"></div>
-      <div class="fg"><label>42 - Data da Solicitação</label><input type="date" id="apac-sol-data"></div>
-    </div>
-    <div class="gr2">
-      <div class="fg"><label>43 - Tipo de Documento</label>
-        <select id="apac-sol-doc-tipo"><option value="CNS">CNS</option><option value="CPF">CPF</option></select>
-      </div>
-      <div class="fg"><label>44 - Nº do Documento (CNS/CPF)</label><input id="apac-sol-doc-num" placeholder="Número do documento"></div>
-    </div>
-  </div>
-  <div class="btn-group">
-    <button class="btn btn-primary" onclick="gerarAPAC()">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h4M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="7" y="2" width="10" height="4" rx="1"/></svg>
-      Gerar PDF da APAC
-    </button>
-  </div>
-  </div><!-- /ex-main-apac -->
-
-  <!-- ── CONTEÚDO: REQUISIÇÃO DE MAMOGRAFIA ── -->
-  <div id="ex-main-mamografia" style="display:none;">
-  <div class="card">
-    <div class="card-title">Requisição de Mamografia — Ministério da Saúde / SUS</div>
-    <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;">Formulário oficial SISCAN · campos obrigatórios marcados com *</p>
-
-    <!-- Unidade solicitante -->
-    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">Unidade de Saúde Solicitante</div>
-    <div class="gr2">
-      <div class="fg"><label>CNES da Unidade *</label><input id="mamo-cnes" placeholder="0000000"></div>
-      <div class="fg"><label>Nome da Unidade *</label><input id="mamo-unidade" placeholder="Nome da unidade de saúde"></div>
-    </div>
-
-    <!-- Dados pessoais -->
-    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;">Informações Pessoais da Paciente</div>
-    <div class="gr2">
-      <div class="fg"><label>Nome Completo *</label><input id="mamo-pac-nome" placeholder="Nome completo"></div>
-      <div class="fg"><label>CNS (Cartão Nacional de Saúde) *</label><input id="mamo-cns" placeholder="000 0000 0000 0000"></div>
-    </div>
-    <div class="gr2">
-      <div class="fg"><label>Data de Nascimento *</label><input type="date" id="mamo-nasc"></div>
-      <div class="fg"><label>Nome Completo da Mãe *</label><input id="mamo-mae" placeholder="Nome da mãe"></div>
-    </div>
-    <div class="fg"><label>Endereço (Rua, Nº, Bairro)</label><input id="mamo-end" placeholder="Rua, número, bairro"></div>
-    <div class="gr2">
-      <div class="fg"><label>Município</label><input id="mamo-municipio" placeholder="Município de residência"></div>
-      <div class="fg"><label>UF</label><select id="mamo-uf" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-size:13px;background:var(--card);color:var(--ink);">
-        <option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
-      </select></div>
-    </div>
-    <div class="fg"><label>Telefone de Contato</label><input id="mamo-tel" placeholder="(00) 00000-0000"></div>
-
-    <!-- Tipo de mamografia -->
-    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;">Tipo de Mamografia</div>
-    <div class="fg"><label>Indicação *</label>
-      <select id="mamo-tipo" onchange="toggleMamoCampos()">
-        <option value="">Selecione…</option>
-        <option value="rastreamento_alvo">8a. Rastreamento — População Alvo (50–69 anos, assintomática)</option>
-        <option value="rastreamento_risco">8b. Rastreamento — Risco Elevado (histórico familiar/pessoal de câncer, >35 anos)</option>
-        <option value="diag_achado">7a. Diagnóstica — Achado no Exame Clínico (sinal/sintoma)</option>
-        <option value="diag_controle3">7b. Diagnóstica — Controle Radiológico BI-RADS 3</option>
-        <option value="diag_controle_biopsia">7c. Diagnóstica — Controle Pós-biópsia</option>
-        <option value="diag_cancer">7d. Diagnóstica — Lesão com Diagnóstico de Câncer</option>
-        <option value="qt_neoadjuvante">7e. Avaliação de Resposta à QT Neoadjuvante</option>
-      </select>
-    </div>
-
-    <!-- Campos diagnóstica (sinais/sintomas) -->
-    <div id="mamo-campos-diag" style="display:none;">
-      <div style="font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.8px;margin:12px 0 8px;">Achados no Exame Clínico</div>
-      <div class="gr2">
-        <div class="fg"><label>Mama Direita — Achados</label>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
-            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-d-nodulo"> Nódulo</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-d-micro"> Microcalcificação</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-d-assim-focal"> Assimetria focal</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-d-assim-dif"> Assimetria difusa</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-d-distorcao"> Distorção focal</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-d-area-densa"> Área densa</label>
-          </div>
-        </div>
-        <div class="fg"><label>Mama Esquerda — Achados</label>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
-            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-e-nodulo"> Nódulo</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-e-micro"> Microcalcificação</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-e-assim-focal"> Assimetria focal</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-e-assim-dif"> Assimetria difusa</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-e-distorcao"> Distorção focal</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-e-area-densa"> Área densa</label>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Histórico clínico -->
-    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;">Histórico Clínico</div>
-    <div class="gr2">
-      <div class="fg"><label>1 - Apresenta risco elevado para câncer de mama?</label>
-        <select id="mamo-risco"><option value="nao">Não</option><option value="sim">Sim</option></select>
-      </div>
-      <div class="fg"><label>2 - Fez mamografia anteriormente?</label>
-        <select id="mamo-anterior"><option value="nao">Não</option><option value="sim">Sim</option></select>
-      </div>
-    </div>
-    <div class="gr2">
-      <div class="fg"><label>3 - Ano da última mamografia</label><input id="mamo-ano-ant" placeholder="Ex: 2022" type="number" min="2000" max="2026"></div>
-      <div class="fg"><label>4 - Apresenta nódulo/caroço na mama?</label>
-        <select id="mamo-nodulo"><option value="nao">Não</option><option value="sim">Sim</option></select>
-      </div>
-    </div>
-    <div class="gr2">
-      <div class="fg"><label>5 - Data da última menstruação</label><input type="date" id="mamo-menstrua"></div>
-      <div class="fg"><label>6 - Faz reposição hormonal?</label>
-        <select id="mamo-hormonio"><option value="nao">Não</option><option value="sim">Sim</option></select>
-      </div>
-    </div>
-    <div class="fg"><label>7 - Outros dados clínicos relevantes</label><textarea id="mamo-outros" style="min-height:70px;" placeholder="Histórico familiar, cirurgias mamárias, amamentação, outras informações relevantes"></textarea></div>
-
-    <!-- Solicitante -->
-    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;">Dados do Solicitante</div>
-    <div class="gr2">
-      <div class="fg"><label>Nome do Responsável *</label><input id="mamo-sol-nome" placeholder="Nome do médico/enfermeiro"></div>
-      <div class="fg"><label>Data da Solicitação *</label><input type="date" id="mamo-sol-data"></div>
-    </div>
-    <div class="fg"><label>Nº do Exame (preenchido pelo serviço de mamografia)</label><input id="mamo-num-exame" placeholder="Deixar em branco — será preenchido pelo serviço"></div>
-  </div>
-  <div class="btn-group">
-    <button class="btn btn-primary" onclick="gerarReqMamografia()">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h4M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="7" y="2" width="10" height="4" rx="1"/></svg>
-      Gerar Requisição de Mamografia
-    </button>
-  </div>
-  </div><!-- /ex-main-mamografia -->
+</div>
 
 <!-- ===== DOCUMENTOS ===== -->
 <div class="page" id="page-documentos">
@@ -1464,21 +1219,6 @@ body.is-admin .admin-only-block{display:block;}
   </div>
 </div>
 
-<!-- ── MODAL TERMOS LEGAIS ── -->
-<div class="modal-overlay" id="modal-termos" style="z-index:3100;">
-  <div class="modal" style="max-width:680px;max-height:90vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line);flex-shrink:0;">
-      <h3 id="modal-termos-title" style="margin:0;font-size:16px;">Termos de Uso</h3>
-      <button onclick="closeModal('modal-termos')" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--ink3);line-height:1;padding:0;">×</button>
-    </div>
-    <div id="modal-termos-body" style="overflow-y:auto;padding:24px;flex:1;font-size:13px;line-height:1.8;color:var(--ink2);">
-    </div>
-    <div style="padding:14px 24px;border-top:1px solid var(--line);flex-shrink:0;text-align:right;">
-      <button class="btn btn-primary" onclick="closeModal('modal-termos')">Entendi</button>
-    </div>
-  </div>
-</div>
-
 <!-- Modal Droga Injetável -->
 <div class="modal-overlay" id="modal-inj">
   <div class="modal" style="max-width:680px;max-height:92vh;overflow-y:auto;">
@@ -1731,466 +1471,7 @@ let _currentProfile = null;
 let _subscription   = null;   // dados da assinatura atual
 
 function currentUser(){return _currentProfile;}
-// ── MÓDULO APAC / MAMOGRAFIA ────────────────────────────────
-
-function switchExMainTab(tab, btn){
-  ['normal','apac','mamografia'].forEach(t=>{
-    const el = document.getElementById('ex-main-'+t);
-    if(el) el.style.display = t===tab ? '' : 'none';
-  });
-  document.querySelectorAll('#page-exames .admin-tabs:first-of-type .admin-tab').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-}
-
-function toggleMamoCampos(){
-  const tipo = document.getElementById('mamo-tipo').value;
-  const diagEl = document.getElementById('mamo-campos-diag');
-  if(diagEl) diagEl.style.display = tipo.startsWith('diag_') ? '' : 'none';
-}
-
-// ── Gerar PDF APAC Geral ──
-function gerarAPAC(){
-  const g = id => (document.getElementById(id)||{value:''}).value.trim();
-  const pac = g('apac-pac-nome');
-  if(!pac){ toast('⚠️ Informe o nome do paciente'); return; }
-  if(!g('apac-proc-nome')){ toast('⚠️ Informe o procedimento'); return; }
-
-  const perfil = ls(KEYS.perfil)||{};
-  const hoje = new Date().toLocaleDateString('pt-BR');
-
-  const f = (label, val, full) => `
-    <div class="apac-field${full?' apac-full':''}">
-      <div class="apac-label">${label}</div>
-      <div class="apac-val">${val||'&nbsp;'}</div>
-    </div>`;
-
-  const html = `
-    <div class="apac-sheet">
-      <!-- Cabeçalho oficial -->
-      <div class="apac-header">
-        <div class="apac-sus-logo">
-          <div class="apac-sus-badge">SUS</div>
-          <div style="font-size:8px;color:#555;line-height:1.3;">Sistema<br>Único de<br>Saúde</div>
-          <div style="font-size:8px;color:#555;line-height:1.3;margin-left:6px;">Ministério<br>da<br>Saúde</div>
-        </div>
-        <div class="apac-header-title">
-          <div class="apac-title">LAUDO PARA SOLICITAÇÃO/AUTORIZAÇÃO DE PROCEDIMENTO AMBULATORIAL</div>
-          <div class="apac-subtitle">SIA/SUS — Sistema de Informações Ambulatoriais</div>
-        </div>
-      </div>
-
-      <!-- Estabelecimento -->
-      <div class="apac-section-title">Identificação do Estabelecimento</div>
-      <div class="apac-row">
-        ${f('1 - CNES Solicitante', g('apac-cnes-sol'))}
-        ${f('2 - Estabelecimento Solicitante', g('apac-estab-sol'))}
-        ${f('3 - CNES Executante', g('apac-cnes-exec'))}
-        ${f('4 - Estabelecimento Executante', g('apac-estab-exec'))}
-      </div>
-
-      <!-- Paciente -->
-      <div class="apac-section-title">Identificação do Paciente</div>
-      <div class="apac-row">
-        ${f('5 - Nome do Paciente', pac, true)}
-        ${f('6 - CNS', g('apac-cns'))}
-        ${f('7 - Data de Nascimento', g('apac-nasc')?new Date(g('apac-nasc')+'T12:00:00').toLocaleDateString('pt-BR'):'')}
-        ${f('8 - Sexo', g('apac-sexo'))}
-      </div>
-      <div class="apac-row">
-        ${f('9 - Nome da Mãe', g('apac-mae'), true)}
-      </div>
-      <div class="apac-row">
-        ${f('10 - Endereço', g('apac-end'), true)}
-      </div>
-      <div class="apac-row">
-        ${f('11 - Município', g('apac-municipio'))}
-        ${f('12 - UF', g('apac-uf'))}
-        ${f('13 - CEP', g('apac-cep'))}
-        ${f('14 - Telefone', g('apac-tel'))}
-      </div>
-
-      <!-- Procedimento -->
-      <div class="apac-section-title">Procedimento Solicitado</div>
-      <div class="apac-row">
-        ${f('15 - Código SIGTAP', g('apac-proc-cod'))}
-        ${f('16 - Nome do Procedimento', g('apac-proc-nome'))}
-        ${f('17 - CID Principal', g('apac-cid'))}
-        ${f('18 - CID Secundário', g('apac-cid2'))}
-      </div>
-
-      <!-- Clínico -->
-      <div class="apac-section-title">Dados Clínicos</div>
-      <div class="apac-row">
-        ${f('19 - Hipótese / Diagnóstico', g('apac-diag'), true)}
-      </div>
-      <div class="apac-row">
-        <div class="apac-field apac-full">
-          <div class="apac-label">20 - Motivo do Procedimento</div>
-          <div class="apac-val apac-textarea">${g('apac-motivo')||'&nbsp;'}</div>
-        </div>
-      </div>
-      ${g('apac-obs')?`<div class="apac-row"><div class="apac-field apac-full"><div class="apac-label">21 - Observações</div><div class="apac-val">${g('apac-obs')}</div></div></div>`:''}
-      <div class="apac-row">
-        ${f('22 - Início da Validade', g('apac-val-ini')?new Date(g('apac-val-ini')+'T12:00:00').toLocaleDateString('pt-BR'):'')}
-        ${f('23 - Fim da Validade', g('apac-val-fim')?new Date(g('apac-val-fim')+'T12:00:00').toLocaleDateString('pt-BR'):'')}
-      </div>
-
-      <!-- Solicitação -->
-      <div class="apac-section-title apac-red">Solicitação</div>
-      <div class="apac-row">
-        ${f('41 - Nome do Profissional Solicitante', g('apac-sol-nome')||perfil.nome||'—')}
-        ${f('42 - Data da Solicitação', g('apac-sol-data')?new Date(g('apac-sol-data')+'T12:00:00').toLocaleDateString('pt-BR'):hoje)}
-        ${f('43 - Tipo Doc', g('apac-sol-doc-tipo'))}
-        ${f('44 - Nº do Documento', g('apac-sol-doc-num')||perfil.crm||'')}
-      </div>
-      <div class="apac-sign-row">
-        <div class="apac-sign-box">
-          <div style="height:40px;"></div>
-          <div class="apac-sign-line"></div>
-          <div style="font-size:9px;color:#555;text-align:center;">45 - Assinatura e Carimbo do Profissional Solicitante<br>(Nº do Registro do Conselho)</div>
-        </div>
-      </div>
-
-      <!-- Autorização (em branco para preenchimento pela gestão) -->
-      <div class="apac-section-title apac-blue">Autorização (preenchimento pela gestão de saúde)</div>
-      <div class="apac-row">
-        ${f('46 - Nome do Profissional Autorizador', '')}
-        ${f('47 - Cód. Órgão Emissor', '')}
-        ${f('48 - Documento', '')}
-        ${f('50 - Data da Autorização', '')}
-      </div>
-      <div class="apac-row">
-        ${f('52 - Nº da Autorização (APAC)', '', true)}
-      </div>
-      <div class="apac-sign-row">
-        <div class="apac-sign-box">
-          <div style="height:40px;"></div>
-          <div class="apac-sign-line"></div>
-          <div style="font-size:9px;color:#555;text-align:center;">51 - Assinatura e Carimbo do Profissional Autorizador</div>
-        </div>
-      </div>
-    </div>`;
-
-  const style = `<style>
-    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
-    body{background:#fff;font-size:11px;color:#111;}
-    .apac-sheet{padding:10mm 12mm;width:210mm;}
-    .apac-header{display:flex;align-items:center;gap:14px;padding-bottom:8px;border-bottom:2px solid #1a5276;margin-bottom:8px;}
-    .apac-sus-logo{display:flex;align-items:center;gap:4px;flex-shrink:0;}
-    .apac-sus-badge{background:#1a5276;color:#fff;font-weight:900;font-size:16px;padding:4px 8px;border-radius:3px;}
-    .apac-header-title{flex:1;}
-    .apac-title{font-size:11px;font-weight:700;color:#1a5276;text-transform:uppercase;letter-spacing:.5px;}
-    .apac-subtitle{font-size:9px;color:#777;margin-top:2px;}
-    .apac-section-title{background:#1a5276;color:#fff;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:3px 8px;margin:6px 0 4px;}
-    .apac-section-title.apac-red{background:#C0392B;}
-    .apac-section-title.apac-blue{background:#2471a3;}
-    .apac-row{display:flex;flex-wrap:wrap;gap:0;border:1px solid #ccc;border-top:none;margin-bottom:0;}
-    .apac-row + .apac-row{border-top:none;}
-    .apac-row:first-of-type{border-top:1px solid #ccc;}
-    .apac-field{flex:1;min-width:120px;border-right:1px solid #ccc;padding:3px 5px;}
-    .apac-field:last-child{border-right:none;}
-    .apac-field.apac-full{flex:100%;border-right:none;}
-    .apac-label{font-size:8px;color:#777;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
-    .apac-val{font-size:11px;color:#111;min-height:14px;margin-top:1px;}
-    .apac-val.apac-textarea{min-height:36px;white-space:pre-wrap;}
-    .apac-sign-row{display:flex;justify-content:center;border:1px solid #ccc;border-top:none;padding:8px;}
-    .apac-sign-box{width:260px;text-align:center;}
-    .apac-sign-line{border-top:1px solid #555;margin:0 auto 4px;}
-  </style>`;
-
-  const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">${style}</head><body>${html}</body></html>`;
-  const win = window.open('about:blank','_blank');
-  if(win){ win.document.open(); win.document.write(fullHtml); win.document.close(); }
-  else { toast('Permita popups para gerar o PDF'); }
-}
-
-// ── Gerar Requisição de Mamografia ──
-function gerarReqMamografia(){
-  const g = id => (document.getElementById(id)||{value:''}).value.trim();
-  const cb = id => (document.getElementById(id)||{checked:false}).checked;
-  const pac = g('mamo-pac-nome');
-  if(!pac){ toast('⚠️ Informe o nome da paciente'); return; }
-  if(!g('mamo-tipo')){ toast('⚠️ Selecione o tipo de mamografia'); return; }
-
-  const perfil = ls(KEYS.perfil)||{};
-  const hoje = new Date().toLocaleDateString('pt-BR');
-
-  const tipoMap = {
-    'rastreamento_alvo':      '8a. Rastreamento — População Alvo (50–69 anos)',
-    'rastreamento_risco':     '8b. Rastreamento — Risco Elevado',
-    'diag_achado':            '7a. Diagnóstica — Achado no Exame Clínico',
-    'diag_controle3':         '7b. Diagnóstica — Controle BI-RADS 3',
-    'diag_controle_biopsia':  '7c. Diagnóstica — Controle Pós-biópsia',
-    'diag_cancer':            '7d. Diagnóstica — Lesão com Diagnóstico de Câncer',
-    'qt_neoadjuvante':        '7e. Avaliação de Resposta à QT Neoadjuvante',
-  };
-  const tipoLabel = tipoMap[g('mamo-tipo')] || g('mamo-tipo');
-  const isDiag = g('mamo-tipo').startsWith('diag_');
-
-  const achadosMD = [cb('mamo-d-nodulo')&&'Nódulo', cb('mamo-d-micro')&&'Microcalcificação', cb('mamo-d-assim-focal')&&'Assim. focal', cb('mamo-d-assim-dif')&&'Assim. difusa', cb('mamo-d-distorcao')&&'Distorção focal', cb('mamo-d-area-densa')&&'Área densa'].filter(Boolean).join(', ') || '—';
-  const achadosME = [cb('mamo-e-nodulo')&&'Nódulo', cb('mamo-e-micro')&&'Microcalcificação', cb('mamo-e-assim-focal')&&'Assim. focal', cb('mamo-e-assim-dif')&&'Assim. difusa', cb('mamo-e-distorcao')&&'Distorção focal', cb('mamo-e-area-densa')&&'Área densa'].filter(Boolean).join(', ') || '—';
-
-  const simNao = v => v === 'sim' ? 'Sim' : 'Não';
-  const fmtDate = id => { const v = g(id); return v ? new Date(v+'T12:00:00').toLocaleDateString('pt-BR') : ''; };
-
-  const html = `
-    <div class="mamo-sheet">
-      <!-- Cabeçalho -->
-      <div class="mamo-header">
-        <div class="mamo-sus-wrap">
-          <div class="mamo-sus-badge">SUS</div>
-          <div class="mamo-sus-text">Sistema Único de Saúde<br>Ministério da Saúde</div>
-        </div>
-        <div class="mamo-title-wrap">
-          <div class="mamo-title">REQUISIÇÃO DE MAMOGRAFIA</div>
-          <div class="mamo-subtitle">SISCAN — Sistema de Informação do Câncer</div>
-        </div>
-        <div class="mamo-cnes-wrap">
-          <div class="mamo-field-label">Código da Unidade (CNES)</div>
-          <div class="mamo-field-val mamo-cnes-val">${g('mamo-cnes')||'_______'}</div>
-        </div>
-      </div>
-
-      <div class="mamo-unidade">${g('mamo-unidade')||'_________________________________'}</div>
-
-      <!-- Nº do exame -->
-      <div class="mamo-num-row">
-        <div class="mamo-field-label" style="font-size:9px;">Nº DO EXAME (preenchido pelo serviço)</div>
-        <div class="mamo-num-box">${g('mamo-num-exame')||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</div>
-      </div>
-
-      <!-- Dados pessoais -->
-      <div class="mamo-section">INFORMAÇÕES PESSOAIS</div>
-      <div class="mamo-grid2">
-        <div><div class="mamo-field-label">Nome Completo *</div><div class="mamo-field-val">${pac}</div></div>
-        <div><div class="mamo-field-label">CNS *</div><div class="mamo-field-val">${g('mamo-cns')||'&nbsp;'}</div></div>
-      </div>
-      <div class="mamo-grid2">
-        <div><div class="mamo-field-label">Data de Nascimento</div><div class="mamo-field-val">${fmtDate('mamo-nasc')}</div></div>
-        <div><div class="mamo-field-label">Nome da Mãe *</div><div class="mamo-field-val">${g('mamo-mae')||'&nbsp;'}</div></div>
-      </div>
-      <div class="mamo-grid3">
-        <div style="grid-column:1/3"><div class="mamo-field-label">Endereço</div><div class="mamo-field-val">${g('mamo-end')||'&nbsp;'}</div></div>
-        <div><div class="mamo-field-label">Município / UF</div><div class="mamo-field-val">${[g('mamo-municipio'),g('mamo-uf')].filter(Boolean).join(' / ')||'&nbsp;'}</div></div>
-      </div>
-      <div class="mamo-field-row">
-        <div class="mamo-field-label">Telefone</div>
-        <div class="mamo-field-val">${g('mamo-tel')||'&nbsp;'}</div>
-      </div>
-
-      <!-- Tipo de mamografia -->
-      <div class="mamo-section mamo-section-pink">TIPO DE MAMOGRAFIA</div>
-      <div class="mamo-tipo-box">
-        <div class="mamo-tipo-label">${tipoLabel}</div>
-        ${isDiag ? `
-        <div class="mamo-achados-row">
-          <div class="mamo-achados-col"><div class="mamo-achados-title">Mama Direita</div><div>${achadosMD}</div></div>
-          <div class="mamo-achados-col"><div class="mamo-achados-title">Mama Esquerda</div><div>${achadosME}</div></div>
-        </div>` : ''}
-      </div>
-
-      <!-- Histórico clínico -->
-      <div class="mamo-section">HISTÓRICO CLÍNICO</div>
-      <div class="mamo-hx-grid">
-        <div class="mamo-hx-item"><span class="mamo-hx-num">1</span> Risco elevado para câncer de mama? <strong>${simNao(g('mamo-risco'))}</strong></div>
-        <div class="mamo-hx-item"><span class="mamo-hx-num">2</span> Mamografia anterior? <strong>${simNao(g('mamo-anterior'))}</strong>${g('mamo-ano-ant') ? ` (${g('mamo-ano-ant')})` : ''}</div>
-        <div class="mamo-hx-item"><span class="mamo-hx-num">4</span> Nódulo/caroço na mama? <strong>${simNao(g('mamo-nodulo'))}</strong></div>
-        <div class="mamo-hx-item"><span class="mamo-hx-num">5</span> Última menstruação: <strong>${fmtDate('mamo-menstrua')||'—'}</strong></div>
-        <div class="mamo-hx-item"><span class="mamo-hx-num">6</span> Reposição hormonal? <strong>${simNao(g('mamo-hormonio'))}</strong></div>
-      </div>
-      ${g('mamo-outros') ? `<div class="mamo-outros"><span class="mamo-hx-num">7</span> ${g('mamo-outros')}</div>` : ''}
-
-      <!-- Rodapé solicitante -->
-      <div class="mamo-footer">
-        <div class="mamo-footer-data">
-          <div class="mamo-field-label">Data da Solicitação</div>
-          <div class="mamo-field-val">${fmtDate('mamo-sol-data')||hoje}</div>
-        </div>
-        <div class="mamo-footer-sign">
-          <div style="height:36px;"></div>
-          <div class="mamo-sign-line"></div>
-          <div class="mamo-sign-name">${g('mamo-sol-nome')||perfil.nome||'—'}</div>
-          ${perfil.crm ? `<div class="mamo-sign-sub">${perfil.espec||''} · CRM ${perfil.crm}/${perfil.estado||''}</div>` : ''}
-          <div style="font-size:8px;color:#999;margin-top:2px;">Responsável pela Solicitação</div>
-        </div>
-      </div>
-
-      <div class="mamo-atencao">⚠ ATENÇÃO: OS CAMPOS COM ASTERISCO (*) SÃO OBRIGATÓRIOS · MASTALGIA NÃO É SINAL DE CÂNCER DE MAMA</div>
-    </div>`;
-
-  const style = `<style>
-    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
-    body{background:#fff;font-size:11px;color:#111;}
-    .mamo-sheet{padding:10mm 12mm;width:210mm;}
-    .mamo-header{display:flex;align-items:flex-start;gap:12px;padding-bottom:8px;border-bottom:2.5px solid #1a5276;margin-bottom:4px;}
-    .mamo-sus-wrap{display:flex;align-items:center;gap:5px;flex-shrink:0;}
-    .mamo-sus-badge{background:#1a5276;color:#fff;font-weight:900;font-size:14px;padding:4px 7px;border-radius:3px;}
-    .mamo-sus-text{font-size:8px;color:#555;line-height:1.4;}
-    .mamo-title-wrap{flex:1;text-align:center;}
-    .mamo-title{font-size:13px;font-weight:700;color:#1a5276;text-transform:uppercase;letter-spacing:.5px;}
-    .mamo-subtitle{font-size:9px;color:#777;margin-top:2px;}
-    .mamo-cnes-wrap{min-width:120px;text-align:right;}
-    .mamo-cnes-val{font-size:13px;font-weight:700;color:#111;border-bottom:1.5px solid #555;min-height:16px;text-align:right;}
-    .mamo-unidade{font-size:11px;font-weight:600;color:#333;border-bottom:1px solid #ccc;padding:3px 0;margin-bottom:6px;}
-    .mamo-num-row{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;}
-    .mamo-num-box{border:1.5px solid #1a5276;padding:2px 8px;font-size:11px;min-width:140px;color:#1a5276;font-weight:600;}
-    .mamo-section{background:#1a5276;color:#fff;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:3px 8px;margin:6px 0 4px;}
-    .mamo-section.mamo-section-pink{background:#C0392B;}
-    .mamo-grid2{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #ccc;border-bottom:none;}
-    .mamo-grid2 > div{padding:3px 6px;border-right:1px solid #ccc;}
-    .mamo-grid2 > div:last-child{border-right:none;}
-    .mamo-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid #ccc;border-top:none;border-bottom:none;}
-    .mamo-grid3 > div{padding:3px 6px;border-right:1px solid #ccc;}
-    .mamo-grid3 > div:last-child{border-right:none;}
-    .mamo-field-row{border:1px solid #ccc;border-top:none;padding:3px 6px;margin-bottom:0;}
-    .mamo-field-label{font-size:8px;color:#777;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
-    .mamo-field-val{font-size:11px;color:#111;min-height:14px;margin-top:1px;}
-    .mamo-tipo-box{border:1px solid #C0392B;padding:6px 10px;margin-bottom:0;}
-    .mamo-tipo-label{font-size:11.5px;font-weight:600;color:#C0392B;}
-    .mamo-achados-row{display:flex;gap:16px;margin-top:6px;}
-    .mamo-achados-col{flex:1;font-size:10.5px;color:#444;}
-    .mamo-achados-title{font-size:8.5px;font-weight:700;color:#777;text-transform:uppercase;margin-bottom:2px;}
-    .mamo-hx-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;border:1px solid #ccc;padding:6px 8px;}
-    .mamo-hx-item{font-size:10.5px;color:#333;padding:2px 0;}
-    .mamo-hx-num{display:inline-block;background:#1a5276;color:#fff;border-radius:50%;width:14px;height:14px;text-align:center;line-height:14px;font-size:8px;font-weight:700;margin-right:3px;}
-    .mamo-outros{border:1px solid #ccc;border-top:none;padding:4px 8px;font-size:10.5px;color:#333;}
-    .mamo-footer{display:flex;justify-content:space-between;align-items:flex-end;border-top:1.5px solid #1a5276;margin-top:12px;padding-top:8px;}
-    .mamo-footer-data{min-width:120px;}
-    .mamo-footer-sign{text-align:center;min-width:220px;}
-    .mamo-sign-line{border-top:1px solid #555;margin:0 auto 4px;width:200px;}
-    .mamo-sign-name{font-size:12px;font-weight:600;color:#111;}
-    .mamo-sign-sub{font-size:9.5px;color:#555;margin-top:1px;}
-    .mamo-atencao{font-size:8px;color:#C0392B;font-weight:600;text-align:center;margin-top:8px;border-top:1px solid #fdd;padding-top:5px;}
-  </style>`;
-
-  const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">${style}</head><body>${html}</body></html>`;
-  const win = window.open('about:blank','_blank');
-  if(win){ win.document.open(); win.document.write(fullHtml); win.document.close(); }
-  else { toast('Permita popups para gerar o PDF'); }
-}
-
-const TERMOS_CONTEUDO = {
-  uso: {
-    titulo: 'Termos de Uso',
-    html: `
-      <p style="color:var(--ink3);font-size:11.5px;margin-bottom:16px;">Última atualização: abril de 2026</p>
-
-      <h4 style="color:var(--ink);margin:0 0 6px;">1. Aceitação dos Termos</h4>
-      <p>Ao acessar ou utilizar o <strong>MedScript</strong>, você concorda com estes Termos de Uso. Se não concordar com qualquer disposição, não utilize a plataforma.</p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">2. Descrição do Serviço</h4>
-      <p>O MedScript é uma plataforma de apoio à geração de receituários, documentos médicos e cálculos de doses pediátricas. O sistema oferece <strong>sugestões e modelos</strong> para uso por profissionais de saúde habilitados, não substituindo o julgamento clínico do profissional.</p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">3. Uso Permitido</h4>
-      <p>A plataforma é destinada exclusivamente a profissionais de saúde legalmente habilitados (médicos, dentistas, enfermeiros e demais categorias regulamentadas). O usuário é inteiramente responsável por verificar e validar todas as informações antes de utilizá-las na prática clínica.</p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">4. Limitação de Responsabilidade</h4>
-      <p>O MedScript e seu criador, <strong>Josue Andrade Martins</strong>, não se responsabilizam por decisões clínicas tomadas com base nas informações geradas pela plataforma. O sistema não garante a precisão, completude ou atualidade das informações fornecidas. O profissional de saúde é o único responsável pelas prescrições, condutas e documentos emitidos.</p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">5. Propriedade Intelectual</h4>
-      <p>Todo o conteúdo, código, design e funcionalidades do MedScript são de propriedade de Josue Andrade Martins. É vedada a reprodução, distribuição ou modificação sem autorização expressa.</p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">6. Assinatura e Pagamento</h4>
-      <p>O acesso a funcionalidades premium está condicionado à assinatura ativa. O período de trial de 7 dias é gratuito. Após o trial, a cobrança é realizada conforme o plano escolhido. O cancelamento pode ser feito a qualquer momento, mantendo o acesso até o fim do ciclo pago.</p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">7. Alterações</h4>
-      <p>Estes termos podem ser atualizados a qualquer momento. O uso continuado da plataforma após alterações constitui aceitação dos novos termos.</p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">8. Contato</h4>
-      <p>Dúvidas sobre estes termos: <strong>contato@medscript.com.br</strong></p>
-    `
-  },
-  privacidade: {
-    titulo: 'Política de Privacidade',
-    html: `
-      <p style="color:var(--ink3);font-size:11.5px;margin-bottom:16px;">Última atualização: abril de 2026 · Em conformidade com a LGPD (Lei nº 13.709/2018)</p>
-
-      <h4 style="color:var(--ink);margin:0 0 6px;">1. Dados Coletados</h4>
-      <p>Coletamos os seguintes dados para prestação do serviço:</p>
-      <ul style="margin:8px 0 8px 16px;">
-        <li><strong>Dados de identificação:</strong> nome completo, CPF, e-mail, número de conselho profissional (CRM/CRO/COREN) e especialidade</li>
-        <li><strong>Dados de uso:</strong> receituários gerados, medicamentos prescritos, modelos utilizados</li>
-        <li><strong>Dados de pagamento:</strong> processados exclusivamente pelo Stripe — não armazenamos dados de cartão</li>
-      </ul>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">2. Finalidade do Tratamento</h4>
-      <p>Os dados são utilizados exclusivamente para: prestação do serviço contratado, personalização da experiência, geração de documentos médicos, cobrança de assinaturas e cumprimento de obrigações legais.</p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">3. Compartilhamento de Dados</h4>
-      <p>Seus dados <strong>não são vendidos ou compartilhados</strong> com terceiros para fins comerciais. Podem ser compartilhados apenas com: Supabase (infraestrutura de banco de dados) e Stripe (processamento de pagamentos), ambos sob acordo de tratamento de dados compatível com a LGPD.</p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">4. Armazenamento e Segurança</h4>
-      <p>Os dados são armazenados em servidores seguros da Supabase com criptografia em trânsito (TLS) e em repouso. O acesso é restrito ao próprio usuário por meio de autenticação com e-mail e senha.</p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">5. Seus Direitos (LGPD)</h4>
-      <p>Como titular dos dados, você tem direito a:</p>
-      <ul style="margin:8px 0 8px 16px;">
-        <li>Confirmar a existência de tratamento dos seus dados</li>
-        <li>Acessar, corrigir ou atualizar seus dados a qualquer momento</li>
-        <li>Solicitar a exclusão dos seus dados</li>
-        <li>Revogar o consentimento para tratamento de dados</li>
-        <li>Portabilidade dos dados</li>
-      </ul>
-      <p>Para exercer seus direitos: <strong>contato@medscript.com.br</strong></p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">6. Cookies</h4>
-      <p>Utilizamos apenas cookies essenciais para autenticação e funcionamento da plataforma. Não utilizamos cookies de rastreamento ou publicidade.</p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">7. Retenção de Dados</h4>
-      <p>Os dados são mantidos enquanto a conta estiver ativa. Após solicitação de exclusão, os dados são removidos em até 30 dias, exceto quando houver obrigação legal de retenção.</p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">8. Encarregado de Dados (DPO)</h4>
-      <p>Responsável: <strong>Josue Andrade Martins</strong> · contato@medscript.com.br</p>
-    `
-  },
-  responsabilidade: {
-    titulo: 'Termo de Responsabilidade Médica',
-    html: `
-      <p style="color:var(--ink3);font-size:11.5px;margin-bottom:16px;">Última atualização: abril de 2026</p>
-
-      <div style="background:#fff8e6;border-left:4px solid var(--amber);padding:12px 16px;border-radius:4px;margin-bottom:20px;">
-        <strong style="color:#8a6200;">⚠ Leia com atenção antes de utilizar a plataforma</strong>
-      </div>
-
-      <h4 style="color:var(--ink);margin:0 0 6px;">1. Natureza do Sistema</h4>
-      <p>O MedScript é uma ferramenta de <strong>apoio e sugestão</strong> para profissionais de saúde. Todas as informações, cálculos de doses, posologias, modelos de receituário e demais conteúdos disponibilizados têm caráter <strong>orientativo e não vinculante</strong>.</p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">2. Responsabilidade Exclusiva do Profissional</h4>
-      <p>O profissional de saúde é <strong>inteira e exclusivamente responsável</strong> por:</p>
-      <ul style="margin:8px 0 8px 16px;">
-        <li>Todas as decisões clínicas tomadas com ou sem auxílio desta plataforma</li>
-        <li>A verificação e validação de todas as doses, medicamentos e informações antes de prescrever</li>
-        <li>A adequação das prescrições às condições clínicas específicas de cada paciente</li>
-        <li>O cumprimento das normas do conselho profissional ao qual está vinculado (CFM, CFO, COFEN)</li>
-        <li>A emissão de receitas, atestados e documentos médicos em seu nome</li>
-      </ul>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">3. Ausência de Garantias</h4>
-      <p>O MedScript <strong>não garante</strong> a precisão, completude, atualidade ou adequação das informações para casos específicos. Cálculos de doses são baseados em referências bibliográficas gerais e podem não refletir protocolos institucionais ou diretrizes mais recentes.</p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">4. Limitação de Responsabilidade da Plataforma</h4>
-      <p><strong>Josue Andrade Martins e o MedScript não se responsabilizam</strong> por quaisquer danos diretos, indiretos, incidentais ou consequentes decorrentes do uso das informações da plataforma, incluindo mas não se limitando a: erros de dosagem, reações adversas, eventos adversos ou quaisquer danos à saúde do paciente.</p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">5. Obrigação de Validação</h4>
-      <p>Ao utilizar qualquer informação gerada pelo MedScript, o profissional declara ter <strong>verificado e validado</strong> as informações perante fontes primárias (bulas, literatura científica, protocolos institucionais) antes de aplicá-las na prática clínica.</p>
-
-      <h4 style="color:var(--ink);margin:16px 0 6px;">6. Declaração de Habilitação</h4>
-      <p>Ao criar uma conta no MedScript, o usuário declara ser <strong>profissional de saúde legalmente habilitado</strong> e com registro ativo no respectivo conselho profissional, assumindo total responsabilidade pelo uso da plataforma.</p>
-
-      <div style="background:#f0faf6;border:1px solid var(--teal);border-radius:6px;padding:12px 16px;margin-top:20px;">
-        <p style="margin:0;font-size:12px;color:var(--teal);"><strong>Ao utilizar o MedScript, você confirma que leu, compreendeu e concorda integralmente com este termo.</strong></p>
-      </div>
-    `
-  }
-};
-
-function openTermos(tipo){
-  const conteudo = TERMOS_CONTEUDO[tipo];
-  if(!conteudo) return;
-  document.getElementById('modal-termos-title').textContent = conteudo.titulo;
-  document.getElementById('modal-termos-body').innerHTML = conteudo.html;
-  document.getElementById('modal-termos').classList.add('show');
-}
+function isAdmin(){return _currentProfile?.role==='admin';}
 
 // ── SISTEMA DE ASSINATURAS ───────────────────────────────────
 
@@ -2305,12 +1586,12 @@ function requireAccess(fn){
 // ── MODAL DE PLANOS ──────────────────────────────────────────
 function openPlansModal(){
   const m = document.getElementById('modal-plans');
-  if(m){ m.classList.add('show'); loadPlans(); }
+  if(m){ m.classList.add('open'); loadPlans(); }
 }
 
 function closePlansModal(){
   const m = document.getElementById('modal-plans');
-  if(m) m.classList.remove('show');
+  if(m) m.classList.remove('open');
 }
 
 async function loadPlans(){
@@ -2664,35 +1945,18 @@ async function loadFavoritos(){
 
 async function toggleFavInj(){
   if(!_currentInjId) return;
-  const id = String(_currentInjId);
-  const idNum = parseInt(_currentInjId); // ref_id pode ser integer no banco
-  const sb = await getSB();
-  const isFav = _favInjetaveis.includes(id);
-  const {data:{user}} = await sb.auth.getUser();
-  if(!user) return;
-
+  const id=String(_currentInjId);
+  const sb=await getSB();
+  const isFav=_favInjetaveis.includes(id);
   if(isFav){
-    const {error} = await sb.from('favoritos')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('tipo', 'injetavel')
-      .eq('ref_id', idNum||id);
-    if(error){ toast('Erro ao remover favorito: '+error.message); return; }
-    _favInjetaveis = _favInjetaveis.filter(x=>x!==id);
+    await sb.from('favoritos').delete().eq('user_id',(await sb.auth.getUser()).data.user.id).eq('tipo','injetavel').eq('ref_id',id);
+    _favInjetaveis=_favInjetaveis.filter(x=>x!==id);
   } else {
-    const {error} = await sb.from('favoritos')
-      .insert({user_id: user.id, tipo: 'injetavel', ref_id: idNum||id});
-    if(error){ toast('Erro ao salvar favorito: '+error.message); return; }
+    const {data:{user}}=await sb.auth.getUser();
+    await sb.from('favoritos').insert({user_id:user.id,tipo:'injetavel',ref_id:id});
     _favInjetaveis.push(id);
   }
-
-  const favBtn = document.getElementById('inj-fav-btn');
-  const starred = _favInjetaveis.includes(id);
-  if(favBtn) favBtn.innerHTML = starred
-    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="var(--amber)" stroke="var(--amber)" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'
-    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
-
-  toast(starred ? '⭐ Adicionado aos favoritos' : 'Removido dos favoritos');
+  document.getElementById('inj-fav-btn').innerHTML=_favInjetaveis.includes(id)?'<svg width="16" height="16" viewBox="0 0 24 24" fill="var(--amber)" stroke="var(--amber)" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
   renderFavInjetaveis();
 }
 
@@ -2819,83 +2083,52 @@ function validCPF(cpf){
   return parseInt(cpf[9])===d1&&parseInt(cpf[10])===d2;
 }
 
-// ── TIPO DE PROFISSIONAL ─────────────────────────────────────
-const TIPO_CONFIG = {
-  medico:     { label:'Médico',      conselho:'CRM',   placeholder:'Ex: Pediatria, Clínica Geral' },
-  enfermagem: { label:'Enfermagem',  conselho:'COREN', placeholder:'Ex: Enfermagem Obstétrica' },
-  odonto:     { label:'Odontólogo',  conselho:'CRO',   placeholder:'Ex: Ortodontia, Implantodontia' },
-};
-
-function setTipoProfissional(tipo){
-  document.getElementById('reg-tipo').value = tipo;
-  const cfg = TIPO_CONFIG[tipo] || TIPO_CONFIG.medico;
-
-  // Atualiza labels do conselho
-  document.getElementById('reg-conselho-label').textContent = cfg.conselho;
-  document.getElementById('reg-estado-label').textContent   = `Estado (${cfg.conselho})`;
-  document.getElementById('reg-espec').placeholder          = cfg.placeholder;
-
-  // Visual dos botões
-  ['medico','enfermagem','odonto'].forEach(t=>{
-    const btn = document.getElementById(`tipo-${t}-btn`);
-    if(!btn) return;
-    const active = t === tipo;
-    btn.style.borderColor  = active ? 'var(--teal)'   : 'var(--line)';
-    btn.style.background   = active ? 'var(--teal-light)' : 'var(--card)';
-    btn.style.color        = active ? 'var(--teal)'   : 'var(--ink2)';
-    btn.style.fontWeight   = active ? '600' : '500';
-  });
-}
-
 async function doRegister(){
-  const nome   = document.getElementById('reg-nome').value.trim();
-  const cpf    = document.getElementById('reg-cpf').value.replace(/\D/g,'');
-  const crm    = document.getElementById('reg-crm').value.trim();
-  const estado = document.getElementById('reg-estado').value;
-  const espec  = document.getElementById('reg-espec').value.trim();
-  const email  = document.getElementById('reg-email').value.trim().toLowerCase();
-  const pass   = document.getElementById('reg-pass').value;
-  const pass2  = document.getElementById('reg-pass2').value;
-  const tipo   = document.getElementById('reg-tipo')?.value || 'medico';
-  const errEl  = document.getElementById('login-err');
-  const okEl   = document.getElementById('login-ok');
+  const nome  = document.getElementById('reg-nome').value.trim();
+  const cpf   = document.getElementById('reg-cpf').value.replace(/\D/g,'');
+  const crm   = document.getElementById('reg-crm').value.trim();
+  const estado= document.getElementById('reg-estado').value;
+  const espec = document.getElementById('reg-espec').value.trim();
+  const email = document.getElementById('reg-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('reg-pass').value;
+  const pass2 = document.getElementById('reg-pass2').value;
+  const errEl = document.getElementById('login-err');
+  const okEl  = document.getElementById('login-ok');
   errEl.classList.remove('show'); okEl.style.display='none';
 
   if(!nome||!cpf||!email||!pass){errEl.textContent='Preencha nome, CPF, e-mail e senha.';errEl.classList.add('show');return;}
   if(!validCPF(cpf)){errEl.textContent='CPF inválido.';errEl.classList.add('show');return;}
   if(pass.length<6){errEl.textContent='Senha deve ter pelo menos 6 caracteres.';errEl.classList.add('show');return;}
   if(pass!==pass2){errEl.textContent='Senhas não conferem.';errEl.classList.add('show');return;}
-  if(!document.getElementById('reg-aceite')?.checked){errEl.textContent='Você deve aceitar os Termos de Uso e a Política de Privacidade para continuar.';errEl.classList.add('show');return;}
 
   const btn=document.querySelector('#panel-register .login-btn');
   btn.textContent='Criando conta...'; btn.disabled=true;
   try{
     const sb=await getSB();
+    // Verifica CPF duplicado
     const {data:cpfCheck}=await sb.from('profiles').select('id').eq('cpf',cpf).maybeSingle();
     if(cpfCheck){errEl.textContent='Este CPF já está cadastrado.';errEl.classList.add('show');btn.textContent='Criar conta';btn.disabled=false;return;}
 
+    // Cria usuário
     const {data,error}=await sb.auth.signUp({
       email, password:pass,
-      options:{data:{nome, cpf, crm, estado, espec, tipo_profissional:tipo, role:'user', status:'active'}}
+      options:{data:{nome, cpf, crm, estado, espec, role:'user', status:'active'}}
     });
     if(error) throw error;
 
     if(data.session&&data.user){
-      // Sincroniza profiles
-      await sb.from('profiles').update({
-        cpf, nome, status:'active', tipo_profissional:tipo
-      }).eq('id',data.user.id);
-
-      // Salva perfil profissional completo
+      // Atualiza profile com CPF e nome
+      await sb.from('profiles').update({cpf,nome,status:'active'}).eq('id',data.user.id);
+      // Salva perfil médico completo
       await sb.from('perfil_medico').upsert({
-        user_id:data.user.id, nome, crm, estado, espec, tel:'', tipo_profissional:tipo
+        user_id:data.user.id, nome, crm, estado, espec, tel:''
       },{onConflict:'user_id'});
-
-      // Popula cache imediatamente
-      cacheSet('perfil',{nome, crm, estado, espec, tel:'', tipo_profissional:tipo});
+      // Popula cache para uso imediato
+      cacheSet('perfil',{nome,crm,estado,espec,tel:''});
       await loadProfile(data.user.id);
       applyAuth();
     } else {
+      // Confirmação de e-mail necessária
       okEl.textContent='✓ Conta criada! Verifique seu e-mail para confirmar o cadastro.';
       okEl.style.display='block';
       setTimeout(()=>showPanel('login'),3000);
@@ -3865,14 +3098,13 @@ async function gerarPDF(data, title){
   const fonts=`<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">`;
   const style=`<style>
     *{box-sizing:border-box;font-family:'Outfit',sans-serif;margin:0;padding:0;}
-    body{color:#111;font-size:13px;line-height:1.5;background:#fff;padding:0;margin:0;width:210mm;}
-    .page-wrap{padding:20mm 15mm 15mm;width:100%;box-sizing:border-box;}
+    body{color:#111;font-size:13px;line-height:1.5;background:#fff;padding:15mm;width:210mm;min-height:270mm;}
     .rx-sheet{width:100%;display:flex;flex-direction:column;min-height:240mm;page-break-after:always;}
     .rx-sheet:last-child{page-break-after:auto;}
     .rx-spacer{flex:1;min-height:8px;}
     .rx-sh-head{display:flex;align-items:center;gap:12px;padding-bottom:10px;}
-    .rx-sh-logo{max-width:110px;max-height:60px;display:flex;align-items:center;background:transparent;}
-    .rx-sh-logo img{max-width:110px;max-height:60px;width:auto;height:auto;object-fit:contain;object-position:left center;display:block;}
+    .rx-sh-logo{max-width:110px;max-height:60px;display:flex;align-items:center;}
+    .rx-sh-logo img{max-width:110px;max-height:60px;width:auto;height:auto;object-fit:contain;display:block;}
     .rx-sh-logo-placeholder{font-family:'Lora',serif;font-size:20px;font-weight:700;color:#aaa;}
     .rx-sh-local-info h3{font-size:13px;font-weight:600;margin:0;color:#111;}
     .rx-sh-local-info p{font-size:10.5px;color:#555;margin-top:1px;line-height:1.45;}
@@ -3891,53 +3123,21 @@ async function gerarPDF(data, title){
     .rx-sh-foot-espec,.rx-sh-foot-crm{font-size:11px;color:#555;margin-top:2px;}
     .rx-sh-foot-date{font-size:11px;color:#888;margin-top:2px;}
     .rx-divider-foot{border:none;border-top:1.5px solid #111;margin-top:12px;}
-
-    /* ── CONTROLADO ── */
-    .ctrl-sheet{width:100%;display:flex;flex-direction:column;min-height:240mm;border:1px solid #bbb;}
-    .ctrl-spacer{flex:1;min-height:8px;}
-    .ctrl-bar{background:#C0392B;color:#fff;text-align:center;padding:6px 0;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}
-    .ctrl-subbar{background:#fdeceb;text-align:center;padding:3px 0;font-size:8.5px;color:#C0392B;font-weight:600;letter-spacing:.5px;border-bottom:1px solid #C0392B;}
-    .ctrl-head-local{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 14px 8px;border-bottom:0.5px solid #eee;}
-    .ctrl-head-local-inner{display:flex;gap:12px;align-items:center;}
-    .ctrl-logo{min-width:40px;max-width:110px;max-height:56px;background:transparent;display:flex;align-items:center;justify-content:flex-start;flex-shrink:0;}
-    .ctrl-logo img{max-width:46px;max-height:46px;width:auto;height:auto;border-radius:0;object-fit:contain;object-position:left center;display:block;}
-    .ctrl-logo-letter{color:#fff;font-family:'Lora',serif;font-size:20px;font-weight:700;background:#1D9E75;width:46px;height:46px;border-radius:7px;display:flex;align-items:center;justify-content:center;}
-    .ctrl-clinic-name{font-size:13px;font-weight:600;color:#111;margin-bottom:1px;}
-    .ctrl-clinic-sub{font-size:10px;color:#666;line-height:1.5;}
-    .ctrl-via{border:1.5px solid #C0392B;color:#C0392B;font-size:9px;font-weight:700;padding:3px 10px;letter-spacing:.5px;white-space:nowrap;align-self:flex-start;margin-top:2px;}
-    .ctrl-head-medico{padding:8px 14px 10px;border-bottom:1px solid #C0392B;}
-    .ctrl-prescritor-label{font-size:8.5px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}
-    .ctrl-prescritor-row{display:flex;justify-content:space-between;align-items:flex-start;}
-    .ctrl-med-name-big{font-family:'Lora',serif;font-size:13px;font-weight:600;color:#111;}
-    .ctrl-med-sub{font-size:10px;color:#555;margin-top:2px;line-height:1.6;}
-    .ctrl-crm-badge{display:inline-block;background:#e8f7f0;color:#0F6E56;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:3px;vertical-align:middle;margin-left:4px;}
-    .ctrl-date{font-size:9.5px;color:#888;text-align:right;margin-top:2px;}
-    .ctrl-body{padding:10px 14px;}
-    .ctrl-rx-title{font-size:9px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;border-bottom:0.5px solid #fdd;padding-bottom:3px;}
-    .ctrl-patient{font-size:12px;color:#444;margin-bottom:10px;}
-    .ctrl-patient strong{color:#111;font-weight:600;}
-    .ctrl-med{padding:6px 0;border-bottom:1px dashed #ccc;}
-    .ctrl-med:last-child{border-bottom:none;}
-    .ctrl-med-name{font-size:12.5px;font-weight:600;color:#111;}
-    .ctrl-med-posol{font-size:11px;color:#444;margin-top:2px;padding-left:10px;line-height:1.5;}
-    .ctrl-obs{background:#f7f5f0;border-radius:5px;padding:6px 10px;font-size:11px;color:#444;margin-top:8px;}
-    .ctrl-sign{border-top:1px solid #C0392B;padding:10px 14px;text-align:center;}
-    .ctrl-sign-line{border-top:1px solid #111;width:200px;margin:0 auto 4px;}
-    .ctrl-sign-name{font-family:'Lora',serif;font-size:13px;font-weight:600;color:#111;}
-    .ctrl-sign-sub{font-size:10.5px;color:#555;margin-top:1px;}
-    .ctrl-sign-date{font-size:10.5px;color:#888;margin-top:1px;}
-    .ctrl-footer{display:flex;border-top:2px solid #C0392B;}
-    .ctrl-footer-col{flex:1;padding:8px 12px;}
-    .ctrl-footer-col:first-child{border-right:1px solid #C0392B;}
-    .ctrl-footer-title{font-size:8px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;border-bottom:0.5px solid #fdd;padding-bottom:2px;}
-    .ctrl-footer-field{margin-bottom:5px;}
-    .ctrl-footer-label{font-size:8.5px;color:#888;display:block;margin-bottom:1px;}
-    .ctrl-footer-value{display:block;border-bottom:0.5px solid #ccc;min-height:12px;font-size:10px;color:#111;padding-bottom:1px;}
-    .ctrl-footer-row{display:flex;gap:8px;}
-    .ctrl-footer-row .ctrl-footer-field{flex:1;}
+    .controlado-header{background:#fdeceb;border:1px solid #C0392B;border-radius:5px;padding:6px 11px;margin-bottom:8px;font-size:11px;font-weight:600;color:#C0392B;display:flex;align-items:center;gap:5px;}
+    .controlado-box{border:1.5px solid #C0392B;border-radius:5px;padding:9px 11px;margin-top:8px;font-size:10.5px;color:#444;}
+    .controlado-field{display:inline-block;border-bottom:1px solid #aaa;min-width:80px;flex:1;height:12px;margin:0 3px;}
+    .ctrl-section-title{font-size:9.5px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;border-bottom:1px solid #fdd;padding-bottom:2px;}
+    .cf-field-row{display:flex;align-items:baseline;gap:3px;font-size:10.5px;}
+    .controlado-ficha{border:1px solid #ddd;border-radius:5px;padding:7px 10px;margin:6px 0 8px;font-size:10.5px;background:#fafafa;}
+    .cf-label{font-weight:600;color:#555;white-space:nowrap;}
+    .cf-val{color:#111;margin-left:3px;}
+    .cf-row{display:flex;align-items:baseline;gap:5px;margin-bottom:3px;}
+    .cf-row2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:3px;}
+    .rx-sheet.controlado .rx-divider{border-top-color:#C0392B;}
+    .rx-sheet.controlado .rx-divider-foot{border-top-color:#C0392B;}
   </style>`;
 
-  // --- Build the sheets HTML ---
+  // --- Build the sheets HTML (same logic as antes) ---
   const headHtml = data.local ? `
     <div class="rx-sh-head">
       <div class="rx-sh-logo">${data.local.logo?`<img src="${data.local.logo}" alt="logo">`:`<span class="rx-sh-logo-placeholder">${data.local.nome[0].toUpperCase()}</span>`}</div>
@@ -3948,7 +3148,22 @@ async function gerarPDF(data, title){
       </div>
     </div>` : '';
 
-  const footHtml = `
+  const fichaHtml = data.controlado ? `
+    <div class="controlado-ficha">
+      <div class="cf-row"><span class="cf-label">Paciente:</span><span class="cf-val">${data.pac}</span></div>
+      ${data.extra?`<div class="cf-row"><span class="cf-label">Dados:</span><span class="cf-val">${data.extra}</span></div>`:''}
+    </div>` : '';
+
+  const footHtml = data.doctorSignature ? `
+    <div class="rx-sh-foot">
+      <div style="height:40px;"></div>
+      <div style="border-top:1px solid #111;width:260px;margin:0 auto;"></div>
+      <div class="rx-sh-foot-name">${data.perfil.nome||'—'}</div>
+      ${data.perfil.espec?`<div class="rx-sh-foot-espec">${data.perfil.espec}</div>`:''}
+      ${data.crmStr?`<div class="rx-sh-foot-crm">${data.crmStr}</div>`:''}
+      <div class="rx-sh-foot-date">${data.hoje}</div>
+    </div>
+    <hr class="rx-divider-foot">` : `
     <div class="rx-sh-foot">
       <div class="rx-sh-foot-name">${data.perfil.nome||'—'}</div>
       ${data.perfil.espec?`<div class="rx-sh-foot-espec">${data.perfil.espec}</div>`:''}
@@ -3957,97 +3172,14 @@ async function gerarPDF(data, title){
     </div>
     <hr class="rx-divider-foot">`;
 
-  // ── CONTROLADO: cada via como sheet independente ──
-  const localNome = data.local?.nome||'';
-  const localEnd  = [data.local?.endereco,data.local?.cidade].filter(Boolean).join(', ');
-  const localTel  = data.local?.tel||'';
-  const ctrlLogoHtml = data.local?.logo
-    ? `<img src="${data.local.logo}" alt="logo" style="max-width:110px;max-height:56px;width:auto;height:auto;object-fit:contain;display:block;">`
-    : `<span class="ctrl-logo-letter">${(localNome||data.perfil?.nome||'M')[0].toUpperCase()}</span>`;
-
-  function buildControladoSheet(via){
-    const medsHtml=(data.meds||[]).map(m=>`
-      <div class="ctrl-med">
-        <div class="ctrl-med-name">${m.nome}</div>
-        ${m.posol?`<div class="ctrl-med-posol">${m.posol}</div>`:''}
-      </div>`).join('');
-    const obsHtml=data.obs?`<div class="ctrl-obs"><strong>Obs:</strong> ${data.obs}</div>`:'';
-    return `<div class="ctrl-sheet">
-      <div class="ctrl-bar">Receituário de Controle Especial</div>
-      <div class="ctrl-subbar">Portaria SVS/MS nº 344/98 — 2 vias obrigatórias</div>
-      <div class="ctrl-head-local">
-        <div class="ctrl-head-local-inner">
-          <div class="ctrl-logo">${ctrlLogoHtml}</div>
-          <div>
-            <div class="ctrl-clinic-name">${localNome||data.perfil?.nome||'—'}</div>
-            <div class="ctrl-clinic-sub">${localEnd||''}${localEnd&&localTel?' · ':''}${localTel?'Tel: '+localTel:''}</div>
-          </div>
-        </div>
-        <div class="ctrl-via">${via}</div>
-      </div>
-      <div class="ctrl-head-medico">
-        <div class="ctrl-prescritor-label">Identificação do Prescritor</div>
-        <div class="ctrl-prescritor-row">
-          <div>
-            <div class="ctrl-med-name-big">${data.perfil?.nome||'—'}</div>
-            <div class="ctrl-med-sub">
-              ${data.perfil?.espec||''}${data.crmStr?`<span class="ctrl-crm-badge">${data.crmStr}</span>`:''}
-              ${localEnd?`<br>${localEnd}`:''}${localTel?` · Tel: ${localTel}`:''}
-            </div>
-          </div>
-          <div class="ctrl-date">Data: ${data.hoje}</div>
-        </div>
-      </div>
-      <div class="ctrl-body">
-        <hr style="border:none;border-top:1.5px solid #111;margin:0 0 2px;">
-        <hr style="border:none;border-top:1px solid #ccc;margin:0 0 10px;">
-        <div class="ctrl-patient"><strong>Paciente:</strong> ${data.pac}${data.extra?' · '+data.extra:''}</div>
-        <div class="ctrl-rx-title">Prescrição</div>
-        ${medsHtml}${obsHtml}
-      </div>
-      <div class="ctrl-spacer"></div>
-      <div class="ctrl-sign">
-        <div class="ctrl-sign-line"></div>
-        <div class="ctrl-sign-name">${data.perfil?.nome||'—'}</div>
-        ${data.perfil?.espec?`<div class="ctrl-sign-sub">${data.perfil.espec}</div>`:''}
-        ${data.crmStr?`<div class="ctrl-sign-sub">${data.crmStr}</div>`:''}
-        <div class="ctrl-sign-date">${data.hoje}</div>
-      </div>
-      <div class="ctrl-footer">
-        <div class="ctrl-footer-col">
-          <div class="ctrl-footer-title">Identificação do Comprador</div>
-          <div class="ctrl-footer-field"><span class="ctrl-footer-label">Nome completo</span><span class="ctrl-footer-value"></span></div>
-          <div class="ctrl-footer-row">
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Documento de identidade</span><span class="ctrl-footer-value"></span></div>
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Órgão emissor</span><span class="ctrl-footer-value"></span></div>
-          </div>
-          <div class="ctrl-footer-field"><span class="ctrl-footer-label">Endereço</span><span class="ctrl-footer-value"></span></div>
-          <div class="ctrl-footer-row">
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Cidade</span><span class="ctrl-footer-value"></span></div>
-            <div class="ctrl-footer-field" style="max-width:90px;"><span class="ctrl-footer-label">Telefone</span><span class="ctrl-footer-value"></span></div>
-          </div>
-        </div>
-        <div class="ctrl-footer-col">
-          <div class="ctrl-footer-title">Identificação da Farmácia</div>
-          <div class="ctrl-footer-field"><span class="ctrl-footer-label">Nome da farmácia</span><span class="ctrl-footer-value"></span></div>
-          <div class="ctrl-footer-field"><span class="ctrl-footer-label">Endereço</span><span class="ctrl-footer-value"></span></div>
-          <div class="ctrl-footer-row">
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Cidade</span><span class="ctrl-footer-value"></span></div>
-            <div class="ctrl-footer-field" style="max-width:90px;"><span class="ctrl-footer-label">Telefone</span><span class="ctrl-footer-value"></span></div>
-          </div>
-          <div class="ctrl-footer-row">
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Data da dispensação</span><span class="ctrl-footer-value"></span></div>
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Assinatura do farmacêutico</span><span class="ctrl-footer-value" style="min-height:20px;"></span></div>
-          </div>
-        </div>
-      </div>
-    </div>`;
-  }
+  const ctrlHdr = data.controlado ? `<div class="controlado-header">⚕ RECEITUÁRIO DE CONTROLE ESPECIAL — 2 VIAS</div>` : '';
+  const sheetClass = `rx-sheet${data.controlado?' controlado':''}`;
 
   let bodyHtml = '';
 
+  // Document mode (exames, atestados, encaminhamentos)
   if(data.docCorpo!==undefined){
-    bodyHtml = `<div class="rx-sheet">
+    bodyHtml = `<div class="${sheetClass}">
       ${headHtml}
       <hr class="rx-divider">
       <div class="rx-sh-patient"><strong>Paciente:</strong> ${data.pac}</div>
@@ -4057,14 +3189,15 @@ async function gerarPDF(data, title){
       <div class="rx-spacer"></div>
       ${footHtml}
     </div>`;
-  } else if(data.controlado){
-    bodyHtml = buildControladoSheet('1ª VIA — Farmácia') + buildControladoSheet('2ª VIA — Paciente');
   } else {
-    const medsHtml=(data.meds||[]).map(m=>`<div class="rx-sh-med"><strong>${m.nome}</strong><p>${m.posol||''}</p></div>`).join('');
-    const obsHtml=data.obs?`<div class="rx-sh-obs"><strong>Observações:</strong> ${data.obs}</div>`:'';
-    bodyHtml = `<div class="rx-sheet">
+    // Prescription mode
+    const medsHtml = (data.meds||[]).map(m=>`<div class="rx-sh-med"><strong>${m.nome}</strong><p>${m.posol||''}</p></div>`).join('');
+    const obsHtml = data.obs?`<div class="rx-sh-obs"><strong>Observações:</strong> ${data.obs}</div>`:'';
+    bodyHtml = `<div class="${sheetClass}">
+      ${ctrlHdr}
       ${headHtml}
       <hr class="rx-divider">
+      ${fichaHtml}
       <div class="rx-sh-patient"><strong>Paciente:</strong> ${data.pac}${data.extra?' · '+data.extra:''}</div>
       <hr class="rx-divider-light">
       <div class="rx-sh-title">Receituário Médico</div>
@@ -4074,93 +3207,91 @@ async function gerarPDF(data, title){
       ${footHtml}
     </div>`;
   }
-  const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">${fonts}${style}</head><body><div class="page-wrap">${bodyHtml}</div></body></html>`;
 
-  // --- Render: cada sheet vira uma página independente ---
+  const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">${fonts}${style}</head><body>${bodyHtml}</body></html>`;
+
+  // --- Render to off-screen iframe and capture as canvas ---
   const wrapper = document.createElement('div');
-  wrapper.style.cssText='position:fixed;left:-9999px;top:0;width:210mm;background:#fff;z-index:-1;overflow:visible;';
+  wrapper.style.cssText='position:fixed;left:-9999px;top:0;width:210mm;background:#fff;z-index:-1;';
   document.body.appendChild(wrapper);
 
   const iframe = document.createElement('iframe');
-  iframe.style.cssText='width:210mm;height:1px;border:none;background:#fff;';
+  iframe.style.cssText='width:210mm;min-height:297mm;border:none;background:#fff;';
   wrapper.appendChild(iframe);
+
+  // Write content to iframe
   iframe.srcdoc = fullHtml;
 
-  await new Promise(resolve=>{ iframe.onload = ()=> setTimeout(resolve, 900); });
+  // Wait for iframe to load + fonts
+  await new Promise(resolve=>{
+    iframe.onload = ()=>{
+      // Give fonts time to render
+      setTimeout(resolve, 800);
+    };
+  });
 
   try {
-    const iDoc = iframe.contentDocument;
-    const iBody = iDoc.body;
-    const iWrap = iDoc.querySelector('.page-wrap') || iBody;
-    iframe.style.height = iWrap.scrollHeight + 'px';
+    const contentEl = iframe.contentDocument.body;
 
+    // Capture as canvas
+    const canvas = await html2canvas(contentEl, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      windowWidth: contentEl.scrollWidth,
+      windowHeight: contentEl.scrollHeight
+    });
+
+    // Create PDF with jsPDF
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-    const pdfW = pdf.internal.pageSize.getWidth();
-    const pdfH = pdf.internal.pageSize.getHeight();
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
 
-    const sheets = iDoc.querySelectorAll('.rx-sheet, .ctrl-sheet');
+    const pdfWidth = pdf.internal.pageSize.getWidth();   // 210mm
+    const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
 
-    if(sheets.length === 0){
-      const canvas = await html2canvas(iWrap, {
-        scale:2, useCORS:true, backgroundColor:'#ffffff',
-        windowWidth: iWrap.scrollWidth,
-        windowHeight: iWrap.scrollHeight
-      });
-      const imgH = (canvas.height * pdfW) / canvas.width;
-      pdf.addImage(canvas.toDataURL('image/jpeg',0.93), 'JPEG', 0, 0, pdfW, imgH);
-    } else {
-      let firstPage = true;
-      for(const sheet of sheets){
-        // Captura o sheet com contexto do wrapper (preserva margens)
-        const canvas = await html2canvas(sheet, {
-          scale:2, useCORS:true, backgroundColor:'#ffffff',
-          windowWidth: iWrap.scrollWidth,
-          windowHeight: iWrap.scrollHeight,
-          x: 0,
-          y: 0,
-          width: sheet.scrollWidth,
-          height: sheet.scrollHeight,
-          scrollX: 0,
-          scrollY: -sheet.getBoundingClientRect().top
-        });
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
-        if(!firstPage) pdf.addPage();
-        firstPage = false;
+    let heightLeft = imgHeight;
+    let position = 0;
 
-        // Calcular margens em pixels para o PDF (20mm topo, 15mm laterais)
-        const mmToPx = canvas.width / sheet.scrollWidth;
-        const marginTopMM = 20, marginSideMM = 15, marginBotMM = 15;
-        const contentW = pdfW - (marginSideMM * 2);
-        const contentH = (canvas.height * contentW) / canvas.width;
-        const totalH = contentH + marginTopMM + marginBotMM;
+    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+    heightLeft -= pdfHeight;
 
-        if(totalH <= pdfH){
-          pdf.addImage(canvas.toDataURL('image/jpeg',0.93), 'JPEG',
-            marginSideMM, marginTopMM, contentW, contentH);
-        } else {
-          // Conteúdo maior que uma página — pagina automaticamente
-          let pos = marginTopMM;
-          let left = contentH;
-          pdf.addImage(canvas.toDataURL('image/jpeg',0.93), 'JPEG',
-            marginSideMM, pos, contentW, contentH);
-          left -= (pdfH - marginTopMM - marginBotMM);
-          while(left > 1){
-            pos -= (pdfH - marginTopMM - marginBotMM);
-            pdf.addPage();
-            pdf.addImage(canvas.toDataURL('image/jpeg',0.93), 'JPEG',
-              marginSideMM, pos + marginTopMM, contentW, contentH);
-            left -= (pdfH - marginTopMM - marginBotMM);
-          }
-        }
+    while(heightLeft > 0){
+      position -= pdfHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfHeight;
+    }
+
+    // If controlado, duplicate all pages (2 vias)
+    if(data.controlado){
+      const totalPages = pdf.internal.getNumberOfPages();
+      for(let i=1;i<=totalPages;i++){
+        pdf.setPage(i);
+      }
+      // Add 2nd via
+      heightLeft = imgHeight;
+      position = 0;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfHeight;
+      while(heightLeft > 0){
+        position -= pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
       }
     }
 
-    // Filename
+    // Generate filename
     const pacName = _sanitizeFilename(data.pac);
-    const prefix = data.docCorpo!==undefined
-      ? (data.tipoLabel||'documento').toLowerCase().replace(/\s+/g,'_')
-      : data.controlado ? 'receituario_controlado' : 'receituario';
+    const prefix = data.docCorpo!==undefined ? (data.tipoLabel||'documento').toLowerCase().replace(/\s+/g,'_') : 'receituario';
     const filename = `${prefix}-${pacName}.pdf`;
 
     // Open in new tab
