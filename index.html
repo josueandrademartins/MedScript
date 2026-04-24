@@ -78,6 +78,27 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 .btn-amber{background:var(--amber-light);color:var(--amber);}
 .btn-amber:hover{background:#fde8c4;}
 .btn-danger{background:var(--red-light);color:var(--red);}
+
+/* ── Subscription Banners ── */
+.sub-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;border-radius:var(--radius-sm);font-size:12.5px;font-weight:500;}
+.sub-trial{background:#e8f8f5;color:#1a6b5a;border:1px solid #a8e6d8;}
+.sub-warning{background:#fff8e6;color:#8a6200;border:1px solid #f0d080;}
+.sub-blocked{background:#fdecea;color:#b00020;border:1px solid #f5a0a0;}
+.sub-canceling{background:#f0f4ff;color:#3a4a8a;border:1px solid #b0c0f0;}
+.sub-banner-btn{padding:4px 12px;border-radius:20px;border:none;background:var(--teal);color:#fff;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;}
+
+/* ── Plan Cards ── */
+.plan-card{flex:1;min-width:240px;border:1.5px solid var(--line);border-radius:12px;padding:20px;position:relative;display:flex;flex-direction:column;gap:10px;transition:box-shadow .2s;}
+.plan-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);}
+.plan-highlight{border-color:var(--teal);box-shadow:0 0 0 2px rgba(32,158,141,.15);}
+.plan-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--teal);color:#fff;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px;white-space:nowrap;}
+.plan-name{font-size:16px;font-weight:700;color:var(--ink);}
+.plan-price{display:flex;align-items:baseline;gap:3px;}
+.plan-amount{font-size:28px;font-weight:800;color:var(--teal);}
+.plan-interval{font-size:13px;color:var(--ink3);}
+.plan-trial{font-size:12px;color:var(--green);font-weight:600;}
+.plan-features{list-style:none;padding:0;margin:4px 0;font-size:12.5px;color:var(--ink2);display:flex;flex-direction:column;gap:4px;}
+.plan-btn{margin-top:auto;width:100%;padding:10px;}
 .btn-purple{background:var(--purple-light);color:var(--purple);}
 .btn-purple:hover{background:#e4d8f7;}
 .btn-sm{padding:6px 12px;font-size:12px;}
@@ -418,6 +439,8 @@ body.is-admin .admin-only-block{display:block;}
     </button>
   </nav>
   <div class="sb-footer">
+    <!-- Banner de assinatura -->
+    <div id="sb-sub-banner" style="margin-bottom:8px;"></div>
     <div class="sb-doctor">
       <div class="sb-av" id="sb-av-initials">?</div>
       <div class="sb-doc-info"><p id="sb-doc-name">Meu Perfil</p><span id="sb-doc-crm">CRM —</span></div>
@@ -1163,6 +1186,39 @@ body.is-admin .admin-only-block{display:block;}
   </div>
 </div>
 
+<!-- ── SUBSCRIPTION BANNER (dentro da sidebar/topo) ── -->
+<div id="subscription-banner" style="margin:0 0 8px;"></div>
+
+<!-- ── MODAL DE PLANOS ── -->
+<div class="modal-overlay" id="modal-plans" style="z-index:3000;">
+  <div class="modal" style="max-width:700px;padding:0;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,var(--teal),var(--teal-dark,#1a6b6b));padding:24px 28px;color:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <h2 style="margin:0;font-size:20px;font-weight:700;">MedScript Pro</h2>
+          <p style="margin:4px 0 0;opacity:.85;font-size:13px;">Escolha seu plano e comece com 7 dias grátis</p>
+        </div>
+        <button onclick="closePlansModal()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">×</button>
+      </div>
+    </div>
+    <div style="padding:24px 28px;">
+      <!-- Campo de cupom -->
+      <div style="margin-bottom:20px;display:flex;gap:8px;align-items:center;">
+        <input id="checkout-coupon" placeholder="Código de desconto (opcional)" style="flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);font-size:13px;">
+        <span style="font-size:12px;color:var(--ink3);">Aplicado automaticamente</span>
+      </div>
+      <!-- Planos -->
+      <div id="plans-container" style="display:flex;gap:16px;flex-wrap:wrap;">
+        <p style="text-align:center;color:var(--ink3);width:100%;">Carregando planos...</p>
+      </div>
+      <p style="font-size:11.5px;color:var(--ink3);margin-top:16px;text-align:center;">
+        Sem cobrança no período trial. Cancele a qualquer momento.<br>
+        Se cancelar, mantém acesso até o fim do ciclo pago.
+      </p>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Droga Injetável -->
 <div class="modal-overlay" id="modal-inj">
   <div class="modal" style="max-width:680px;max-height:92vh;overflow-y:auto;">
@@ -1349,6 +1405,7 @@ body.is-admin .admin-only-block{display:block;}
 //  SUPABASE CONFIG — substitua pelos valores do seu projeto
 // ══════════════════════════════════════════════════════════
 const SUPABASE_URL  = 'https://lgqeommxhdiicqqapflw.supabase.co';
+const EDGE_BASE_URL = 'https://lgqeommxhdiicqqapflw.functions.supabase.co'; // Edge Functions
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxncWVvbW14aGRpaWNxcWFwZmx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NjcyODYsImV4cCI6MjA5MjA0MzI4Nn0.YSwTBcZedmwel1ongMPltZau_3Ora1A62uXxk8kbG_8';
 
 // SDK já carregado via <script> no <head>
@@ -1411,9 +1468,229 @@ async function dbDelete(table,id){
 // ── AUTH (Supabase) ──────────────────────────────────────────
 // Role do usuário fica em profiles.role (admin | user)
 let _currentProfile = null;
+let _subscription   = null;   // dados da assinatura atual
 
 function currentUser(){return _currentProfile;}
 function isAdmin(){return _currentProfile?.role==='admin';}
+
+// ── SISTEMA DE ASSINATURAS ───────────────────────────────────
+
+/** Verifica se o usuário tem acesso ativo (trial, active, carência ou admin) */
+function hasAccess(){
+  if(isAdmin()) return true; // admin sempre tem acesso
+  if(!_subscription) return false;
+  const s = _subscription;
+  if(s.status === 'trialing' || s.status === 'active') return true;
+  // Carência: past_due dentro do prazo
+  if(s.status === 'past_due' && s.grace_period_end){
+    return new Date(s.grace_period_end) > new Date();
+  }
+  // Cancelado mas ainda no período pago
+  if(s.status === 'canceled' && s.current_period_end){
+    return new Date(s.current_period_end) > new Date();
+  }
+  return false;
+}
+
+function isOnTrial(){
+  return _subscription?.status === 'trialing';
+}
+
+function daysLeft(){
+  if(!_subscription) return 0;
+  const end = _subscription.trial_end || _subscription.current_period_end;
+  if(!end) return 0;
+  const diff = new Date(end) - new Date();
+  return Math.max(0, Math.ceil(diff / 86400000));
+}
+
+/** Carrega assinatura do usuário via RPC (validado no backend) */
+async function loadSubscription(){
+  if(!_currentProfile) return;
+  if(isAdmin()){ _subscription = {status:'active'}; renderSubscriptionBanner(); return; }
+  try{
+    const sb = await getSB();
+    const {data, error} = await sb.rpc('check_subscription_access',
+      { p_user_id: _currentProfile.id });
+    if(error) throw error;
+    _subscription = data;
+  } catch(e){
+    console.warn('Subscription check failed:', e.message);
+    _subscription = null;
+  }
+  renderSubscriptionBanner();
+  enforcePremiumWall();
+}
+
+/** Banner de trial / carência no rodapé da sidebar */
+function renderSubscriptionBanner(){
+  const el = document.getElementById('sb-sub-banner');
+  if(!el) return;
+  if(isAdmin() || !_subscription){ el.innerHTML=''; return; }
+
+  const s = _subscription;
+  let html = '';
+
+  if(s.status === 'trialing'){
+    const d = daysLeft();
+    html = `<div onclick="openPlansModal()" style="cursor:pointer;padding:8px 10px;border-radius:8px;background:rgba(32,158,141,.15);color:var(--teal-light,#7ecfc5);font-size:11.5px;text-align:center;">
+      🎯 Trial — <strong>${d} dia${d!==1?'s':''}</strong> restante${d!==1?'s':''}<br>
+      <span style="font-size:10.5px;opacity:.8;">Clique para assinar</span>
+    </div>`;
+  } else if(s.status === 'past_due'){
+    html = `<div onclick="openBillingPortal()" style="cursor:pointer;padding:8px 10px;border-radius:8px;background:rgba(220,150,0,.15);color:#f0c040;font-size:11.5px;text-align:center;">
+      ⚠️ Pagamento pendente<br>
+      <span style="font-size:10.5px;opacity:.8;">Clique para resolver</span>
+    </div>`;
+  } else if(!hasAccess()){
+    html = `<div onclick="openPlansModal()" style="cursor:pointer;padding:8px 10px;border-radius:8px;background:rgba(180,0,0,.15);color:#f08080;font-size:11.5px;text-align:center;">
+      🔒 Assinatura inativa<br>
+      <span style="font-size:10.5px;opacity:.8;">Clique para reativar</span>
+    </div>`;
+  } else if(s.cancel_at_period_end){
+    html = `<div onclick="openBillingPortal()" style="cursor:pointer;padding:8px 10px;border-radius:8px;background:rgba(100,100,180,.15);color:#aab;font-size:11.5px;text-align:center;">
+      Acesso até ${new Date(s.current_period_end).toLocaleDateString('pt-BR')}<br>
+      <span style="font-size:10.5px;opacity:.8;">Clique para renovar</span>
+    </div>`;
+  } else {
+    // Ativo sem problemas — mostra discretamente o plano
+    html = `<div onclick="openBillingPortal()" style="cursor:pointer;padding:6px 10px;border-radius:8px;background:rgba(32,158,141,.1);color:var(--teal-light,#7ecfc5);font-size:10.5px;text-align:center;opacity:.7;">
+      ✓ Pro ativo · Gerenciar
+    </div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+/** Bloqueia funcionalidades premium se sem acesso */
+function enforcePremiumWall(){
+  if(hasAccess()) return;
+  // Mostra modal de paywall ao tentar acessar features premium
+  document.querySelectorAll('.premium-feature').forEach(el=>{
+    el.style.pointerEvents='none';
+    el.style.opacity='0.4';
+  });
+}
+
+/** Gera receita — verifica acesso antes */
+function requireAccess(fn){
+  return function(...args){
+    if(!hasAccess()){
+      openPlansModal();
+      return;
+    }
+    return fn.apply(this, args);
+  };
+}
+
+// ── MODAL DE PLANOS ──────────────────────────────────────────
+function openPlansModal(){
+  const m = document.getElementById('modal-plans');
+  if(m){ m.classList.add('open'); loadPlans(); }
+}
+
+function closePlansModal(){
+  const m = document.getElementById('modal-plans');
+  if(m) m.classList.remove('open');
+}
+
+async function loadPlans(){
+  const container = document.getElementById('plans-container');
+  if(!container) return;
+  container.innerHTML = '<p style="text-align:center;color:var(--ink3);">Carregando planos...</p>';
+  try{
+    const sb = await getSB();
+    const {data: plans} = await sb.from('plans').select('*').eq('active',true).order('amount_cents');
+    if(!plans?.length){
+      container.innerHTML = '<p style="text-align:center;color:var(--ink3);">Nenhum plano disponível.</p>';
+      return;
+    }
+    container.innerHTML = plans.map(p => `
+      <div class="plan-card${p.id.includes('yearly')?'plan-highlight':''}">
+        ${p.id.includes('yearly')?'<div class="plan-badge">Melhor valor</div>':''}
+        <div class="plan-name">${p.name}</div>
+        <div class="plan-price">
+          <span class="plan-amount">R$ ${(p.amount_cents/100).toFixed(2).replace('.',',')}</span>
+          <span class="plan-interval">/${p.interval==='month'?'mês':'ano'}</span>
+        </div>
+        <div class="plan-trial">✓ ${p.trial_days} dias grátis para começar</div>
+        <ul class="plan-features">
+          ${(p.features||[]).map(f=>`<li>✓ ${f}</li>`).join('')}
+        </ul>
+        <button class="btn btn-primary plan-btn" onclick="startCheckout('${p.id}')">
+          Começar trial grátis
+        </button>
+      </div>
+    `).join('');
+  } catch(e){
+    container.innerHTML = `<p style="color:var(--danger);">Erro ao carregar planos: ${e.message}</p>`;
+  }
+}
+
+async function startCheckout(planId){
+  const btn = event?.target;
+  if(btn){ btn.textContent='Aguarde...'; btn.disabled=true; }
+  try{
+    const sb = await getSB();
+    const {data:{session}} = await sb.auth.getSession();
+    if(!session) throw new Error('Faça login primeiro');
+
+    // Cupom direcionado por email (opcional)
+    const couponEl = document.getElementById('checkout-coupon');
+    const couponId = couponEl?.value?.trim() || null;
+
+    const res = await fetch(`${EDGE_BASE_URL}/create-checkout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ plan_id: planId, coupon_id: couponId }),
+    });
+
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Erro ao criar checkout');
+
+    // Redireciona para checkout Stripe
+    window.location.href = data.url;
+  } catch(e){
+    toast('❌ ' + e.message);
+    if(btn){ btn.textContent='Começar trial grátis'; btn.disabled=false; }
+  }
+}
+
+async function openBillingPortal(){
+  toast('⏳ Abrindo portal...');
+  try{
+    const sb = await getSB();
+    const {data:{session}} = await sb.auth.getSession();
+    if(!session) throw new Error('Faça login primeiro');
+
+    const res = await fetch(`${EDGE_BASE_URL}/billing-portal`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${session.access_token}` },
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error);
+    window.open(data.url, '_blank');
+  } catch(e){
+    toast('❌ ' + e.message);
+  }
+}
+
+// Verificar retorno do checkout (URL param)
+(function checkCheckoutReturn(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('checkout') === 'success'){
+    setTimeout(()=>{
+      toast('✅ Assinatura ativada! Bem-vindo ao MedScript Pro.');
+      // Recarrega subscription após confirmar
+      loadSubscription();
+    }, 1500);
+    // Limpar URL
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+})();
 
 async function doLogin(){
   const email = document.getElementById('login-user').value.trim();
@@ -1918,7 +2195,7 @@ async function boot(){
   ['ms_modelos_adulto','ms_modelos_ped','ms_modelos_exames'].forEach(k=>{
     try{localStorage.removeItem(k);}catch(e){}
   });
-  await Promise.all([initData(), loadPerfilFromDB(), loadFavoritos()]);
+  await Promise.all([initData(), loadPerfilFromDB(), loadFavoritos(), loadSubscription()]);
   updateSidebarDoctor();
   updateDash();
   populateLocalSelects();
