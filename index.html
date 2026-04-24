@@ -1586,12 +1586,12 @@ function requireAccess(fn){
 // ── MODAL DE PLANOS ──────────────────────────────────────────
 function openPlansModal(){
   const m = document.getElementById('modal-plans');
-  if(m){ m.classList.add('show'); loadPlans(); }
+  if(m){ m.classList.add('open'); loadPlans(); }
 }
 
 function closePlansModal(){
   const m = document.getElementById('modal-plans');
-  if(m) m.classList.remove('show');
+  if(m) m.classList.remove('open');
 }
 
 async function loadPlans(){
@@ -3095,297 +3095,203 @@ async function gerarPDF(data, title){
   // Toast de carregamento
   toast('⏳ Gerando PDF...');
 
-  const fonts=`<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">`;
+  const fonts=`<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">`;
   const style=`<style>
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Inter',Arial,sans-serif;color:#111;font-size:13px;line-height:1.5;background:#fff;padding:20mm;width:794px;min-height:1123px;display:flex;flex-direction:column;}
-    .rx-sheet{flex:1;display:flex;flex-direction:column;width:100%;}
-    .rx-spacer{flex:1;min-height:16px;}
-    .rx-head{display:flex;align-items:flex-start;gap:16px;padding-bottom:14px;}
-    .rx-logo{width:52px;height:52px;border-radius:8px;background:#1D9E75;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .rx-logo img{width:52px;height:52px;border-radius:8px;object-fit:contain;}
-    .rx-logo-letter{color:#fff;font-family:'Lora',serif;font-size:22px;font-weight:700;}
-    .rx-head-info{flex:1;}
-    .rx-clinic-name{font-family:'Lora',serif;font-size:15px;font-weight:700;color:#111;margin-bottom:2px;}
-    .rx-clinic-sub{font-size:10.5px;color:#666;line-height:1.6;}
-    .rx-rule-thick{border:none;border-top:2.5px solid #111;margin:0 0 2px;}
-    .rx-rule-thin{border:none;border-top:0.75px solid #111;margin:0 0 16px;}
-    .rx-title{text-align:center;font-family:'Inter',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:16px;}
-    .rx-patient{font-size:12px;color:#444;margin-bottom:16px;}
-    .rx-patient strong{color:#111;font-weight:600;}
-    .rx-med{padding:9px 0;border-bottom:0.5px solid #ddd;}
-    .rx-med:last-child{border-bottom:none;}
-    .rx-med-name{font-size:13px;font-weight:700;color:#111;}
-    .rx-med-posol{font-size:11.5px;color:#555;margin-top:4px;line-height:1.6;padding-left:12px;}
-    .rx-obs{border-left:3px solid #ccc;padding:6px 10px;font-size:11px;color:#555;margin-top:12px;}
-    .rx-foot{text-align:center;padding-top:8px;}
-    .rx-sign-line{border-top:1px solid #555;width:210px;margin:0 auto 7px;}
-    .rx-foot-name{font-family:'Lora',serif;font-size:13.5px;font-weight:700;color:#111;}
-    .rx-foot-sub{font-size:10.5px;color:#666;margin-top:2px;}
-    .ctrl-sheet{flex:1;display:flex;flex-direction:column;width:100%;border:1px solid #bbb;}
-    .ctrl-spacer{flex:1;min-height:16px;}
-    .ctrl-bar{background:#C0392B;color:#fff;text-align:center;padding:6px 0;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}
-    .ctrl-subbar{background:#fdeceb;text-align:center;padding:3px 0;font-size:9px;color:#C0392B;font-weight:600;letter-spacing:.5px;border-bottom:1px solid #C0392B;}
-    .ctrl-head-local{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 16px 10px;border-bottom:0.5px solid #eee;}
-    .ctrl-head-local-inner{display:flex;gap:12px;align-items:flex-start;}
-    .ctrl-logo{width:44px;height:44px;border-radius:7px;background:#1D9E75;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .ctrl-logo img{width:44px;height:44px;border-radius:7px;object-fit:contain;}
-    .ctrl-logo-letter{color:#fff;font-family:'Lora',serif;font-size:19px;font-weight:700;}
-    .ctrl-clinic-name{font-family:'Lora',serif;font-size:13.5px;font-weight:700;color:#111;margin-bottom:2px;}
-    .ctrl-clinic-sub{font-size:10px;color:#666;line-height:1.5;}
-    .ctrl-via{border:1.5px solid #C0392B;color:#C0392B;font-size:9px;font-weight:700;padding:3px 10px;letter-spacing:.5px;white-space:nowrap;align-self:flex-start;}
-    .ctrl-head-medico{padding:10px 16px;border-bottom:1px solid #C0392B;}
-    .ctrl-prescritor-label{font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
-    .ctrl-prescritor-row{display:flex;justify-content:space-between;align-items:flex-start;}
-    .ctrl-med-name-big{font-family:'Lora',serif;font-size:13.5px;font-weight:700;color:#111;}
-    .ctrl-med-sub{font-size:10.5px;color:#555;margin-top:3px;line-height:1.6;}
-    .ctrl-crm-badge{display:inline-block;background:#f0faf6;color:#0F6E56;font-size:9px;font-weight:700;padding:1px 7px;border-radius:3px;vertical-align:middle;margin-left:5px;}
-    .ctrl-date{font-size:10px;color:#888;text-align:right;}
-    .ctrl-rule-thick{border:none;border-top:2.5px solid #111;margin:0 0 2px;}
-    .ctrl-rule-thin{border:none;border-top:0.75px solid #111;margin:0 0 12px;}
-    .ctrl-body{padding:12px 16px;}
-    .ctrl-rx-title{font-size:9px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;border-bottom:0.5px solid #fdd;padding-bottom:3px;}
-    .ctrl-patient{font-size:12px;color:#444;margin-bottom:12px;}
-    .ctrl-patient strong{color:#111;font-weight:600;}
-    .ctrl-med{padding:8px 0;border-bottom:0.5px solid #ddd;page-break-inside:avoid;break-inside:avoid;}
-    .ctrl-med:last-child{border-bottom:none;}
-    .ctrl-med-name{font-size:13px;font-weight:700;color:#111;}
-    .ctrl-med-posol{font-size:11px;color:#555;margin-top:4px;padding-left:12px;line-height:1.6;}
-    .ctrl-obs{border-left:3px solid #C0392B;padding:5px 9px;font-size:10.5px;color:#555;margin-top:10px;}
-    .ctrl-sign{border-top:1px solid #C0392B;padding:12px 16px 10px;text-align:center;}
-    .ctrl-sign-line{border-top:1px solid #555;width:210px;margin:0 auto 7px;}
-    .ctrl-sign-name{font-family:'Lora',serif;font-size:13px;font-weight:700;color:#111;}
-    .ctrl-sign-sub{font-size:10.5px;color:#666;margin-top:2px;}
-    .ctrl-footer{display:flex;border-top:2px solid #C0392B;margin-top:auto;}
-    .ctrl-footer-col{flex:1;padding:10px 14px;}
-    .ctrl-footer-col:first-child{border-right:1px solid #C0392B;}
-    .ctrl-footer-title{font-size:8px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;border-bottom:0.5px solid #fdd;padding-bottom:3px;}
-    .ctrl-footer-field{margin-bottom:6px;}
-    .ctrl-footer-label{font-size:8.5px;color:#888;display:block;margin-bottom:1px;}
-    .ctrl-footer-value{display:block;border-bottom:0.5px solid #ccc;min-height:13px;font-size:10px;color:#111;padding-bottom:1px;}
-    .ctrl-footer-row{display:flex;gap:8px;}
-    .ctrl-footer-row .ctrl-footer-field{flex:1;}
+    *{box-sizing:border-box;font-family:'Outfit',sans-serif;margin:0;padding:0;}
+    body{color:#111;font-size:13px;line-height:1.5;background:#fff;padding:15mm;width:210mm;min-height:270mm;}
+    .rx-sheet{width:100%;display:flex;flex-direction:column;min-height:240mm;page-break-after:always;}
+    .rx-sheet:last-child{page-break-after:auto;}
+    .rx-spacer{flex:1;min-height:8px;}
+    .rx-sh-head{display:flex;align-items:center;gap:12px;padding-bottom:10px;}
+    .rx-sh-logo{max-width:110px;max-height:60px;display:flex;align-items:center;}
+    .rx-sh-logo img{max-width:110px;max-height:60px;width:auto;height:auto;object-fit:contain;display:block;}
+    .rx-sh-logo-placeholder{font-family:'Lora',serif;font-size:20px;font-weight:700;color:#aaa;}
+    .rx-sh-local-info h3{font-size:13px;font-weight:600;margin:0;color:#111;}
+    .rx-sh-local-info p{font-size:10.5px;color:#555;margin-top:1px;line-height:1.45;}
+    .rx-divider{border:none;border-top:1.5px solid #111;margin:0;}
+    .rx-divider-light{border:none;border-top:1px solid #ccc;margin:0;}
+    .rx-sh-patient{padding:8px 0;font-size:12.5px;color:#111;}
+    .rx-sh-title{text-align:center;font-family:'Lora',serif;font-size:15px;font-weight:600;padding:10px 0 4px;color:#111;}
+    .rx-sh-meds{padding:4px 0 6px;}
+    .rx-sh-med{padding:6px 0;border-bottom:1px dashed #ccc;}
+    .rx-sh-med:last-child{border-bottom:none;}
+    .rx-sh-med strong{font-size:12.5px;display:block;color:#111;}
+    .rx-sh-med p{font-size:11.5px;color:#444;margin-top:2px;}
+    .rx-sh-obs{background:#f7f5f0;border-radius:5px;padding:7px 10px;font-size:11.5px;color:#444;margin:6px 0 8px;}
+    .rx-sh-foot{text-align:center;padding:10px 0 0;}
+    .rx-sh-foot-name{font-family:'Lora',serif;font-size:13.5px;font-weight:600;color:#111;}
+    .rx-sh-foot-espec,.rx-sh-foot-crm{font-size:11px;color:#555;margin-top:2px;}
+    .rx-sh-foot-date{font-size:11px;color:#888;margin-top:2px;}
+    .rx-divider-foot{border:none;border-top:1.5px solid #111;margin-top:12px;}
+    .controlado-header{background:#fdeceb;border:1px solid #C0392B;border-radius:5px;padding:6px 11px;margin-bottom:8px;font-size:11px;font-weight:600;color:#C0392B;display:flex;align-items:center;gap:5px;}
+    .controlado-box{border:1.5px solid #C0392B;border-radius:5px;padding:9px 11px;margin-top:8px;font-size:10.5px;color:#444;}
+    .controlado-field{display:inline-block;border-bottom:1px solid #aaa;min-width:80px;flex:1;height:12px;margin:0 3px;}
+    .ctrl-section-title{font-size:9.5px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;border-bottom:1px solid #fdd;padding-bottom:2px;}
+    .cf-field-row{display:flex;align-items:baseline;gap:3px;font-size:10.5px;}
+    .controlado-ficha{border:1px solid #ddd;border-radius:5px;padding:7px 10px;margin:6px 0 8px;font-size:10.5px;background:#fafafa;}
+    .cf-label{font-weight:600;color:#555;white-space:nowrap;}
+    .cf-val{color:#111;margin-left:3px;}
+    .cf-row{display:flex;align-items:baseline;gap:5px;margin-bottom:3px;}
+    .cf-row2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:3px;}
+    .rx-sheet.controlado .rx-divider{border-top-color:#C0392B;}
+    .rx-sheet.controlado .rx-divider-foot{border-top-color:#C0392B;}
   </style>`;
 
-  const localNome = data.local?.nome || '';
-  const localEnd  = [data.local?.endereco, data.local?.cidade].filter(Boolean).join(' — ');
-  const localTel  = data.local?.tel || '';
-  const logoHtml  = data.local?.logo
-    ? `<img src="${data.local.logo}" alt="logo">`
-    : `<span class="rx-logo-letter">${(localNome||data.perfil?.nome||'M')[0].toUpperCase()}</span>`;
-  const ctrlLogoHtml = data.local?.logo
-    ? `<img src="${data.local.logo}" alt="logo">`
-    : `<span class="ctrl-logo-letter">${(localNome||data.perfil?.nome||'M')[0].toUpperCase()}</span>`;
-
-  const headHtml = `
-    <div class="rx-head">
-      <div class="rx-logo">${logoHtml}</div>
-      <div class="rx-head-info">
-        <div class="rx-clinic-name">${localNome||data.perfil?.nome||'—'}</div>
-        <div class="rx-clinic-sub">${localEnd||''}${localEnd&&localTel?' · ':''}${localTel?'Tel: '+localTel:''}</div>
+  // --- Build the sheets HTML (same logic as antes) ---
+  const headHtml = data.local ? `
+    <div class="rx-sh-head">
+      <div class="rx-sh-logo">${data.local.logo?`<img src="${data.local.logo}" alt="logo">`:`<span class="rx-sh-logo-placeholder">${data.local.nome[0].toUpperCase()}</span>`}</div>
+      <div class="rx-sh-local-info">
+        <h3>${data.local.nome}</h3>
+        <p>${[data.local.endereco,data.local.cidade].filter(Boolean).join(', ')}</p>
+        ${data.local.tel?`<p>Tel: ${data.local.tel}</p>`:''}
       </div>
+    </div>` : '';
+
+  const fichaHtml = data.controlado ? `
+    <div class="controlado-ficha">
+      <div class="cf-row"><span class="cf-label">Paciente:</span><span class="cf-val">${data.pac}</span></div>
+      ${data.extra?`<div class="cf-row"><span class="cf-label">Dados:</span><span class="cf-val">${data.extra}</span></div>`:''}
+    </div>` : '';
+
+  const footHtml = data.doctorSignature ? `
+    <div class="rx-sh-foot">
+      <div style="height:40px;"></div>
+      <div style="border-top:1px solid #111;width:260px;margin:0 auto;"></div>
+      <div class="rx-sh-foot-name">${data.perfil.nome||'—'}</div>
+      ${data.perfil.espec?`<div class="rx-sh-foot-espec">${data.perfil.espec}</div>`:''}
+      ${data.crmStr?`<div class="rx-sh-foot-crm">${data.crmStr}</div>`:''}
+      <div class="rx-sh-foot-date">${data.hoje}</div>
     </div>
-    <hr class="rx-rule-thick">
-    <hr class="rx-rule-thin">`;
+    <hr class="rx-divider-foot">` : `
+    <div class="rx-sh-foot">
+      <div class="rx-sh-foot-name">${data.perfil.nome||'—'}</div>
+      ${data.perfil.espec?`<div class="rx-sh-foot-espec">${data.perfil.espec}</div>`:''}
+      ${data.crmStr?`<div class="rx-sh-foot-crm">${data.crmStr}</div>`:''}
+      <div class="rx-sh-foot-date">${data.hoje}</div>
+    </div>
+    <hr class="rx-divider-foot">`;
 
-  const footHtml = `
-    <div class="rx-spacer"></div>
-    <div class="rx-foot">
-      <div class="rx-sign-line"></div>
-      <div class="rx-foot-name">${data.perfil?.nome||'—'}</div>
-      ${data.perfil?.espec?`<div class="rx-foot-sub">${data.perfil.espec}</div>`:''}
-      ${data.crmStr?`<div class="rx-foot-sub">${data.crmStr}</div>`:''}
-      <div class="rx-foot-sub">${data.hoje}</div>
-    </div>`;
-
-  function buildControladoSheet(via){
-    const medsHtml=(data.meds||[]).map((m,i)=>`
-      <div class="ctrl-med">
-        <div class="ctrl-med-name">${i+1}. ${m.nome}</div>
-        ${m.posol?`<div class="ctrl-med-posol">${m.posol}</div>`:''}
-      </div>`).join('');
-    const obsHtml=data.obs?`<div class="ctrl-obs"><strong>Obs:</strong> ${data.obs}</div>`:'';
-    return `<div class="ctrl-sheet">
-      <div class="ctrl-bar">Receituário de Controle Especial</div>
-      <div class="ctrl-subbar">Portaria SVS/MS nº 344/98 — 2 vias obrigatórias</div>
-      <div class="ctrl-head-local">
-        <div class="ctrl-head-local-inner">
-          <div class="ctrl-logo">${ctrlLogoHtml}</div>
-          <div>
-            <div class="ctrl-clinic-name">${localNome||'—'}</div>
-            <div class="ctrl-clinic-sub">${localEnd||''}${localEnd&&localTel?' · ':''}${localTel?'Tel: '+localTel:''}</div>
-          </div>
-        </div>
-        <div class="ctrl-via">${via}</div>
-      </div>
-      <div class="ctrl-head-medico">
-        <div class="ctrl-prescritor-label">Identificação do Prescritor</div>
-        <div class="ctrl-prescritor-row">
-          <div>
-            <div class="ctrl-med-name-big">${data.perfil?.nome||'—'}</div>
-            <div class="ctrl-med-sub">
-              ${data.perfil?.espec||''}${data.crmStr?`<span class="ctrl-crm-badge">${data.crmStr}</span>`:''}
-              ${localEnd?`<br>${localEnd}`:''}${localTel?` · Tel: ${localTel}`:''}
-            </div>
-          </div>
-          <div class="ctrl-date">Data: ${data.hoje}</div>
-        </div>
-      </div>
-      <div class="ctrl-body">
-        <hr class="ctrl-rule-thick">
-        <hr class="ctrl-rule-thin">
-        <div class="ctrl-patient"><strong>Paciente:</strong> ${data.pac}${data.extra?' · '+data.extra:''}</div>
-        <div class="ctrl-rx-title">Prescrição</div>
-        ${medsHtml}${obsHtml}
-      </div>
-      <div class="ctrl-spacer"></div>
-      <div class="ctrl-sign">
-        <div class="ctrl-sign-line"></div>
-        <div class="ctrl-sign-name">${data.perfil?.nome||'—'}</div>
-        ${data.perfil?.espec?`<div class="ctrl-sign-sub">${data.perfil.espec}</div>`:''}
-        ${data.crmStr?`<div class="ctrl-sign-sub">${data.crmStr}</div>`:''}
-        <div class="ctrl-sign-sub">${data.hoje}</div>
-      </div>
-      <div class="ctrl-footer">
-        <div class="ctrl-footer-col">
-          <div class="ctrl-footer-title">Identificação do Comprador</div>
-          <div class="ctrl-footer-field"><span class="ctrl-footer-label">Nome completo</span><span class="ctrl-footer-value"></span></div>
-          <div class="ctrl-footer-row">
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Documento de identidade</span><span class="ctrl-footer-value"></span></div>
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Órgão emissor</span><span class="ctrl-footer-value"></span></div>
-          </div>
-          <div class="ctrl-footer-field"><span class="ctrl-footer-label">Endereço</span><span class="ctrl-footer-value"></span></div>
-          <div class="ctrl-footer-row">
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Cidade</span><span class="ctrl-footer-value"></span></div>
-            <div class="ctrl-footer-field" style="max-width:90px;"><span class="ctrl-footer-label">Telefone</span><span class="ctrl-footer-value"></span></div>
-          </div>
-        </div>
-        <div class="ctrl-footer-col">
-          <div class="ctrl-footer-title">Identificação da Farmácia</div>
-          <div class="ctrl-footer-field"><span class="ctrl-footer-label">Nome da farmácia</span><span class="ctrl-footer-value"></span></div>
-          <div class="ctrl-footer-field"><span class="ctrl-footer-label">Endereço</span><span class="ctrl-footer-value"></span></div>
-          <div class="ctrl-footer-row">
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Cidade</span><span class="ctrl-footer-value"></span></div>
-            <div class="ctrl-footer-field" style="max-width:90px;"><span class="ctrl-footer-label">Telefone</span><span class="ctrl-footer-value"></span></div>
-          </div>
-          <div class="ctrl-footer-row">
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Data da dispensação</span><span class="ctrl-footer-value"></span></div>
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Assinatura do farmacêutico</span><span class="ctrl-footer-value" style="min-height:20px;"></span></div>
-          </div>
-        </div>
-      </div>
-    </div>`;
-  }
+  const ctrlHdr = data.controlado ? `<div class="controlado-header">⚕ RECEITUÁRIO DE CONTROLE ESPECIAL — 2 VIAS</div>` : '';
+  const sheetClass = `rx-sheet${data.controlado?' controlado':''}`;
 
   let bodyHtml = '';
+
+  // Document mode (exames, atestados, encaminhamentos)
   if(data.docCorpo!==undefined){
-    bodyHtml = `<div class="rx-sheet">
+    bodyHtml = `<div class="${sheetClass}">
       ${headHtml}
-      <div class="rx-title">${data.tipoLabel||'Documento'}</div>
-      <div class="rx-patient"><strong>Paciente:</strong> ${data.pac}</div>
-      <div style="font-size:13px;line-height:1.8;">${data.docCorpo}</div>
+      <hr class="rx-divider">
+      <div class="rx-sh-patient"><strong>Paciente:</strong> ${data.pac}</div>
+      <hr class="rx-divider-light">
+      <div class="rx-sh-title">${data.tipoLabel}</div>
+      <div style="padding:8px 0 0;font-size:13px;line-height:1.7;">${data.docCorpo}</div>
+      <div class="rx-spacer"></div>
       ${footHtml}
     </div>`;
-  } else if(data.controlado){
-    bodyHtml = buildControladoSheet('1ª VIA — Farmácia') + buildControladoSheet('2ª VIA — Paciente');
   } else {
-    const medsHtml=(data.meds||[]).map((m,i)=>`
-      <div class="rx-med">
-        <div class="rx-med-name">${i+1}. ${m.nome}</div>
-        ${m.posol?`<div class="rx-med-posol">${m.posol}</div>`:''}
-      </div>`).join('');
-    const obsHtml=data.obs?`<div class="rx-obs"><strong>Observações:</strong> ${data.obs}</div>`:'';
-    bodyHtml = `<div class="rx-sheet">
+    // Prescription mode
+    const medsHtml = (data.meds||[]).map(m=>`<div class="rx-sh-med"><strong>${m.nome}</strong><p>${m.posol||''}</p></div>`).join('');
+    const obsHtml = data.obs?`<div class="rx-sh-obs"><strong>Observações:</strong> ${data.obs}</div>`:'';
+    bodyHtml = `<div class="${sheetClass}">
+      ${ctrlHdr}
       ${headHtml}
-      <div class="rx-title">Receituário Médico</div>
-      <div class="rx-patient"><strong>Paciente:</strong> ${data.pac}${data.extra?' · '+data.extra:''}</div>
-      <div>${medsHtml}</div>
+      <hr class="rx-divider">
+      ${fichaHtml}
+      <div class="rx-sh-patient"><strong>Paciente:</strong> ${data.pac}${data.extra?' · '+data.extra:''}</div>
+      <hr class="rx-divider-light">
+      <div class="rx-sh-title">Receituário Médico</div>
+      <div class="rx-sh-meds">${medsHtml}</div>
       ${obsHtml}
+      <div class="rx-spacer"></div>
       ${footHtml}
     </div>`;
   }
+
   const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">${fonts}${style}</head><body>${bodyHtml}</body></html>`;
 
-  // --- Render: cada sheet vira uma página independente ---
+  // --- Render to off-screen iframe and capture as canvas ---
   const wrapper = document.createElement('div');
-  wrapper.style.cssText='position:fixed;left:-9999px;top:0;width:794px;background:#fff;z-index:-1;overflow:visible;';
+  wrapper.style.cssText='position:fixed;left:-9999px;top:0;width:210mm;background:#fff;z-index:-1;';
   document.body.appendChild(wrapper);
 
   const iframe = document.createElement('iframe');
-  // Sem min-height — deixa o conteúdo definir a altura real
-  iframe.style.cssText='width:794px;height:1px;border:none;background:#fff;';
+  iframe.style.cssText='width:210mm;min-height:297mm;border:none;background:#fff;';
   wrapper.appendChild(iframe);
+
+  // Write content to iframe
   iframe.srcdoc = fullHtml;
 
-  // Aguarda carregamento + fontes
+  // Wait for iframe to load + fonts
   await new Promise(resolve=>{
-    iframe.onload = ()=> setTimeout(resolve, 900);
+    iframe.onload = ()=>{
+      // Give fonts time to render
+      setTimeout(resolve, 800);
+    };
   });
 
   try {
-    const iDoc = iframe.contentDocument;
-    const iBody = iDoc.body;
+    const contentEl = iframe.contentDocument.body;
 
-    // Ajusta iframe à altura real do conteúdo (sem scroll, sem branco extra)
-    iframe.style.height = iBody.scrollHeight + 'px';
+    // Capture as canvas
+    const canvas = await html2canvas(contentEl, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      windowWidth: contentEl.scrollWidth,
+      windowHeight: contentEl.scrollHeight
+    });
 
+    // Create PDF with jsPDF
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-    const pdfW = pdf.internal.pageSize.getWidth();   // 210mm
-    const pdfH = pdf.internal.pageSize.getHeight();  // 297mm
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
 
-    // Seleciona os sheets: .rx-sheet ou .ctrl-sheet
-    const sheets = iDoc.querySelectorAll('.rx-sheet, .ctrl-sheet');
+    const pdfWidth = pdf.internal.pageSize.getWidth();   // 210mm
+    const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
 
-    if(sheets.length === 0){
-      // Fallback: documento inteiro como uma imagem
-      const canvas = await html2canvas(iBody, {
-        scale:2, useCORS:true, backgroundColor:'#ffffff',
-        windowWidth: iBody.scrollWidth,
-        windowHeight: iBody.scrollHeight
-      });
-      const imgH = (canvas.height * pdfW) / canvas.width;
-      pdf.addImage(canvas.toDataURL('image/jpeg',0.93), 'JPEG', 0, 0, pdfW, imgH);
-    } else {
-      let firstPage = true;
-      for(const sheet of sheets){
-        // Captura cada sheet individualmente — sem espaço extra
-        const canvas = await html2canvas(sheet, {
-          scale:2, useCORS:true, backgroundColor:'#ffffff',
-          windowWidth: sheet.scrollWidth,
-          windowHeight: sheet.scrollHeight,
-          width: sheet.offsetWidth,
-          height: sheet.offsetHeight
-        });
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
-        if(!firstPage) pdf.addPage();
-        firstPage = false;
+    let heightLeft = imgHeight;
+    let position = 0;
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.93);
-        const imgH = (canvas.height * pdfW) / canvas.width;
+    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+    heightLeft -= pdfHeight;
 
-        // Se o conteúdo é maior que uma página, pagina automaticamente
-        if(imgH <= pdfH){
-          pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, imgH);
-        } else {
-          let pos = 0, left = imgH;
-          pdf.addImage(imgData, 'JPEG', 0, pos, pdfW, imgH);
-          left -= pdfH;
-          while(left > 1){
-            pos -= pdfH;
-            pdf.addPage();
-            pdf.addImage(imgData, 'JPEG', 0, pos, pdfW, imgH);
-            left -= pdfH;
-          }
-        }
+    while(heightLeft > 0){
+      position -= pdfHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfHeight;
+    }
+
+    // If controlado, duplicate all pages (2 vias)
+    if(data.controlado){
+      const totalPages = pdf.internal.getNumberOfPages();
+      for(let i=1;i<=totalPages;i++){
+        pdf.setPage(i);
+      }
+      // Add 2nd via
+      heightLeft = imgHeight;
+      position = 0;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfHeight;
+      while(heightLeft > 0){
+        position -= pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
       }
     }
 
-    // Filename
+    // Generate filename
     const pacName = _sanitizeFilename(data.pac);
-    const prefix = data.docCorpo!==undefined
-      ? (data.tipoLabel||'documento').toLowerCase().replace(/\s+/g,'_')
-      : data.controlado ? 'receituario_controlado' : 'receituario';
+    const prefix = data.docCorpo!==undefined ? (data.tipoLabel||'documento').toLowerCase().replace(/\s+/g,'_') : 'receituario';
     const filename = `${prefix}-${pacName}.pdf`;
 
     // Open in new tab
