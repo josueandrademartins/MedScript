@@ -1586,12 +1586,12 @@ function requireAccess(fn){
 // ── MODAL DE PLANOS ──────────────────────────────────────────
 function openPlansModal(){
   const m = document.getElementById('modal-plans');
-  if(m){ m.classList.add('open'); loadPlans(); }
+  if(m){ m.classList.add('show'); loadPlans(); }
 }
 
 function closePlansModal(){
   const m = document.getElementById('modal-plans');
-  if(m) m.classList.remove('open');
+  if(m) m.classList.remove('show');
 }
 
 async function loadPlans(){
