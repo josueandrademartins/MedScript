@@ -3098,7 +3098,8 @@ async function gerarPDF(data, title){
   const fonts=`<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">`;
   const style=`<style>
     *{box-sizing:border-box;font-family:'Outfit',sans-serif;margin:0;padding:0;}
-    body{color:#111;font-size:13px;line-height:1.5;background:#fff;padding:20mm 15mm 15mm;width:210mm;min-height:270mm;}
+    body{color:#111;font-size:13px;line-height:1.5;background:#fff;padding:0;margin:0;width:210mm;}
+    .page-wrap{padding:20mm 15mm 15mm;width:100%;box-sizing:border-box;}
     .rx-sheet{width:100%;display:flex;flex-direction:column;min-height:240mm;page-break-after:always;}
     .rx-sheet:last-child{page-break-after:auto;}
     .rx-spacer{flex:1;min-height:8px;}
@@ -3306,7 +3307,7 @@ async function gerarPDF(data, title){
       ${footHtml}
     </div>`;
   }
-  const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">${fonts}${style}</head><body>${bodyHtml}</body></html>`;
+  const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">${fonts}${style}</head><body><div class="page-wrap">${bodyHtml}</div></body></html>`;
 
   // --- Render: cada sheet vira uma página independente ---
   const wrapper = document.createElement('div');
@@ -3323,55 +3324,66 @@ async function gerarPDF(data, title){
   try {
     const iDoc = iframe.contentDocument;
     const iBody = iDoc.body;
-    iframe.style.height = iBody.scrollHeight + 'px';
+    const iWrap = iDoc.querySelector('.page-wrap') || iBody;
+    iframe.style.height = iWrap.scrollHeight + 'px';
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-    const pdfW = pdf.internal.pageSize.getWidth();   // 210mm
-    const pdfH = pdf.internal.pageSize.getHeight();  // 297mm
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const pdfH = pdf.internal.pageSize.getHeight();
 
-    // Seleciona os sheets: .rx-sheet ou .ctrl-sheet
     const sheets = iDoc.querySelectorAll('.rx-sheet, .ctrl-sheet');
 
     if(sheets.length === 0){
-      // Fallback: documento inteiro como uma imagem
-      const canvas = await html2canvas(iBody, {
+      const canvas = await html2canvas(iWrap, {
         scale:2, useCORS:true, backgroundColor:'#ffffff',
-        windowWidth: iBody.scrollWidth,
-        windowHeight: iBody.scrollHeight
+        windowWidth: iWrap.scrollWidth,
+        windowHeight: iWrap.scrollHeight
       });
       const imgH = (canvas.height * pdfW) / canvas.width;
       pdf.addImage(canvas.toDataURL('image/jpeg',0.93), 'JPEG', 0, 0, pdfW, imgH);
     } else {
       let firstPage = true;
       for(const sheet of sheets){
-        // Captura cada sheet individualmente — sem espaço extra
+        // Captura o sheet com contexto do wrapper (preserva margens)
         const canvas = await html2canvas(sheet, {
           scale:2, useCORS:true, backgroundColor:'#ffffff',
-          windowWidth: sheet.scrollWidth,
-          windowHeight: sheet.scrollHeight,
-          width: sheet.offsetWidth,
-          height: sheet.offsetHeight
+          windowWidth: iWrap.scrollWidth,
+          windowHeight: iWrap.scrollHeight,
+          x: 0,
+          y: 0,
+          width: sheet.scrollWidth,
+          height: sheet.scrollHeight,
+          scrollX: 0,
+          scrollY: -sheet.getBoundingClientRect().top
         });
 
         if(!firstPage) pdf.addPage();
         firstPage = false;
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.93);
-        const imgH = (canvas.height * pdfW) / canvas.width;
+        // Calcular margens em pixels para o PDF (20mm topo, 15mm laterais)
+        const mmToPx = canvas.width / sheet.scrollWidth;
+        const marginTopMM = 20, marginSideMM = 15, marginBotMM = 15;
+        const contentW = pdfW - (marginSideMM * 2);
+        const contentH = (canvas.height * contentW) / canvas.width;
+        const totalH = contentH + marginTopMM + marginBotMM;
 
-        // Se o conteúdo é maior que uma página, pagina automaticamente
-        if(imgH <= pdfH){
-          pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, imgH);
+        if(totalH <= pdfH){
+          pdf.addImage(canvas.toDataURL('image/jpeg',0.93), 'JPEG',
+            marginSideMM, marginTopMM, contentW, contentH);
         } else {
-          let pos = 0, left = imgH;
-          pdf.addImage(imgData, 'JPEG', 0, pos, pdfW, imgH);
-          left -= pdfH;
+          // Conteúdo maior que uma página — pagina automaticamente
+          let pos = marginTopMM;
+          let left = contentH;
+          pdf.addImage(canvas.toDataURL('image/jpeg',0.93), 'JPEG',
+            marginSideMM, pos, contentW, contentH);
+          left -= (pdfH - marginTopMM - marginBotMM);
           while(left > 1){
-            pos -= pdfH;
+            pos -= (pdfH - marginTopMM - marginBotMM);
             pdf.addPage();
-            pdf.addImage(imgData, 'JPEG', 0, pos, pdfW, imgH);
-            left -= pdfH;
+            pdf.addImage(canvas.toDataURL('image/jpeg',0.93), 'JPEG',
+              marginSideMM, pos + marginTopMM, contentW, contentH);
+            left -= (pdfH - marginTopMM - marginBotMM);
           }
         }
       }
