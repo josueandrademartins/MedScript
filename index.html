@@ -1109,7 +1109,7 @@ body.is-admin .admin-only-block{display:block;}
 
     <!-- ══ SEÇÃO: PESO ══════════════════════════════════════ -->
     <div id="mp-secao-peso" style="display:none;">
-      <div class="fg" style="margin-bottom:12px;"><label>Nome + Concentração</label><input id="mp-nome" placeholder="Ex: Amoxicilina 250mg/5ml"></div>
+      <div class="fg" style="margin-bottom:12px;"><label>Nome + Concentração</label><input id="pk-nome" placeholder="Ex: Amoxicilina 250mg/5ml"></div>
       <div class="gr2" style="margin-bottom:12px;">
         <div class="fg"><label>Apresentação</label>
           <select id="mp-apresentacao" onchange="mpUpdateDoseLabel();mpToggleApresOutro()">
@@ -1292,22 +1292,22 @@ body.is-admin .admin-only-block{display:block;}
 <!-- ── MODAL PACOTE (admin) ── -->
 <div class="modal-overlay" id="modal-pack" style="z-index:3050;">
   <div class="modal" style="max-width:640px;max-height:92vh;overflow-y:auto;">
-    <h3 id="modal-pack-title">Novo Pacote</h3>
-    <input type="hidden" id="mp-id">
+    <h3 id="pk-modal-title">Novo Pacote</h3>
+    <input type="hidden" id="pk-id">
 
     <div class="gr2">
-      <div class="fg"><label>Nome do pacote *</label><input id="mp-nome" placeholder="Ex: Pack Pediatria Premium"></div>
+      <div class="fg"><label>Nome do pacote *</label><input id="pk-nome" placeholder="Ex: Pack Pediatria Premium"></div>
       <div class="fg"><label>Tipo</label>
-        <select id="mp-tipo">
+        <select id="pk-tipo">
           <option value="adulto">Adulto</option>
           <option value="ped">Pediátrico</option>
           <option value="misto">Misto (Adulto + Pediátrico)</option>
         </select>
       </div>
     </div>
-    <div class="fg"><label>Descrição</label><textarea id="mp-desc" rows="2" placeholder="Descreva o que está incluído no pacote"></textarea></div>
+    <div class="fg"><label>Descrição</label><textarea id="pk-desc" rows="2" placeholder="Descreva o que está incluído no pacote"></textarea></div>
     <div class="fg"><label>Preço (R$) *</label>
-      <input type="number" id="mp-preco" step="0.01" min="0" placeholder="Ex: 29.90">
+      <input type="number" id="pk-preco" step="0.01" min="0" placeholder="Ex: 29.90">
       <p style="font-size:11.5px;color:var(--ink3);margin-top:4px;">O produto será criado automaticamente no Stripe na primeira compra.</p>
     </div>
 
@@ -1317,13 +1317,13 @@ body.is-admin .admin-only-block{display:block;}
         <label style="font-weight:600;font-size:13px;">Modelos inclusos no pacote</label>
         <button class="btn btn-sm btn-soft" onclick="addPackModelo()">+ Adicionar modelo</button>
       </div>
-      <div id="mp-modelos-list" style="display:flex;flex-direction:column;gap:6px;"></div>
-      <p id="mp-modelos-empty" style="font-size:12px;color:var(--ink3);">Nenhum modelo adicionado ainda.</p>
+      <div id="pk-modelos-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+      <p id="pk-modelos-empty" style="font-size:12px;color:var(--ink3);">Nenhum modelo adicionado ainda.</p>
     </div>
 
     <div class="fg" style="margin-top:12px;">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-        <input type="checkbox" id="mp-ativo" checked>
+        <input type="checkbox" id="pk-ativo" checked>
         <span style="font-size:13px;">Pacote ativo (visível na loja)</span>
       </label>
     </div>
@@ -1730,30 +1730,30 @@ function openPackModal(packId){
   if(packId){
     const pack = _packs.find(p => p.id === packId);
     if(!pack) return;
-    document.getElementById('mp-id').value = pack.id;
-    document.getElementById('mp-nome').value = pack.nome;
-    document.getElementById('mp-tipo').value = pack.tipo;
-    document.getElementById('mp-desc').value = pack.descricao||'';
-    document.getElementById('mp-preco').value = (pack.preco_cents/100).toFixed(2);
-    document.getElementById('mp-ativo').checked = pack.ativo;
+    document.getElementById('pk-id').value = pack.id;
+    document.getElementById('pk-nome').value = pack.nome;
+    document.getElementById('pk-tipo').value = pack.tipo;
+    document.getElementById('pk-desc').value = pack.descricao||'';
+    document.getElementById('pk-preco').value = (pack.preco_cents/100).toFixed(2);
+    document.getElementById('pk-ativo').checked = pack.ativo;
     _editPackModelos = (_packModelos[packId]||[]).map(m=>({...m}));
-    document.getElementById('modal-pack-title').textContent = 'Editar Pacote';
+    document.getElementById('pk-modal-title').textContent = 'Editar Pacote';
   } else {
-    document.getElementById('mp-id').value = '';
-    document.getElementById('mp-nome').value = '';
-    document.getElementById('mp-tipo').value = 'adulto';
-    document.getElementById('mp-desc').value = '';
-    document.getElementById('mp-preco').value = '';
-    document.getElementById('mp-ativo').checked = true;
-    document.getElementById('modal-pack-title').textContent = 'Novo Pacote';
+    document.getElementById('pk-id').value = '';
+    document.getElementById('pk-nome').value = '';
+    document.getElementById('pk-tipo').value = 'adulto';
+    document.getElementById('pk-desc').value = '';
+    document.getElementById('pk-preco').value = '';
+    document.getElementById('pk-ativo').checked = true;
+    document.getElementById('pk-modal-title').textContent = 'Novo Pacote';
   }
   renderPackModelosList();
   m.classList.add('show');
 }
 
 function renderPackModelosList(){
-  const list = document.getElementById('mp-modelos-list');
-  const empty = document.getElementById('mp-modelos-empty');
+  const list = document.getElementById('pk-modelos-list');
+  const empty = document.getElementById('pk-modelos-empty');
   if(!list) return;
 
   if(!_editPackModelos.length){
@@ -1791,9 +1791,9 @@ function addPackModelo(){
 }
 
 async function savePack(){
-  const id    = document.getElementById('mp-id').value;
-  const nome  = document.getElementById('mp-nome').value.trim();
-  const preco = parseFloat(document.getElementById('mp-preco').value);
+  const id    = document.getElementById('pk-id').value;
+  const nome  = document.getElementById('pk-nome').value.trim();
+  const preco = parseFloat(document.getElementById('pk-preco').value);
   if(!nome){ toast('⚠️ Informe o nome do pacote'); return; }
   if(isNaN(preco)||preco<0){ toast('⚠️ Informe um preço válido'); return; }
 
@@ -1802,10 +1802,10 @@ async function savePack(){
 
   const pack = {
     nome,
-    tipo:        document.getElementById('mp-tipo').value,
-    descricao:   document.getElementById('mp-desc').value.trim() || null,
+    tipo:        document.getElementById('pk-tipo').value,
+    descricao:   document.getElementById('pk-desc').value.trim() || null,
     preco_cents: Math.round(preco * 100),
-    ativo:       document.getElementById('mp-ativo').checked,
+    ativo:       document.getElementById('pk-ativo').checked,
     created_by:  _currentProfile?.id,
   };
 
@@ -4357,7 +4357,7 @@ function editMedPed(id){
   document.getElementById('mp-btn-voltar').style.display='none';
 
   if(tipo==='peso'){
-    document.getElementById('mp-nome').value=m.nome||'';
+    document.getElementById('pk-nome').value=m.nome||'';
     const sel=document.getElementById('mp-apresentacao');
     const opts=[...sel.options].map(o=>o.value);
     if(opts.includes(m.apresentacao)){
