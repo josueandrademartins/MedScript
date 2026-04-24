@@ -3098,11 +3098,10 @@ async function gerarPDF(data, title){
   const fonts=`<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">`;
   const style=`<style>
     *{box-sizing:border-box;font-family:'Outfit',sans-serif;margin:0;padding:0;}
-    body{color:#111;font-size:13px;line-height:1.5;background:#fff;padding:12mm 15mm;width:210mm;min-height:297mm;}
+    body{color:#111;font-size:13px;line-height:1.5;background:#fff;padding:12mm 15mm;width:794px;}
 
     /* ── RECEITUÁRIO GERAL ── */
-    .rx-sheet{width:100%;display:flex;flex-direction:column;min-height:265mm;page-break-after:always;}
-    .rx-sheet:last-child{page-break-after:auto;}
+    .rx-sheet{width:100%;display:flex;flex-direction:column;page-break-inside:avoid;break-inside:avoid;}
     .rx-spacer{flex:1;min-height:8px;}
     .rx-sh-head{display:flex;align-items:flex-start;gap:14px;padding-bottom:10px;}
     .rx-sh-logo{max-width:100px;max-height:56px;display:flex;align-items:center;}
@@ -3115,68 +3114,73 @@ async function gerarPDF(data, title){
     .rx-sh-patient{padding:6px 0 4px;font-size:12px;color:#111;}
     .rx-sh-title{text-align:center;font-family:'Lora',serif;font-size:15px;font-weight:600;padding:8px 0 4px;color:#111;}
     .rx-sh-meds{padding:4px 0 6px;}
-    .rx-sh-med{padding:5px 0;border-bottom:1px dashed #ddd;}
+    .rx-sh-med{padding:5px 0;border-bottom:1px dashed #ddd;page-break-inside:avoid;break-inside:avoid;}
     .rx-sh-med:last-child{border-bottom:none;}
     .rx-sh-med strong{font-size:12.5px;display:block;color:#111;}
     .rx-sh-med p{font-size:11.5px;color:#444;margin-top:2px;}
     .rx-sh-obs{background:#f7f5f0;border-left:3px solid #ccc;padding:6px 10px;font-size:11px;color:#444;margin:6px 0 8px;}
-    .rx-sh-foot{text-align:center;padding:8px 0 0;}
+    .rx-sh-foot{text-align:center;padding:24px 0 0;}
     .rx-sh-foot-name{font-family:'Lora',serif;font-size:13px;font-weight:600;color:#111;}
     .rx-sh-foot-espec,.rx-sh-foot-crm{font-size:10.5px;color:#555;margin-top:1px;}
     .rx-sh-foot-date{font-size:10.5px;color:#888;margin-top:2px;}
     .rx-divider-foot{border:none;border-top:1.5px solid #111;margin-top:10px;}
 
     /* ── RECEITUÁRIO CONTROLADO ── */
-    .ctrl-sheet{width:100%;display:flex;flex-direction:column;min-height:265mm;page-break-after:always;border:1px solid #999;}
-    .ctrl-sheet:last-child{page-break-after:auto;}
+    .ctrl-sheet{
+      width:100%;
+      display:flex;flex-direction:column;
+      border:1px solid #bbb;
+      page-break-inside:avoid;
+      break-inside:avoid;
+      margin-bottom:20px;
+    }
+    .ctrl-sheet:last-child{margin-bottom:0;}
 
-    /* Faixa vermelha do título */
-    .ctrl-title-bar{background:#C0392B;color:#fff;text-align:center;padding:5px 0;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}
-    .ctrl-subtitle-bar{background:#fdeceb;border-bottom:1px solid #C0392B;text-align:center;padding:3px 0;font-size:9px;color:#C0392B;font-weight:600;letter-spacing:.5px;}
+    /* Faixa de título */
+    .ctrl-title-bar{background:#C0392B;color:#fff;text-align:center;padding:5px 0;font-size:10.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}
+    .ctrl-subtitle-bar{background:#fdeceb;border-bottom:1px solid #C0392B;text-align:center;padding:3px 0;font-size:8.5px;color:#C0392B;font-weight:600;letter-spacing:.5px;}
 
-    /* Cabeçalho médico */
-    .ctrl-header{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 14px;border-bottom:1px solid #C0392B;gap:12px;}
-    .ctrl-header-left{flex:1;}
-    .ctrl-header-logo{max-width:90px;max-height:50px;}
-    .ctrl-header-logo img{max-width:90px;max-height:50px;object-fit:contain;display:block;}
-    .ctrl-medico-nome{font-family:'Lora',serif;font-size:14px;font-weight:600;color:#111;margin-bottom:2px;}
-    .ctrl-medico-info{font-size:10px;color:#555;line-height:1.6;}
-    .ctrl-header-right{text-align:right;font-size:10px;color:#555;line-height:1.6;min-width:140px;}
+    /* Cabeçalho: local + médico (igual ao receituário normal) */
+    .ctrl-header{padding:10px 14px;border-bottom:1px solid #C0392B;}
+    .ctrl-header-local{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed #eee;}
+    .ctrl-local-logo{max-width:80px;max-height:46px;}
+    .ctrl-local-logo img{max-width:80px;max-height:46px;object-fit:contain;display:block;}
+    .ctrl-local-nome{font-size:13px;font-weight:600;color:#111;}
+    .ctrl-local-info{font-size:10px;color:#555;line-height:1.5;margin-top:2px;}
+    .ctrl-header-medico{display:flex;justify-content:space-between;align-items:flex-start;}
+    .ctrl-medico-nome{font-family:'Lora',serif;font-size:13px;font-weight:600;color:#111;}
+    .ctrl-medico-info{font-size:10px;color:#555;line-height:1.6;margin-top:2px;}
+    .ctrl-via-badge{display:inline-block;border:1.5px solid #C0392B;color:#C0392B;font-size:9px;font-weight:700;padding:3px 10px;border-radius:3px;letter-spacing:.5px;white-space:nowrap;}
+    .ctrl-header-right{text-align:right;font-size:10px;color:#777;}
 
-    /* Número da via */
-    .ctrl-via-badge{display:inline-block;border:1.5px solid #C0392B;color:#C0392B;font-size:9px;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:.5px;}
-
-    /* Corpo da prescrição */
+    /* Corpo */
     .ctrl-body{flex:1;padding:10px 14px;border-bottom:1px solid #C0392B;}
-    .ctrl-paciente-row{display:flex;gap:4px;align-items:baseline;font-size:11.5px;margin-bottom:6px;}
+    .ctrl-paciente-row{display:flex;gap:6px;align-items:baseline;font-size:11.5px;margin-bottom:5px;}
     .ctrl-paciente-label{font-weight:700;color:#111;white-space:nowrap;}
-    .ctrl-paciente-val{border-bottom:1px solid #555;flex:1;padding-bottom:1px;color:#111;}
-    .ctrl-dados-row{display:flex;gap:16px;font-size:10.5px;margin-bottom:10px;color:#444;}
-    .ctrl-dados-item{display:flex;gap:3px;align-items:baseline;}
-    .ctrl-dados-label{font-weight:600;white-space:nowrap;}
-    .ctrl-dados-val{border-bottom:1px solid #aaa;min-width:60px;padding-bottom:1px;}
-    .ctrl-prescricao-title{font-size:9.5px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;border-bottom:1px solid #fdd;padding-bottom:3px;}
-    .ctrl-med{padding:5px 0;border-bottom:1px dashed #ddd;}
+    .ctrl-paciente-val{border-bottom:1px solid #777;flex:1;padding-bottom:1px;color:#111;}
+    .ctrl-dados-row{font-size:10px;color:#555;margin-bottom:8px;}
+    .ctrl-prescricao-title{font-size:9px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;border-bottom:1px solid #fdd;padding-bottom:3px;}
+    .ctrl-med{padding:5px 0;border-bottom:1px dashed #eee;page-break-inside:avoid;break-inside:avoid;}
     .ctrl-med:last-child{border-bottom:none;}
     .ctrl-med-nome{font-size:12.5px;font-weight:600;color:#111;}
     .ctrl-med-posol{font-size:11px;color:#444;margin-top:2px;padding-left:10px;}
     .ctrl-obs{background:#fff9f9;border-left:3px solid #C0392B;padding:5px 9px;font-size:10.5px;color:#555;margin-top:8px;}
 
-    /* Assinatura central */
-    .ctrl-assinatura{padding:10px 14px;border-bottom:1px solid #C0392B;text-align:center;}
-    .ctrl-ass-linha{border-top:1px solid #555;width:220px;margin:0 auto 3px;}
+    /* Assinatura */
+    .ctrl-assinatura{padding:14px 14px 10px;border-bottom:1px solid #C0392B;text-align:center;}
+    .ctrl-ass-linha{border-top:1px solid #555;width:200px;margin:0 auto 4px;}
     .ctrl-ass-nome{font-family:'Lora',serif;font-size:12px;font-weight:600;color:#111;}
     .ctrl-ass-info{font-size:10px;color:#555;margin-top:1px;}
     .ctrl-ass-data{font-size:10px;color:#888;margin-top:2px;}
 
-    /* Rodapé dividido — PADRÃO ANVISA */
-    .ctrl-footer{display:flex;border-top:2px solid #C0392B;}
+    /* Rodapé dividido — padrão ANVISA */
+    .ctrl-footer{display:flex;}
     .ctrl-footer-col{flex:1;padding:8px 12px;}
     .ctrl-footer-col:first-child{border-right:1px solid #C0392B;}
-    .ctrl-footer-title{font-size:8.5px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;border-bottom:1px solid #fdd;padding-bottom:2px;}
+    .ctrl-footer-title{font-size:8px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;border-bottom:1px solid #fdd;padding-bottom:2px;}
     .ctrl-footer-field{margin-bottom:5px;}
     .ctrl-footer-label{font-size:9px;color:#777;display:block;margin-bottom:1px;}
-    .ctrl-footer-value{font-size:10px;color:#111;border-bottom:1px solid #ccc;display:block;min-height:13px;padding-bottom:1px;}
+    .ctrl-footer-value{font-size:10px;color:#111;border-bottom:1px solid #ccc;display:block;min-height:12px;padding-bottom:1px;}
     .ctrl-footer-row{display:flex;gap:8px;}
     .ctrl-footer-row .ctrl-footer-field{flex:1;}
   </style>`;
@@ -3223,25 +3227,31 @@ async function gerarPDF(data, title){
     const obsHtml = data.obs
       ? `<div class="ctrl-obs"><strong>Obs:</strong> ${data.obs}</div>` : '';
 
-    // Cabeçalho do médico
+    // Cabeçalho: local de trabalho (igual receituário normal) + médico
     const ctrlHead = `
       <div class="ctrl-title-bar">RECEITUÁRIO DE CONTROLE ESPECIAL</div>
       <div class="ctrl-subtitle-bar">Portaria SVS/MS nº 344/98 — 2 vias obrigatórias</div>
       <div class="ctrl-header">
-        <div class="ctrl-header-left">
-          ${data.local?.logo?`<div class="ctrl-header-logo"><img src="${data.local.logo}" alt="logo"></div>`:''}
-          <div class="ctrl-medico-nome">${data.perfil.nome||'—'}</div>
-          <div class="ctrl-medico-info">
-            ${data.perfil.espec?`${data.perfil.espec}<br>`:''}
-            ${data.crmStr?`${data.crmStr}<br>`:''}
-            ${localEnd?`${localEnd}<br>`:''}
-            ${localTel?`Tel: ${localTel}`:''}
+        <div class="ctrl-header-local">
+          ${data.local?.logo?`<div class="ctrl-local-logo"><img src="${data.local.logo}" alt="logo"></div>`:''}
+          <div>
+            <div class="ctrl-local-nome">${localNome||'—'}</div>
+            ${localEnd?`<div class="ctrl-local-info">${localEnd}</div>`:''}
+            ${localTel?`<div class="ctrl-local-info">Tel: ${localTel}</div>`:''}
           </div>
         </div>
-        <div class="ctrl-header-right">
-          <div class="ctrl-via-badge">${via}</div>
-          <br>
-          <div style="margin-top:6px;font-size:10px;color:#777;">Data: ${data.hoje}</div>
+        <div class="ctrl-header-medico">
+          <div>
+            <div class="ctrl-medico-nome">${data.perfil.nome||'—'}</div>
+            <div class="ctrl-medico-info">
+              ${data.perfil.espec||''}
+              ${data.crmStr?`<br>${data.crmStr}`:''}
+            </div>
+          </div>
+          <div class="ctrl-header-right">
+            <div class="ctrl-via-badge">${via}</div>
+            <div style="margin-top:6px;">Data: ${data.hoje}</div>
+          </div>
         </div>
       </div>`;
 
@@ -3377,68 +3387,86 @@ async function gerarPDF(data, title){
 
   const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">${fonts}${style}</head><body>${bodyHtml}</body></html>`;
 
-  // --- Render to off-screen iframe and capture as canvas ---
+  // --- Render: cada sheet vira uma página independente ---
   const wrapper = document.createElement('div');
-  wrapper.style.cssText='position:fixed;left:-9999px;top:0;width:210mm;background:#fff;z-index:-1;';
+  wrapper.style.cssText='position:fixed;left:-9999px;top:0;width:794px;background:#fff;z-index:-1;overflow:visible;';
   document.body.appendChild(wrapper);
 
   const iframe = document.createElement('iframe');
-  iframe.style.cssText='width:210mm;min-height:297mm;border:none;background:#fff;';
+  // Sem min-height — deixa o conteúdo definir a altura real
+  iframe.style.cssText='width:794px;height:1px;border:none;background:#fff;';
   wrapper.appendChild(iframe);
-
-  // Write content to iframe
   iframe.srcdoc = fullHtml;
 
-  // Wait for iframe to load + fonts
+  // Aguarda carregamento + fontes
   await new Promise(resolve=>{
-    iframe.onload = ()=>{
-      // Give fonts time to render
-      setTimeout(resolve, 800);
-    };
+    iframe.onload = ()=> setTimeout(resolve, 900);
   });
 
   try {
-    const contentEl = iframe.contentDocument.body;
+    const iDoc = iframe.contentDocument;
+    const iBody = iDoc.body;
 
-    // Capture as canvas
-    const canvas = await html2canvas(contentEl, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      windowWidth: contentEl.scrollWidth,
-      windowHeight: contentEl.scrollHeight
-    });
+    // Ajusta iframe à altura real do conteúdo (sem scroll, sem branco extra)
+    iframe.style.height = iBody.scrollHeight + 'px';
 
-    // Create PDF with jsPDF
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
+    const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+    const pdfW = pdf.internal.pageSize.getWidth();   // 210mm
+    const pdfH = pdf.internal.pageSize.getHeight();  // 297mm
 
-    const pdfWidth = pdf.internal.pageSize.getWidth();   // 210mm
-    const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
+    // Seleciona os sheets: .rx-sheet ou .ctrl-sheet
+    const sheets = iDoc.querySelectorAll('.rx-sheet, .ctrl-sheet');
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.92);
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+    if(sheets.length === 0){
+      // Fallback: documento inteiro como uma imagem
+      const canvas = await html2canvas(iBody, {
+        scale:2, useCORS:true, backgroundColor:'#ffffff',
+        windowWidth: iBody.scrollWidth,
+        windowHeight: iBody.scrollHeight
+      });
+      const imgH = (canvas.height * pdfW) / canvas.width;
+      pdf.addImage(canvas.toDataURL('image/jpeg',0.93), 'JPEG', 0, 0, pdfW, imgH);
+    } else {
+      let firstPage = true;
+      for(const sheet of sheets){
+        // Captura cada sheet individualmente — sem espaço extra
+        const canvas = await html2canvas(sheet, {
+          scale:2, useCORS:true, backgroundColor:'#ffffff',
+          windowWidth: sheet.scrollWidth,
+          windowHeight: sheet.scrollHeight,
+          width: sheet.offsetWidth,
+          height: sheet.offsetHeight
+        });
 
-    let heightLeft = imgHeight;
-    let position = 0;
+        if(!firstPage) pdf.addPage();
+        firstPage = false;
 
-    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-    heightLeft -= pdfHeight;
+        const imgData = canvas.toDataURL('image/jpeg', 0.93);
+        const imgH = (canvas.height * pdfW) / canvas.width;
 
-    while(heightLeft > 0){
-      position -= pdfHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-      heightLeft -= pdfHeight;
+        // Se o conteúdo é maior que uma página, pagina automaticamente
+        if(imgH <= pdfH){
+          pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, imgH);
+        } else {
+          let pos = 0, left = imgH;
+          pdf.addImage(imgData, 'JPEG', 0, pos, pdfW, imgH);
+          left -= pdfH;
+          while(left > 1){
+            pos -= pdfH;
+            pdf.addPage();
+            pdf.addImage(imgData, 'JPEG', 0, pos, pdfW, imgH);
+            left -= pdfH;
+          }
+        }
+      }
     }
 
     // Filename
     const pacName = _sanitizeFilename(data.pac);
-    const prefix = data.docCorpo!==undefined ? (data.tipoLabel||'documento').toLowerCase().replace(/\s+/g,'_') : data.controlado ? 'receituario_controlado' : 'receituario';
+    const prefix = data.docCorpo!==undefined
+      ? (data.tipoLabel||'documento').toLowerCase().replace(/\s+/g,'_')
+      : data.controlado ? 'receituario_controlado' : 'receituario';
     const filename = `${prefix}-${pacName}.pdf`;
 
     // Open in new tab
