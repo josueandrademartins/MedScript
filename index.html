@@ -441,13 +441,21 @@ body.is-admin .admin-only-block{display:block;}
   <div class="sb-footer">
     <!-- Banner de assinatura -->
     <div id="sb-sub-banner" style="margin-bottom:8px;"></div>
-    <div class="sb-doctor">
+    <div class="sb-doctor" onclick="nav('perfil')" style="cursor:pointer;" title="Ir para o perfil">
       <div class="sb-av" id="sb-av-initials">?</div>
       <div class="sb-doc-info"><p id="sb-doc-name">Meu Perfil</p><span id="sb-doc-crm">CRM —</span></div>
     </div>
     <button onclick="doLogout()" title="Sair" style="background:none;border:none;cursor:pointer;color:var(--ink3);padding:4px;border-radius:6px;transition:color .15s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--ink3)'">
       <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
     </button>
+    <!-- Links legais -->
+    <div style="display:flex;gap:6px;justify-content:flex-start;padding-left:2px;margin-top:6px;flex-wrap:wrap;">
+      <button onclick="openTermos('uso')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.28);font-size:9.5px;padding:0;font-family:'Outfit',sans-serif;text-decoration:underline;">Termos</button>
+      <span style="color:rgba(255,255,255,.15);font-size:9.5px;">·</span>
+      <button onclick="openTermos('privacidade')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.28);font-size:9.5px;padding:0;font-family:'Outfit',sans-serif;text-decoration:underline;">Privacidade</button>
+      <span style="color:rgba(255,255,255,.15);font-size:9.5px;">·</span>
+      <button onclick="openTermos('responsabilidade')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.28);font-size:9.5px;padding:0;font-family:'Outfit',sans-serif;text-decoration:underline;">Responsabilidade</button>
+    </div>
   </div>
 </aside>
 
@@ -1219,6 +1227,20 @@ body.is-admin .admin-only-block{display:block;}
   </div>
 </div>
 
+<!-- ── MODAL TERMOS LEGAIS ── -->
+<div class="modal-overlay" id="modal-termos" style="z-index:3100;">
+  <div class="modal" style="max-width:660px;max-height:90vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--line);flex-shrink:0;">
+      <h3 id="modal-termos-title" style="margin:0;font-size:15px;">Termos de Uso</h3>
+      <button onclick="closeModal('modal-termos')" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--ink3);line-height:1;padding:0;">×</button>
+    </div>
+    <div id="modal-termos-body" style="overflow-y:auto;padding:22px;flex:1;font-size:13px;line-height:1.8;color:var(--ink2);"></div>
+    <div style="padding:12px 22px;border-top:1px solid var(--line);flex-shrink:0;text-align:right;">
+      <button class="btn btn-primary" onclick="closeModal('modal-termos')">Entendi</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Droga Injetável -->
 <div class="modal-overlay" id="modal-inj">
   <div class="modal" style="max-width:680px;max-height:92vh;overflow-y:auto;">
@@ -1472,6 +1494,57 @@ let _subscription   = null;   // dados da assinatura atual
 
 function currentUser(){return _currentProfile;}
 function isAdmin(){return _currentProfile?.role==='admin';}
+
+// ── TERMOS LEGAIS ────────────────────────────────────────────
+const TERMOS_CONTEUDO = {
+  uso:{titulo:'Termos de Uso',html:`
+    <p style="color:var(--ink3);font-size:11.5px;margin-bottom:16px;">Última atualização: abril de 2026</p>
+    <h4 style="color:var(--ink);margin:0 0 6px;">1. Aceitação dos Termos</h4>
+    <p>Ao acessar ou utilizar o <strong>MedScript</strong>, você concorda com estes Termos de Uso. Se não concordar com qualquer disposição, não utilize a plataforma.</p>
+    <h4 style="color:var(--ink);margin:16px 0 6px;">2. Descrição do Serviço</h4>
+    <p>O MedScript é uma plataforma de apoio à geração de receituários, documentos médicos e cálculos de doses pediátricas. O sistema oferece <strong>sugestões e modelos</strong> para uso por profissionais de saúde habilitados, não substituindo o julgamento clínico do profissional.</p>
+    <h4 style="color:var(--ink);margin:16px 0 6px;">3. Uso Permitido</h4>
+    <p>A plataforma é destinada exclusivamente a profissionais de saúde legalmente habilitados. O usuário é inteiramente responsável por verificar e validar todas as informações antes de utilizá-las na prática clínica.</p>
+    <h4 style="color:var(--ink);margin:16px 0 6px;">4. Limitação de Responsabilidade</h4>
+    <p>O MedScript e seu criador, <strong>Josue Andrade Martins</strong>, não se responsabilizam por decisões clínicas tomadas com base nas informações geradas pela plataforma. O sistema não garante a precisão, completude ou atualidade das informações fornecidas.</p>
+    <h4 style="color:var(--ink);margin:16px 0 6px;">5. Propriedade Intelectual</h4>
+    <p>Todo o conteúdo, código, design e funcionalidades do MedScript são de propriedade de Josue Andrade Martins. É vedada a reprodução, distribuição ou modificação sem autorização expressa.</p>
+    <h4 style="color:var(--ink);margin:16px 0 6px;">6. Assinatura e Pagamento</h4>
+    <p>O acesso a funcionalidades premium está condicionado à assinatura ativa. O período de trial de 7 dias é gratuito. O cancelamento pode ser feito a qualquer momento, mantendo o acesso até o fim do ciclo pago.</p>
+    <h4 style="color:var(--ink);margin:16px 0 6px;">7. Contato</h4>
+    <p><strong>contato@medscript.co</strong></p>`},
+  privacidade:{titulo:'Política de Privacidade',html:`
+    <p style="color:var(--ink3);font-size:11.5px;margin-bottom:16px;">Última atualização: abril de 2026 · Em conformidade com a LGPD (Lei nº 13.709/2018)</p>
+    <h4 style="color:var(--ink);margin:0 0 6px;">1. Dados Coletados</h4>
+    <p>Coletamos: nome completo, CPF, e-mail, número de conselho profissional e especialidade. Dados de pagamento são processados exclusivamente pelo Stripe — não armazenamos dados de cartão.</p>
+    <h4 style="color:var(--ink);margin:16px 0 6px;">2. Finalidade</h4>
+    <p>Os dados são utilizados exclusivamente para prestação do serviço, personalização da experiência, geração de documentos médicos e cobrança de assinaturas.</p>
+    <h4 style="color:var(--ink);margin:16px 0 6px;">3. Compartilhamento</h4>
+    <p>Seus dados <strong>não são vendidos ou compartilhados</strong> com terceiros para fins comerciais. Compartilhados apenas com Supabase (infraestrutura) e Stripe (pagamentos), sob acordo compatível com a LGPD.</p>
+    <h4 style="color:var(--ink);margin:16px 0 6px;">4. Seus Direitos (LGPD)</h4>
+    <p>Você tem direito a acessar, corrigir, excluir seus dados e revogar o consentimento a qualquer momento.</p>
+    <h4 style="color:var(--ink);margin:16px 0 6px;">5. Contato / DPO</h4>
+    <p>Responsável: <strong>Josue Andrade Martins</strong> · <strong>contato@medscript.co</strong></p>`},
+  responsabilidade:{titulo:'Termo de Responsabilidade Médica',html:`
+    <p style="color:var(--ink3);font-size:11.5px;margin-bottom:16px;">Última atualização: abril de 2026</p>
+    <div style="background:#fff8e6;border-left:4px solid var(--amber);padding:10px 14px;border-radius:4px;margin-bottom:16px;"><strong style="color:#8a6200;">⚠ Leia com atenção antes de utilizar a plataforma</strong></div>
+    <h4 style="color:var(--ink);margin:0 0 6px;">1. Natureza do Sistema</h4>
+    <p>O MedScript é uma ferramenta de <strong>apoio e sugestão</strong>. Todas as informações têm caráter <strong>orientativo e não vinculante</strong>.</p>
+    <h4 style="color:var(--ink);margin:16px 0 6px;">2. Responsabilidade Exclusiva do Profissional</h4>
+    <p>O profissional de saúde é <strong>inteira e exclusivamente responsável</strong> por todas as decisões clínicas, verificação de doses, adequação das prescrições e cumprimento das normas do conselho profissional ao qual está vinculado.</p>
+    <h4 style="color:var(--ink);margin:16px 0 6px;">3. Ausência de Garantias</h4>
+    <p>O MedScript <strong>não garante</strong> a precisão, completude ou atualidade das informações. Cálculos de doses são baseados em referências gerais e podem não refletir protocolos institucionais atualizados.</p>
+    <h4 style="color:var(--ink);margin:16px 0 6px;">4. Limitação de Responsabilidade</h4>
+    <p><strong>Josue Andrade Martins e o MedScript não se responsabilizam</strong> por quaisquer danos decorrentes do uso das informações da plataforma.</p>
+    <div style="background:#f0faf6;border:1px solid var(--teal);border-radius:6px;padding:10px 14px;margin-top:16px;"><p style="margin:0;font-size:12px;color:var(--teal);"><strong>Ao utilizar o MedScript, você confirma que leu, compreendeu e concorda com este termo.</strong></p></div>`}
+};
+
+function openTermos(tipo){
+  const c = TERMOS_CONTEUDO[tipo]; if(!c) return;
+  document.getElementById('modal-termos-title').textContent = c.titulo;
+  document.getElementById('modal-termos-body').innerHTML = c.html;
+  document.getElementById('modal-termos').classList.add('show');
+}
 
 // ── SISTEMA DE ASSINATURAS ───────────────────────────────────
 
