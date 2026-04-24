@@ -439,10 +439,6 @@ body.is-admin .admin-only-block{display:block;}
       <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M19 11H5M19 11a2 2 0 010 4H5a2 2 0 010-4M19 11V7a2 2 0 00-2-2H7a2 2 0 00-2 2v4M5 15v4a2 2 0 002 2h10a2 2 0 002-2v-4"/></svg>
       Modelos
     </button>
-    <button class="sb-item" onclick="nav('loja',this)">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-      Loja
-    </button>
     <button class="sb-item" onclick="nav('exames',this)">
       <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
       Exames / Encam.
@@ -467,6 +463,10 @@ body.is-admin .admin-only-block{display:block;}
     <button class="sb-item" onclick="nav('perfil',this)">
       <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
       Perfil
+    </button>
+    <button class="sb-item" onclick="nav('loja',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      Loja
     </button>
   </nav>
   <div class="sb-footer">
@@ -1797,7 +1797,6 @@ async function savePack(){
   if(!nome){ toast('⚠️ Informe o nome do pacote'); return; }
   if(isNaN(preco)||preco<0){ toast('⚠️ Informe um preço válido'); return; }
 
-  // Validar modelos
   const modelosValidos = _editPackModelos.filter(m => m.nome.trim());
   if(!modelosValidos.length){ toast('⚠️ Adicione pelo menos 1 modelo'); return; }
 
@@ -1807,34 +1806,40 @@ async function savePack(){
     descricao:   document.getElementById('mp-desc').value.trim() || null,
     preco_cents: Math.round(preco * 100),
     ativo:       document.getElementById('mp-ativo').checked,
+    created_by:  _currentProfile?.id,
   };
 
   const sb = await getSB();
   let packId = id ? parseInt(id) : null;
 
-  if(packId){
-    const {error} = await sb.from('template_packs').update(pack).eq('id', packId);
-    if(error){ toast('Erro: '+error.message); return; }
-    // Apagar modelos antigos e reinserir
-    await sb.from('pack_modelos').delete().eq('pack_id', packId);
-  } else {
-    const {data, error} = await sb.from('template_packs').insert({...pack, created_by: _currentProfile.id}).select().single();
-    if(error){ toast('Erro: '+error.message); return; }
-    packId = data.id;
+  try {
+    if(packId){
+      const {error} = await sb.from('template_packs').update(pack).eq('id', packId);
+      if(error) throw new Error('Erro ao atualizar pacote: ' + error.message);
+      const {error: delErr} = await sb.from('pack_modelos').delete().eq('pack_id', packId);
+      if(delErr) throw new Error('Erro ao limpar modelos: ' + delErr.message);
+    } else {
+      const {data, error} = await sb.from('template_packs').insert(pack).select().single();
+      if(error) throw new Error('Erro ao criar pacote: ' + error.message);
+      packId = data.id;
+    }
+
+    const modelosInsert = modelosValidos.map(m => ({
+      pack_id: packId,
+      nome:    m.nome.trim(),
+      tipo:    m.tipo,
+      meds:    m.meds || [],
+    }));
+    const {error: modErr} = await sb.from('pack_modelos').insert(modelosInsert);
+    if(modErr) throw new Error('Erro ao salvar modelos: ' + modErr.message);
+
+    closeModal('modal-pack');
+    toast('✓ Pacote salvo!');
+    await loadLoja();
+  } catch(e){
+    toast('❌ ' + e.message);
+    console.error('savePack error:', e);
   }
-
-  // Inserir modelos
-  const modelosInsert = modelosValidos.map(m => ({
-    pack_id: packId,
-    nome: m.nome.trim(),
-    tipo: m.tipo,
-    meds: m.meds || [],
-  }));
-  await sb.from('pack_modelos').insert(modelosInsert);
-
-  closeModal('modal-pack');
-  toast('✓ Pacote salvo!');
-  await loadLoja();
 }
 
 async function deletePack(packId){
