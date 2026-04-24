@@ -1764,34 +1764,7 @@ function openPackModal(packId){
   m.classList.add('show');
 }
 
-function renderPackModelosList(){
-  const list = document.getElementById('pk-modelos-list');
-  const empty = document.getElementById('pk-modelos-empty');
-  if(!list) return;
 
-  if(!_editPackModelos.length){
-    list.innerHTML = '';
-    if(empty) empty.style.display = '';
-    return;
-  }
-  if(empty) empty.style.display = 'none';
-
-  list.innerHTML = _editPackModelos.map((m,i) => `
-    <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg2);border-radius:6px;">
-      <div style="flex:1;">
-        <input value="${m.nome}" oninput="_editPackModelos[${i}].nome=this.value"
-          style="width:100%;padding:5px 8px;border:1.5px solid var(--line);border-radius:5px;font-size:12.5px;background:var(--card);"
-          placeholder="Nome do modelo">
-      </div>
-      <select onchange="_editPackModelos[${i}].tipo=this.value"
-        style="padding:5px 8px;border:1.5px solid var(--line);border-radius:5px;font-size:12px;background:var(--card);">
-        <option value="adulto" ${m.tipo==='adulto'?'selected':''}>Adulto</option>
-        <option value="ped" ${m.tipo==='ped'?'selected':''}>Pediátrico</option>
-      </select>
-      <button onclick="_editPackModelos.splice(${i},1);renderPackModelosList()"
-        style="background:var(--red-light);color:var(--red);border:none;border-radius:5px;padding:5px 8px;cursor:pointer;font-size:12px;">✕</button>
-    </div>`).join('');
-}
 
 function addPackModelo(){
   _editPackModelos.push({ nome: '', tipo: 'adulto', meds: [] });
@@ -1804,11 +1777,24 @@ function addPackModelo(){
 
 let _pickTab = 'adulto';
 
-function openPickModelo(){
+async function openPickModelo(){
   const wrap = document.getElementById('pk-pick-wrap');
   const isOpen = wrap.style.display !== 'none';
   wrap.style.display = isOpen ? 'none' : '';
-  if(!isOpen) renderPickList(_pickTab);
+  if(!isOpen){
+    // Garante que os modelos estão no cache
+    if(!(cacheGet('modelos_adulto'))||!(cacheGet('modelos_ped'))){
+      const sb = await getSB();
+      const {data:{user}} = await sb.auth.getSession();
+      if(user?.user){
+        const {data:ma} = await sb.from('modelos').select('*').eq('user_id',user.user.id).eq('tipo','adulto');
+        const {data:mp} = await sb.from('modelos').select('*').eq('user_id',user.user.id).eq('tipo','ped');
+        if(ma) cacheSet('modelos_adulto',ma);
+        if(mp) cacheSet('modelos_ped',mp);
+      }
+    }
+    renderPickList(_pickTab);
+  }
 }
 
 function switchPickTab(tipo){
@@ -1830,10 +1816,15 @@ function switchPickTab(tipo){
 function renderPickList(tipo){
   const list = document.getElementById('pk-pick-list');
   if(!list) return;
+
+  // Garantir que os modelos estão carregados
   const modelos = (cacheGet('modelos_'+tipo)||[]);
 
   if(!modelos.length){
-    list.innerHTML = `<div style="font-size:12px;color:var(--ink3);padding:8px 0;">Nenhum modelo ${tipo==='ped'?'pediátrico':'adulto'} salvo na sua base.</div>`;
+    list.innerHTML = `<div style="font-size:12px;color:var(--ink3);padding:8px 0;">
+      Nenhum modelo ${tipo==='ped'?'pediátrico':'adulto'} salvo na sua base.
+      <br><span style="font-size:11px;">Salve modelos no receituário primeiro.</span>
+    </div>`;
     return;
   }
 
@@ -1841,15 +1832,20 @@ function renderPickList(tipo){
 
   list.innerHTML = modelos.map(m=>{
     const jatem = jaAdicionados.has(m.nome);
-    const medsJson = encodeURIComponent(JSON.stringify(m.meds||[]));
-    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:var(--card);border-radius:5px;border:1px solid var(--line);gap:8px;">
+    // modelos salvos usam campo 'medicamentos', não 'meds'
+    const meds = m.medicamentos || m.meds || [];
+    const medsEnc = encodeURIComponent(JSON.stringify(meds));
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--card);border-radius:6px;border:1px solid var(--line);gap:8px;">
       <div style="flex:1;min-width:0;">
         <div style="font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.nome}</div>
-        <div style="font-size:11px;color:var(--ink3);">${(m.meds||[]).length} medicamento(s) · ${tipo==='ped'?'Pediátrico':'Adulto'}</div>
+        <div style="font-size:11px;color:var(--ink3);">${meds.length} medicamento(s)</div>
       </div>
       ${jatem
         ? `<span style="font-size:11px;color:var(--teal);font-weight:600;flex-shrink:0;">✓ Adicionado</span>`
-        : `<button class="btn btn-sm btn-primary" style="flex-shrink:0;" onclick="addModeloFromBase('${encodeURIComponent(m.nome)}','${tipo}','${medsJson}')">Adicionar</button>`
+        : `<button class="btn btn-sm btn-primary" style="flex-shrink:0;"
+            onclick="addModeloFromBase('${encodeURIComponent(m.nome)}','${tipo}','${medsEnc}')">
+            Adicionar
+           </button>`
       }
     </div>`;
   }).join('');
@@ -1862,6 +1858,70 @@ function addModeloFromBase(nomeEnc, tipo, medsEnc){
   renderPackModelosList();
   renderPickList(tipo);
   toast('✓ "'+nome+'" adicionado ao pacote');
+}
+
+function renderPackModelosList(){
+  const list  = document.getElementById('pk-modelos-list');
+  const empty = document.getElementById('pk-modelos-empty');
+  if(!list) return;
+
+  if(!_editPackModelos.length){
+    list.innerHTML = '';
+    if(empty) empty.style.display = '';
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+
+  list.innerHTML = _editPackModelos.map((m,i) => {
+    const meds = m.meds || [];
+    const medsHtml = meds.map((med,mi) => {
+      // Medicamento pediátrico com flexibilidade por peso/idade/fixo
+      const tipoDose = med.tipo_dose || 'fixo';
+      let descricao = '';
+      if(tipoDose === 'peso' && med.dose_apres_kg){
+        descricao = `${med.dose_apres_kg} por kg`;
+        if(med.dose_max_apres) descricao += ` (máx ${med.dose_max_apres})`;
+      } else if(tipoDose === 'idade' && med.faixas?.length){
+        descricao = med.faixas.map(f=>`${f.idade_min}-${f.idade_max}a: ${f.dose}`).join(', ');
+      } else {
+        descricao = med.posol || med.dose_fixa || '';
+      }
+      return `<div style="display:flex;align-items:center;gap:6px;padding:4px 6px;background:var(--bg2);border-radius:4px;font-size:11.5px;">
+        <span style="flex:1;color:var(--ink2);">${med.nome||'—'}</span>
+        <span style="color:var(--ink3);font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${descricao}</span>
+        <button onclick="_editPackModelos[${i}].meds.splice(${mi},1);renderPackModelosList()"
+          style="background:none;border:none;cursor:pointer;color:var(--red);font-size:13px;padding:0 2px;">✕</button>
+      </div>`;
+    }).join('');
+
+    return `<div style="border:1.5px solid var(--line);border-radius:8px;padding:10px;background:var(--card);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:${meds.length?'8px':'0'};">
+        <input value="${m.nome}" oninput="_editPackModelos[${i}].nome=this.value"
+          style="flex:1;padding:5px 8px;border:1.5px solid var(--line);border-radius:5px;font-size:12.5px;background:var(--bg2);"
+          placeholder="Nome do modelo">
+        <select onchange="_editPackModelos[${i}].tipo=this.value"
+          style="padding:5px 8px;border:1.5px solid var(--line);border-radius:5px;font-size:12px;background:var(--bg2);">
+          <option value="adulto" ${m.tipo==='adulto'?'selected':''}>Adulto</option>
+          <option value="ped" ${m.tipo==='ped'?'selected':''}>Pediátrico</option>
+        </select>
+        <button onclick="_editPackModelos.splice(${i},1);renderPackModelosList()"
+          style="background:var(--red-light);color:var(--red);border:none;border-radius:5px;padding:5px 9px;cursor:pointer;font-size:12px;flex-shrink:0;">Remover</button>
+      </div>
+      ${meds.length ? `<div style="display:flex;flex-direction:column;gap:3px;margin-bottom:6px;">${medsHtml}</div>` : ''}
+      <button onclick="addMedToPackModelo(${i})"
+        style="font-size:11.5px;color:var(--teal);background:none;border:1px dashed var(--teal);border-radius:5px;padding:3px 10px;cursor:pointer;width:100%;">
+        + Adicionar medicamento manualmente
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function addMedToPackModelo(idx){
+  const nome = prompt('Nome do medicamento:');
+  if(!nome||!nome.trim()) return;
+  const posol = prompt('Posologia (ex: 1 comprimido de 8/8h por 7 dias):') || '';
+  _editPackModelos[idx].meds.push({ nome: nome.trim(), posol, tipo_dose: 'fixo', dose_fixa: posol });
+  renderPackModelosList();
 }
 
 async function savePack(){
