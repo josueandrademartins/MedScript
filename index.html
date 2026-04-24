@@ -3098,8 +3098,9 @@ async function gerarPDF(data, title){
   const fonts=`<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">`;
   const style=`<style>
     *{box-sizing:border-box;font-family:'Outfit',sans-serif;margin:0;padding:0;}
-    body{color:#111;font-size:13px;line-height:1.5;background:#fff;padding:15mm;width:210mm;}
-    .rx-sheet{width:100%;display:flex;flex-direction:column;min-height:240mm;}
+    body{color:#111;font-size:13px;line-height:1.5;background:#fff;padding:15mm;width:210mm;min-height:270mm;}
+    .rx-sheet{width:100%;display:flex;flex-direction:column;min-height:240mm;page-break-after:always;}
+    .rx-sheet:last-child{page-break-after:auto;}
     .rx-spacer{flex:1;min-height:8px;}
     .rx-sh-head{display:flex;align-items:center;gap:12px;padding-bottom:10px;}
     .rx-sh-logo{max-width:110px;max-height:60px;display:flex;align-items:center;}
@@ -3122,189 +3123,91 @@ async function gerarPDF(data, title){
     .rx-sh-foot-espec,.rx-sh-foot-crm{font-size:11px;color:#555;margin-top:2px;}
     .rx-sh-foot-date{font-size:11px;color:#888;margin-top:2px;}
     .rx-divider-foot{border:none;border-top:1.5px solid #111;margin-top:12px;}
-
-    /* ── CONTROLADO ── */
-    .ctrl-sheet{width:100%;display:flex;flex-direction:column;min-height:240mm;border:1px solid #bbb;page-break-inside:avoid;break-inside:avoid;}
-    .ctrl-spacer{flex:1;min-height:8px;}
-    .ctrl-bar{background:#C0392B;color:#fff;text-align:center;padding:6px 0;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}
-    .ctrl-subbar{background:#fdeceb;text-align:center;padding:3px 0;font-size:8.5px;color:#C0392B;font-weight:600;letter-spacing:.5px;border-bottom:1px solid #C0392B;}
-    .ctrl-head-local{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 14px 8px;border-bottom:0.5px solid #eee;}
-    .ctrl-head-local-inner{display:flex;gap:12px;align-items:center;}
-    .ctrl-logo{width:46px;height:46px;border-radius:7px;background:#1D9E75;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .ctrl-logo img{width:46px;height:46px;border-radius:7px;object-fit:contain;}
-    .ctrl-logo-letter{color:#fff;font-family:'Lora',serif;font-size:20px;font-weight:700;}
-    .ctrl-clinic-name{font-size:13px;font-weight:600;color:#111;margin-bottom:1px;}
-    .ctrl-clinic-sub{font-size:10px;color:#666;line-height:1.5;}
-    .ctrl-via{border:1.5px solid #C0392B;color:#C0392B;font-size:9px;font-weight:700;padding:3px 10px;letter-spacing:.5px;white-space:nowrap;align-self:flex-start;margin-top:2px;}
-    .ctrl-head-medico{padding:8px 14px 10px;border-bottom:1px solid #C0392B;}
-    .ctrl-prescritor-label{font-size:8.5px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}
-    .ctrl-prescritor-row{display:flex;justify-content:space-between;align-items:flex-start;}
-    .ctrl-med-name-big{font-family:'Lora',serif;font-size:13px;font-weight:600;color:#111;}
-    .ctrl-med-sub{font-size:10px;color:#555;margin-top:2px;line-height:1.6;}
-    .ctrl-crm-badge{display:inline-block;background:#e8f7f0;color:#0F6E56;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:3px;vertical-align:middle;margin-left:4px;}
-    .ctrl-date{font-size:9.5px;color:#888;text-align:right;margin-top:2px;}
-    .ctrl-body{padding:10px 14px;}
-    .ctrl-rx-title{font-size:9px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;border-bottom:0.5px solid #fdd;padding-bottom:3px;}
-    .ctrl-patient{font-size:12px;color:#444;margin-bottom:10px;}
-    .ctrl-patient strong{color:#111;font-weight:600;}
-    .ctrl-med{padding:6px 0;border-bottom:1px dashed #ddd;page-break-inside:avoid;break-inside:avoid;}
-    .ctrl-med:last-child{border-bottom:none;}
-    .ctrl-med-name{font-size:12.5px;font-weight:600;color:#111;}
-    .ctrl-med-posol{font-size:11px;color:#444;margin-top:2px;padding-left:10px;line-height:1.6;}
-    .ctrl-obs{border-left:3px solid #C0392B;padding:5px 9px;font-size:10.5px;color:#555;margin-top:8px;}
-    .ctrl-sign{border-top:1px solid #C0392B;padding:10px 14px;text-align:center;}
-    .ctrl-sign-line{border-top:1px solid #555;width:200px;margin:0 auto 5px;}
-    .ctrl-sign-name{font-family:'Lora',serif;font-size:12.5px;font-weight:600;color:#111;}
-    .ctrl-sign-sub{font-size:10px;color:#666;margin-top:1px;}
-    .ctrl-footer{display:flex;border-top:2px solid #C0392B;}
-    .ctrl-footer-col{flex:1;padding:8px 12px;}
-    .ctrl-footer-col:first-child{border-right:1px solid #C0392B;}
-    .ctrl-footer-title{font-size:8px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;border-bottom:0.5px solid #fdd;padding-bottom:2px;}
-    .ctrl-footer-field{margin-bottom:5px;}
-    .ctrl-footer-label{font-size:8.5px;color:#888;display:block;margin-bottom:1px;}
-    .ctrl-footer-value{display:block;border-bottom:0.5px solid #ccc;min-height:12px;font-size:10px;color:#111;padding-bottom:1px;}
-    .ctrl-footer-row{display:flex;gap:8px;}
-    .ctrl-footer-row .ctrl-footer-field{flex:1;}
+    .controlado-header{background:#fdeceb;border:1px solid #C0392B;border-radius:5px;padding:6px 11px;margin-bottom:8px;font-size:11px;font-weight:600;color:#C0392B;display:flex;align-items:center;gap:5px;}
+    .controlado-box{border:1.5px solid #C0392B;border-radius:5px;padding:9px 11px;margin-top:8px;font-size:10.5px;color:#444;}
+    .controlado-field{display:inline-block;border-bottom:1px solid #aaa;min-width:80px;flex:1;height:12px;margin:0 3px;}
+    .ctrl-section-title{font-size:9.5px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;border-bottom:1px solid #fdd;padding-bottom:2px;}
+    .cf-field-row{display:flex;align-items:baseline;gap:3px;font-size:10.5px;}
+    .controlado-ficha{border:1px solid #ddd;border-radius:5px;padding:7px 10px;margin:6px 0 8px;font-size:10.5px;background:#fafafa;}
+    .cf-label{font-weight:600;color:#555;white-space:nowrap;}
+    .cf-val{color:#111;margin-left:3px;}
+    .cf-row{display:flex;align-items:baseline;gap:5px;margin-bottom:3px;}
+    .cf-row2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:3px;}
+    .rx-sheet.controlado .rx-divider{border-top-color:#C0392B;}
+    .rx-sheet.controlado .rx-divider-foot{border-top-color:#C0392B;}
   </style>`;
 
-  const localNome = data.local?.nome || '';
-  const localEnd  = [data.local?.endereco, data.local?.cidade].filter(Boolean).join(', ');
-  const localTel  = data.local?.tel || '';
-
-  // ── CABEÇALHO RECEITUÁRIO NORMAL (original) ──
+  // --- Build the sheets HTML (same logic as antes) ---
   const headHtml = data.local ? `
     <div class="rx-sh-head">
       <div class="rx-sh-logo">${data.local.logo?`<img src="${data.local.logo}" alt="logo">`:`<span class="rx-sh-logo-placeholder">${data.local.nome[0].toUpperCase()}</span>`}</div>
       <div class="rx-sh-local-info">
-        <h3>${localNome}</h3>
-        ${localEnd?`<p>${localEnd}</p>`:''}
-        ${localTel?`<p>Tel: ${localTel}</p>`:''}
+        <h3>${data.local.nome}</h3>
+        <p>${[data.local.endereco,data.local.cidade].filter(Boolean).join(', ')}</p>
+        ${data.local.tel?`<p>Tel: ${data.local.tel}</p>`:''}
       </div>
     </div>` : '';
 
-  // ── RODAPÉ RECEITUÁRIO NORMAL (original) ──
-  const footHtml = `
-    <div class="rx-spacer"></div>
+  const fichaHtml = data.controlado ? `
+    <div class="controlado-ficha">
+      <div class="cf-row"><span class="cf-label">Paciente:</span><span class="cf-val">${data.pac}</span></div>
+      ${data.extra?`<div class="cf-row"><span class="cf-label">Dados:</span><span class="cf-val">${data.extra}</span></div>`:''}
+    </div>` : '';
+
+  const footHtml = data.doctorSignature ? `
     <div class="rx-sh-foot">
       <div style="height:40px;"></div>
-      <div style="border-top:1px solid #111;width:260px;margin:0 auto 3px;"></div>
-      <div class="rx-sh-foot-name">${data.perfil?.nome||'—'}</div>
-      ${data.perfil?.espec?`<div class="rx-sh-foot-espec">${data.perfil.espec}</div>`:''}
+      <div style="border-top:1px solid #111;width:260px;margin:0 auto;"></div>
+      <div class="rx-sh-foot-name">${data.perfil.nome||'—'}</div>
+      ${data.perfil.espec?`<div class="rx-sh-foot-espec">${data.perfil.espec}</div>`:''}
       ${data.crmStr?`<div class="rx-sh-foot-crm">${data.crmStr}</div>`:''}
       <div class="rx-sh-foot-date">${data.hoje}</div>
-    </div>`;
+    </div>
+    <hr class="rx-divider-foot">` : `
+    <div class="rx-sh-foot">
+      <div class="rx-sh-foot-name">${data.perfil.nome||'—'}</div>
+      ${data.perfil.espec?`<div class="rx-sh-foot-espec">${data.perfil.espec}</div>`:''}
+      ${data.crmStr?`<div class="rx-sh-foot-crm">${data.crmStr}</div>`:''}
+      <div class="rx-sh-foot-date">${data.hoje}</div>
+    </div>
+    <hr class="rx-divider-foot">`;
 
-  // ── CONTROLADO: builder por via ──
-  const ctrlLogoHtml = data.local?.logo
-    ? `<img src="${data.local.logo}" alt="logo">`
-    : `<span class="ctrl-logo-letter">${(localNome||data.perfil?.nome||'M')[0].toUpperCase()}</span>`;
-
-  function buildControladoSheet(via){
-    const medsHtml=(data.meds||[]).map((m,i)=>`
-      <div class="ctrl-med">
-        <div class="ctrl-med-name">${i+1}. ${m.nome}</div>
-        ${m.posol?`<div class="ctrl-med-posol">${m.posol}</div>`:''}
-      </div>`).join('');
-    const obsHtml=data.obs?`<div class="ctrl-obs"><strong>Obs:</strong> ${data.obs}</div>`:'';
-    return `<div class="ctrl-sheet">
-      <div class="ctrl-bar">Receituário de Controle Especial</div>
-      <div class="ctrl-subbar">Portaria SVS/MS nº 344/98 — 2 vias obrigatórias</div>
-      <div class="ctrl-head-local">
-        <div class="ctrl-head-local-inner">
-          <div class="ctrl-logo">${ctrlLogoHtml}</div>
-          <div>
-            <div class="ctrl-clinic-name">${localNome||'—'}</div>
-            <div class="ctrl-clinic-sub">${localEnd||''}${localEnd&&localTel?' · ':''}${localTel?'Tel: '+localTel:''}</div>
-          </div>
-        </div>
-        <div class="ctrl-via">${via}</div>
-      </div>
-      <div class="ctrl-head-medico">
-        <div class="ctrl-prescritor-label">Identificação do Prescritor</div>
-        <div class="ctrl-prescritor-row">
-          <div>
-            <div class="ctrl-med-name-big">${data.perfil?.nome||'—'}</div>
-            <div class="ctrl-med-sub">
-              ${data.perfil?.espec||''}${data.crmStr?`<span class="ctrl-crm-badge">${data.crmStr}</span>`:''}
-              ${localEnd?`<br>${localEnd}`:''}${localTel?` · Tel: ${localTel}`:''}
-            </div>
-          </div>
-          <div class="ctrl-date">Data: ${data.hoje}</div>
-        </div>
-      </div>
-      <div class="ctrl-body">
-        <hr style="border:none;border-top:1.5px solid #111;margin:0 0 2px;">
-        <hr style="border:none;border-top:1px solid #ccc;margin:0 0 10px;">
-        <div class="ctrl-patient"><strong>Paciente:</strong> ${data.pac}${data.extra?' · '+data.extra:''}</div>
-        <div class="ctrl-rx-title">Prescrição</div>
-        ${medsHtml}${obsHtml}
-      </div>
-      <div class="ctrl-spacer"></div>
-      <div class="ctrl-sign">
-        <div class="ctrl-sign-line"></div>
-        <div class="ctrl-sign-name">${data.perfil?.nome||'—'}</div>
-        ${data.perfil?.espec?`<div class="ctrl-sign-sub">${data.perfil.espec}</div>`:''}
-        ${data.crmStr?`<div class="ctrl-sign-sub">${data.crmStr}</div>`:''}
-        <div class="ctrl-sign-sub">${data.hoje}</div>
-      </div>
-      <div class="ctrl-footer">
-        <div class="ctrl-footer-col">
-          <div class="ctrl-footer-title">Identificação do Comprador</div>
-          <div class="ctrl-footer-field"><span class="ctrl-footer-label">Nome completo</span><span class="ctrl-footer-value"></span></div>
-          <div class="ctrl-footer-row">
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Documento de identidade</span><span class="ctrl-footer-value"></span></div>
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Órgão emissor</span><span class="ctrl-footer-value"></span></div>
-          </div>
-          <div class="ctrl-footer-field"><span class="ctrl-footer-label">Endereço</span><span class="ctrl-footer-value"></span></div>
-          <div class="ctrl-footer-row">
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Cidade</span><span class="ctrl-footer-value"></span></div>
-            <div class="ctrl-footer-field" style="max-width:90px;"><span class="ctrl-footer-label">Telefone</span><span class="ctrl-footer-value"></span></div>
-          </div>
-        </div>
-        <div class="ctrl-footer-col">
-          <div class="ctrl-footer-title">Identificação da Farmácia</div>
-          <div class="ctrl-footer-field"><span class="ctrl-footer-label">Nome da farmácia</span><span class="ctrl-footer-value"></span></div>
-          <div class="ctrl-footer-field"><span class="ctrl-footer-label">Endereço</span><span class="ctrl-footer-value"></span></div>
-          <div class="ctrl-footer-row">
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Cidade</span><span class="ctrl-footer-value"></span></div>
-            <div class="ctrl-footer-field" style="max-width:90px;"><span class="ctrl-footer-label">Telefone</span><span class="ctrl-footer-value"></span></div>
-          </div>
-          <div class="ctrl-footer-row">
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Data da dispensação</span><span class="ctrl-footer-value"></span></div>
-            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Assinatura do farmacêutico</span><span class="ctrl-footer-value" style="min-height:20px;"></span></div>
-          </div>
-        </div>
-      </div>
-    </div>`;
-  }
+  const ctrlHdr = data.controlado ? `<div class="controlado-header">⚕ RECEITUÁRIO DE CONTROLE ESPECIAL — 2 VIAS</div>` : '';
+  const sheetClass = `rx-sheet${data.controlado?' controlado':''}`;
 
   let bodyHtml = '';
+
+  // Document mode (exames, atestados, encaminhamentos)
   if(data.docCorpo!==undefined){
-    bodyHtml = `<div class="rx-sheet">
+    bodyHtml = `<div class="${sheetClass}">
       ${headHtml}
       <hr class="rx-divider">
       <div class="rx-sh-patient"><strong>Paciente:</strong> ${data.pac}</div>
       <hr class="rx-divider-light">
-      <div class="rx-sh-title">${data.tipoLabel||'Documento'}</div>
+      <div class="rx-sh-title">${data.tipoLabel}</div>
       <div style="padding:8px 0 0;font-size:13px;line-height:1.7;">${data.docCorpo}</div>
+      <div class="rx-spacer"></div>
       ${footHtml}
     </div>`;
-  } else if(data.controlado){
-    bodyHtml = buildControladoSheet('1ª VIA — Farmácia') + buildControladoSheet('2ª VIA — Paciente');
   } else {
-    const medsHtml=(data.meds||[]).map(m=>`<div class="rx-sh-med"><strong>${m.nome}</strong><p>${m.posol||''}</p></div>`).join('');
-    const obsHtml=data.obs?`<div class="rx-sh-obs"><strong>Observações:</strong> ${data.obs}</div>`:'';
-    bodyHtml = `<div class="rx-sheet">
+    // Prescription mode
+    const medsHtml = (data.meds||[]).map(m=>`<div class="rx-sh-med"><strong>${m.nome}</strong><p>${m.posol||''}</p></div>`).join('');
+    const obsHtml = data.obs?`<div class="rx-sh-obs"><strong>Observações:</strong> ${data.obs}</div>`:'';
+    bodyHtml = `<div class="${sheetClass}">
+      ${ctrlHdr}
       ${headHtml}
       <hr class="rx-divider">
+      ${fichaHtml}
       <div class="rx-sh-patient"><strong>Paciente:</strong> ${data.pac}${data.extra?' · '+data.extra:''}</div>
       <hr class="rx-divider-light">
       <div class="rx-sh-title">Receituário Médico</div>
       <div class="rx-sh-meds">${medsHtml}</div>
       ${obsHtml}
+      <div class="rx-spacer"></div>
       ${footHtml}
     </div>`;
   }
+
   const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">${fonts}${style}</head><body>${bodyHtml}</body></html>`;
 
   // --- Render: cada sheet vira uma página independente ---
