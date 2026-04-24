@@ -1109,7 +1109,7 @@ body.is-admin .admin-only-block{display:block;}
 
     <!-- ══ SEÇÃO: PESO ══════════════════════════════════════ -->
     <div id="mp-secao-peso" style="display:none;">
-      <div class="fg" style="margin-bottom:12px;"><label>Nome + Concentração</label><input id="pk-nome" placeholder="Ex: Amoxicilina 250mg/5ml"></div>
+      <div class="fg" style="margin-bottom:12px;"><label>Nome + Concentração</label><input id="mp-nome" placeholder="Ex: Amoxicilina 250mg/5ml"></div>
       <div class="gr2" style="margin-bottom:12px;">
         <div class="fg"><label>Apresentação</label>
           <select id="mp-apresentacao" onchange="mpUpdateDoseLabel();mpToggleApresOutro()">
@@ -1791,10 +1791,15 @@ function addPackModelo(){
 }
 
 async function savePack(){
+  const pkNomeEl = document.getElementById('pk-nome');
   const id    = document.getElementById('pk-id').value;
-  const nome  = document.getElementById('pk-nome').value.trim();
-  const preco = parseFloat(document.getElementById('pk-preco').value);
-  if(!nome){ toast('⚠️ Informe o nome do pacote'); return; }
+  const nome  = pkNomeEl ? pkNomeEl.value.trim() : '';
+  const preco = parseFloat((document.getElementById('pk-preco')||{}).value||'0');
+
+  // Debug temporário
+  console.log('savePack debug:', { pkNomeEl, nome, preco, id });
+
+  if(!nome){ toast('⚠️ Informe o nome do pacote — campo pk-nome: ' + (pkNomeEl ? 'encontrado, valor="'+pkNomeEl.value+'"' : 'NÃO ENCONTRADO')); return; }
   if(isNaN(preco)||preco<0){ toast('⚠️ Informe um preço válido'); return; }
 
   const modelosValidos = _editPackModelos.filter(m => m.nome.trim());
@@ -4357,7 +4362,7 @@ function editMedPed(id){
   document.getElementById('mp-btn-voltar').style.display='none';
 
   if(tipo==='peso'){
-    document.getElementById('pk-nome').value=m.nome||'';
+    document.getElementById('mp-nome').value=m.nome||'';
     const sel=document.getElementById('mp-apresentacao');
     const opts=[...sel.options].map(o=>o.value);
     if(opts.includes(m.apresentacao)){
