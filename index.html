@@ -360,11 +360,29 @@ body.is-admin .admin-only-block{display:block;}
     <!-- Painel Cadastro -->
     <div id="panel-register" style="display:none;">
       <p style="font-size:12px;color:var(--ink3);margin:0 0 12px;text-align:center;">Esses dados serão usados nas suas receitas e documentos</p>
+
+      <!-- Tipo de profissional -->
+      <div class="login-field">
+        <label>Tipo de profissional</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+          <label id="tipo-medico-btn" onclick="setTipoProfissional('medico')" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border:1.5px solid var(--teal);border-radius:var(--radius-sm);cursor:pointer;background:var(--teal-light);font-size:11.5px;font-weight:600;color:var(--teal);text-align:center;">
+            <span style="font-size:18px;">🩺</span>Médico
+          </label>
+          <label id="tipo-enfermagem-btn" onclick="setTipoProfissional('enfermagem')" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border:1.5px solid var(--line);border-radius:var(--radius-sm);cursor:pointer;background:var(--card);font-size:11.5px;font-weight:500;color:var(--ink2);text-align:center;">
+            <span style="font-size:18px;">💉</span>Enfermagem
+          </label>
+          <label id="tipo-odonto-btn" onclick="setTipoProfissional('odonto')" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border:1.5px solid var(--line);border-radius:var(--radius-sm);cursor:pointer;background:var(--card);font-size:11.5px;font-weight:500;color:var(--ink2);text-align:center;">
+            <span style="font-size:18px;">🦷</span>Odontologia
+          </label>
+        </div>
+        <input type="hidden" id="reg-tipo" value="medico">
+      </div>
+
       <div class="login-field"><label>Nome completo</label><input id="reg-nome" type="text" placeholder="Dr. Nome Sobrenome"></div>
       <div class="login-field"><label>CPF</label><input id="reg-cpf" type="text" placeholder="000.000.000-00" oninput="fmtCPF(this)"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div class="login-field" style="margin:0;"><label>CRM</label><input id="reg-crm" type="text" placeholder="Ex: 12345"></div>
-        <div class="login-field" style="margin:0;"><label>Estado (CRM)</label>
+        <div class="login-field" style="margin:0;"><label id="reg-conselho-label">CRM</label><input id="reg-crm" type="text" placeholder="Ex: 12345"></div>
+        <div class="login-field" style="margin:0;"><label id="reg-estado-label">Estado</label>
           <select id="reg-estado" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:13.5px;background:var(--card);color:var(--ink);outline:none;">
             <option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
           </select>
@@ -375,6 +393,15 @@ body.is-admin .admin-only-block{display:block;}
       <div class="login-field"><label>Senha</label><input id="reg-pass" type="password" placeholder="Mínimo 6 caracteres"></div>
       <div class="login-field"><label>Confirmar senha</label><input id="reg-pass2" type="password" placeholder="Repita a senha"></div>
       <button class="login-btn" onclick="doRegister()">Criar conta</button>
+      <div style="display:flex;align-items:flex-start;gap:8px;margin-top:12px;">
+        <input type="checkbox" id="reg-aceite" style="margin-top:3px;flex-shrink:0;accent-color:var(--teal);">
+        <label for="reg-aceite" style="font-size:12px;color:var(--ink3);line-height:1.5;cursor:pointer;">
+          Li e aceito os
+          <a href="#" onclick="openTermos('uso');return false;" style="color:var(--teal);text-decoration:none;">Termos de Uso</a>,
+          a <a href="#" onclick="openTermos('privacidade');return false;" style="color:var(--teal);text-decoration:none;">Política de Privacidade</a>
+          e o <a href="#" onclick="openTermos('responsabilidade');return false;" style="color:var(--teal);text-decoration:none;">Termo de Responsabilidade Médica</a>
+        </label>
+      </div>
       <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--ink3);">
         Já tem cadastro? <a href="#" onclick="showPanel('login');return false;" style="color:var(--teal);text-decoration:none;font-weight:500;">Entrar</a>
       </p>
@@ -441,15 +468,18 @@ body.is-admin .admin-only-block{display:block;}
   <div class="sb-footer">
     <!-- Banner de assinatura -->
     <div id="sb-sub-banner" style="margin-bottom:8px;"></div>
-    <div class="sb-doctor" onclick="nav('perfil')" style="cursor:pointer;" title="Ir para o perfil">
-      <div class="sb-av" id="sb-av-initials">?</div>
-      <div class="sb-doc-info"><p id="sb-doc-name">Meu Perfil</p><span id="sb-doc-crm">CRM —</span></div>
+    <!-- Usuário + logout lado a lado -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <div class="sb-doctor" onclick="nav('perfil')" style="cursor:pointer;flex:1;" title="Ir para o perfil">
+        <div class="sb-av" id="sb-av-initials">?</div>
+        <div class="sb-doc-info"><p id="sb-doc-name">Meu Perfil</p><span id="sb-doc-crm">CRM —</span></div>
+      </div>
+      <button onclick="doLogout()" title="Sair" style="background:none;border:none;cursor:pointer;color:var(--ink3);padding:4px;border-radius:6px;transition:color .15s;flex-shrink:0;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--ink3)'">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      </button>
     </div>
-    <button onclick="doLogout()" title="Sair" style="background:none;border:none;cursor:pointer;color:var(--ink3);padding:4px;border-radius:6px;transition:color .15s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--ink3)'">
-      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-    </button>
-    <!-- Links legais -->
-    <div style="display:flex;gap:6px;justify-content:flex-start;padding-left:2px;margin-top:6px;flex-wrap:wrap;">
+    <!-- Links legais abaixo do usuário -->
+    <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
       <button onclick="openTermos('uso')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.28);font-size:9.5px;padding:0;font-family:'Outfit',sans-serif;text-decoration:underline;">Termos</button>
       <span style="color:rgba(255,255,255,.15);font-size:9.5px;">·</span>
       <button onclick="openTermos('privacidade')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.28);font-size:9.5px;padding:0;font-family:'Outfit',sans-serif;text-decoration:underline;">Privacidade</button>
@@ -1229,13 +1259,14 @@ body.is-admin .admin-only-block{display:block;}
 
 <!-- ── MODAL TERMOS LEGAIS ── -->
 <div class="modal-overlay" id="modal-termos" style="z-index:3100;">
-  <div class="modal" style="max-width:660px;max-height:90vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--line);flex-shrink:0;">
-      <h3 id="modal-termos-title" style="margin:0;font-size:15px;">Termos de Uso</h3>
+  <div class="modal" style="max-width:680px;max-height:90vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line);flex-shrink:0;">
+      <h3 id="modal-termos-title" style="margin:0;font-size:16px;">Termos de Uso</h3>
       <button onclick="closeModal('modal-termos')" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--ink3);line-height:1;padding:0;">×</button>
     </div>
-    <div id="modal-termos-body" style="overflow-y:auto;padding:22px;flex:1;font-size:13px;line-height:1.8;color:var(--ink2);"></div>
-    <div style="padding:12px 22px;border-top:1px solid var(--line);flex-shrink:0;text-align:right;">
+    <div id="modal-termos-body" style="overflow-y:auto;padding:24px;flex:1;font-size:13px;line-height:1.8;color:var(--ink2);">
+    </div>
+    <div style="padding:14px 24px;border-top:1px solid var(--line);flex-shrink:0;text-align:right;">
       <button class="btn btn-primary" onclick="closeModal('modal-termos')">Entendi</button>
     </div>
   </div>
@@ -1496,53 +1527,127 @@ function currentUser(){return _currentProfile;}
 function isAdmin(){return _currentProfile?.role==='admin';}
 
 // ── TERMOS LEGAIS ────────────────────────────────────────────
+
 const TERMOS_CONTEUDO = {
-  uso:{titulo:'Termos de Uso',html:`
-    <p style="color:var(--ink3);font-size:11.5px;margin-bottom:16px;">Última atualização: abril de 2026</p>
-    <h4 style="color:var(--ink);margin:0 0 6px;">1. Aceitação dos Termos</h4>
-    <p>Ao acessar ou utilizar o <strong>MedScript</strong>, você concorda com estes Termos de Uso. Se não concordar com qualquer disposição, não utilize a plataforma.</p>
-    <h4 style="color:var(--ink);margin:16px 0 6px;">2. Descrição do Serviço</h4>
-    <p>O MedScript é uma plataforma de apoio à geração de receituários, documentos médicos e cálculos de doses pediátricas. O sistema oferece <strong>sugestões e modelos</strong> para uso por profissionais de saúde habilitados, não substituindo o julgamento clínico do profissional.</p>
-    <h4 style="color:var(--ink);margin:16px 0 6px;">3. Uso Permitido</h4>
-    <p>A plataforma é destinada exclusivamente a profissionais de saúde legalmente habilitados. O usuário é inteiramente responsável por verificar e validar todas as informações antes de utilizá-las na prática clínica.</p>
-    <h4 style="color:var(--ink);margin:16px 0 6px;">4. Limitação de Responsabilidade</h4>
-    <p>O MedScript e seu criador, <strong>Josue Andrade Martins</strong>, não se responsabilizam por decisões clínicas tomadas com base nas informações geradas pela plataforma. O sistema não garante a precisão, completude ou atualidade das informações fornecidas.</p>
-    <h4 style="color:var(--ink);margin:16px 0 6px;">5. Propriedade Intelectual</h4>
-    <p>Todo o conteúdo, código, design e funcionalidades do MedScript são de propriedade de Josue Andrade Martins. É vedada a reprodução, distribuição ou modificação sem autorização expressa.</p>
-    <h4 style="color:var(--ink);margin:16px 0 6px;">6. Assinatura e Pagamento</h4>
-    <p>O acesso a funcionalidades premium está condicionado à assinatura ativa. O período de trial de 7 dias é gratuito. O cancelamento pode ser feito a qualquer momento, mantendo o acesso até o fim do ciclo pago.</p>
-    <h4 style="color:var(--ink);margin:16px 0 6px;">7. Contato</h4>
-    <p><strong>contato@medscript.co</strong></p>`},
-  privacidade:{titulo:'Política de Privacidade',html:`
-    <p style="color:var(--ink3);font-size:11.5px;margin-bottom:16px;">Última atualização: abril de 2026 · Em conformidade com a LGPD (Lei nº 13.709/2018)</p>
-    <h4 style="color:var(--ink);margin:0 0 6px;">1. Dados Coletados</h4>
-    <p>Coletamos: nome completo, CPF, e-mail, número de conselho profissional e especialidade. Dados de pagamento são processados exclusivamente pelo Stripe — não armazenamos dados de cartão.</p>
-    <h4 style="color:var(--ink);margin:16px 0 6px;">2. Finalidade</h4>
-    <p>Os dados são utilizados exclusivamente para prestação do serviço, personalização da experiência, geração de documentos médicos e cobrança de assinaturas.</p>
-    <h4 style="color:var(--ink);margin:16px 0 6px;">3. Compartilhamento</h4>
-    <p>Seus dados <strong>não são vendidos ou compartilhados</strong> com terceiros para fins comerciais. Compartilhados apenas com Supabase (infraestrutura) e Stripe (pagamentos), sob acordo compatível com a LGPD.</p>
-    <h4 style="color:var(--ink);margin:16px 0 6px;">4. Seus Direitos (LGPD)</h4>
-    <p>Você tem direito a acessar, corrigir, excluir seus dados e revogar o consentimento a qualquer momento.</p>
-    <h4 style="color:var(--ink);margin:16px 0 6px;">5. Contato / DPO</h4>
-    <p>Responsável: <strong>Josue Andrade Martins</strong> · <strong>contato@medscript.co</strong></p>`},
-  responsabilidade:{titulo:'Termo de Responsabilidade Médica',html:`
-    <p style="color:var(--ink3);font-size:11.5px;margin-bottom:16px;">Última atualização: abril de 2026</p>
-    <div style="background:#fff8e6;border-left:4px solid var(--amber);padding:10px 14px;border-radius:4px;margin-bottom:16px;"><strong style="color:#8a6200;">⚠ Leia com atenção antes de utilizar a plataforma</strong></div>
-    <h4 style="color:var(--ink);margin:0 0 6px;">1. Natureza do Sistema</h4>
-    <p>O MedScript é uma ferramenta de <strong>apoio e sugestão</strong>. Todas as informações têm caráter <strong>orientativo e não vinculante</strong>.</p>
-    <h4 style="color:var(--ink);margin:16px 0 6px;">2. Responsabilidade Exclusiva do Profissional</h4>
-    <p>O profissional de saúde é <strong>inteira e exclusivamente responsável</strong> por todas as decisões clínicas, verificação de doses, adequação das prescrições e cumprimento das normas do conselho profissional ao qual está vinculado.</p>
-    <h4 style="color:var(--ink);margin:16px 0 6px;">3. Ausência de Garantias</h4>
-    <p>O MedScript <strong>não garante</strong> a precisão, completude ou atualidade das informações. Cálculos de doses são baseados em referências gerais e podem não refletir protocolos institucionais atualizados.</p>
-    <h4 style="color:var(--ink);margin:16px 0 6px;">4. Limitação de Responsabilidade</h4>
-    <p><strong>Josue Andrade Martins e o MedScript não se responsabilizam</strong> por quaisquer danos decorrentes do uso das informações da plataforma.</p>
-    <div style="background:#f0faf6;border:1px solid var(--teal);border-radius:6px;padding:10px 14px;margin-top:16px;"><p style="margin:0;font-size:12px;color:var(--teal);"><strong>Ao utilizar o MedScript, você confirma que leu, compreendeu e concorda com este termo.</strong></p></div>`}
+  uso: {
+    titulo: 'Termos de Uso',
+    html: `
+      <p style="color:var(--ink3);font-size:11.5px;margin-bottom:16px;">Última atualização: abril de 2026</p>
+
+      <h4 style="color:var(--ink);margin:0 0 6px;">1. Aceitação dos Termos</h4>
+      <p>Ao acessar ou utilizar o <strong>MedScript</strong>, você concorda com estes Termos de Uso. Se não concordar com qualquer disposição, não utilize a plataforma.</p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">2. Descrição do Serviço</h4>
+      <p>O MedScript é uma plataforma de apoio à geração de receituários, documentos médicos e cálculos de doses pediátricas. O sistema oferece <strong>sugestões e modelos</strong> para uso por profissionais de saúde habilitados, não substituindo o julgamento clínico do profissional.</p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">3. Uso Permitido</h4>
+      <p>A plataforma é destinada exclusivamente a profissionais de saúde legalmente habilitados (médicos, dentistas, enfermeiros e demais categorias regulamentadas). O usuário é inteiramente responsável por verificar e validar todas as informações antes de utilizá-las na prática clínica.</p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">4. Limitação de Responsabilidade</h4>
+      <p>O MedScript e seu criador, <strong>Josue Andrade Martins</strong>, não se responsabilizam por decisões clínicas tomadas com base nas informações geradas pela plataforma. O sistema não garante a precisão, completude ou atualidade das informações fornecidas. O profissional de saúde é o único responsável pelas prescrições, condutas e documentos emitidos.</p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">5. Propriedade Intelectual</h4>
+      <p>Todo o conteúdo, código, design e funcionalidades do MedScript são de propriedade de Josue Andrade Martins. É vedada a reprodução, distribuição ou modificação sem autorização expressa.</p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">6. Assinatura e Pagamento</h4>
+      <p>O acesso a funcionalidades premium está condicionado à assinatura ativa. O período de trial de 7 dias é gratuito. Após o trial, a cobrança é realizada conforme o plano escolhido. O cancelamento pode ser feito a qualquer momento, mantendo o acesso até o fim do ciclo pago.</p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">7. Alterações</h4>
+      <p>Estes termos podem ser atualizados a qualquer momento. O uso continuado da plataforma após alterações constitui aceitação dos novos termos.</p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">8. Contato</h4>
+      <p>Dúvidas sobre estes termos: <strong>contato@medscript.co</strong></p>
+    `
+  },
+  privacidade: {
+    titulo: 'Política de Privacidade',
+    html: `
+      <p style="color:var(--ink3);font-size:11.5px;margin-bottom:16px;">Última atualização: abril de 2026 · Em conformidade com a LGPD (Lei nº 13.709/2018)</p>
+
+      <h4 style="color:var(--ink);margin:0 0 6px;">1. Dados Coletados</h4>
+      <p>Coletamos os seguintes dados para prestação do serviço:</p>
+      <ul style="margin:8px 0 8px 16px;">
+        <li><strong>Dados de identificação:</strong> nome completo, CPF, e-mail, número de conselho profissional (CRM/CRO/COREN) e especialidade</li>
+        <li><strong>Dados de uso:</strong> receituários gerados, medicamentos prescritos, modelos utilizados</li>
+        <li><strong>Dados de pagamento:</strong> processados exclusivamente pelo Stripe — não armazenamos dados de cartão</li>
+      </ul>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">2. Finalidade do Tratamento</h4>
+      <p>Os dados são utilizados exclusivamente para: prestação do serviço contratado, personalização da experiência, geração de documentos médicos, cobrança de assinaturas e cumprimento de obrigações legais.</p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">3. Compartilhamento de Dados</h4>
+      <p>Seus dados <strong>não são vendidos ou compartilhados</strong> com terceiros para fins comerciais. Podem ser compartilhados apenas com: Supabase (infraestrutura de banco de dados) e Stripe (processamento de pagamentos), ambos sob acordo de tratamento de dados compatível com a LGPD.</p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">4. Armazenamento e Segurança</h4>
+      <p>Os dados são armazenados em servidores seguros da Supabase com criptografia em trânsito (TLS) e em repouso. O acesso é restrito ao próprio usuário por meio de autenticação com e-mail e senha.</p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">5. Seus Direitos (LGPD)</h4>
+      <p>Como titular dos dados, você tem direito a:</p>
+      <ul style="margin:8px 0 8px 16px;">
+        <li>Confirmar a existência de tratamento dos seus dados</li>
+        <li>Acessar, corrigir ou atualizar seus dados a qualquer momento</li>
+        <li>Solicitar a exclusão dos seus dados</li>
+        <li>Revogar o consentimento para tratamento de dados</li>
+        <li>Portabilidade dos dados</li>
+      </ul>
+      <p>Para exercer seus direitos: <strong>contato@medscript.co</strong></p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">6. Cookies</h4>
+      <p>Utilizamos apenas cookies essenciais para autenticação e funcionamento da plataforma. Não utilizamos cookies de rastreamento ou publicidade.</p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">7. Retenção de Dados</h4>
+      <p>Os dados são mantidos enquanto a conta estiver ativa. Após solicitação de exclusão, os dados são removidos em até 30 dias, exceto quando houver obrigação legal de retenção.</p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">8. Encarregado de Dados (DPO)</h4>
+      <p>Responsável: <strong>Josue Andrade Martins</strong> · contato@medscript.co</p>
+    `
+  },
+  responsabilidade: {
+    titulo: 'Termo de Responsabilidade Médica',
+    html: `
+      <p style="color:var(--ink3);font-size:11.5px;margin-bottom:16px;">Última atualização: abril de 2026</p>
+
+      <div style="background:#fff8e6;border-left:4px solid var(--amber);padding:12px 16px;border-radius:4px;margin-bottom:20px;">
+        <strong style="color:#8a6200;">⚠ Leia com atenção antes de utilizar a plataforma</strong>
+      </div>
+
+      <h4 style="color:var(--ink);margin:0 0 6px;">1. Natureza do Sistema</h4>
+      <p>O MedScript é uma ferramenta de <strong>apoio e sugestão</strong> para profissionais de saúde. Todas as informações, cálculos de doses, posologias, modelos de receituário e demais conteúdos disponibilizados têm caráter <strong>orientativo e não vinculante</strong>.</p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">2. Responsabilidade Exclusiva do Profissional</h4>
+      <p>O profissional de saúde é <strong>inteira e exclusivamente responsável</strong> por:</p>
+      <ul style="margin:8px 0 8px 16px;">
+        <li>Todas as decisões clínicas tomadas com ou sem auxílio desta plataforma</li>
+        <li>A verificação e validação de todas as doses, medicamentos e informações antes de prescrever</li>
+        <li>A adequação das prescrições às condições clínicas específicas de cada paciente</li>
+        <li>O cumprimento das normas do conselho profissional ao qual está vinculado (CFM, CFO, COFEN)</li>
+        <li>A emissão de receitas, atestados e documentos médicos em seu nome</li>
+      </ul>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">3. Ausência de Garantias</h4>
+      <p>O MedScript <strong>não garante</strong> a precisão, completude, atualidade ou adequação das informações para casos específicos. Cálculos de doses são baseados em referências bibliográficas gerais e podem não refletir protocolos institucionais ou diretrizes mais recentes.</p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">4. Limitação de Responsabilidade da Plataforma</h4>
+      <p><strong>Josue Andrade Martins e o MedScript não se responsabilizam</strong> por quaisquer danos diretos, indiretos, incidentais ou consequentes decorrentes do uso das informações da plataforma, incluindo mas não se limitando a: erros de dosagem, reações adversas, eventos adversos ou quaisquer danos à saúde do paciente.</p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">5. Obrigação de Validação</h4>
+      <p>Ao utilizar qualquer informação gerada pelo MedScript, o profissional declara ter <strong>verificado e validado</strong> as informações perante fontes primárias (bulas, literatura científica, protocolos institucionais) antes de aplicá-las na prática clínica.</p>
+
+      <h4 style="color:var(--ink);margin:16px 0 6px;">6. Declaração de Habilitação</h4>
+      <p>Ao criar uma conta no MedScript, o usuário declara ser <strong>profissional de saúde legalmente habilitado</strong> e com registro ativo no respectivo conselho profissional, assumindo total responsabilidade pelo uso da plataforma.</p>
+
+      <div style="background:#f0faf6;border:1px solid var(--teal);border-radius:6px;padding:12px 16px;margin-top:20px;">
+        <p style="margin:0;font-size:12px;color:var(--teal);"><strong>Ao utilizar o MedScript, você confirma que leu, compreendeu e concorda integralmente com este termo.</strong></p>
+      </div>
+    `
+  }
 };
 
 function openTermos(tipo){
-  const c = TERMOS_CONTEUDO[tipo]; if(!c) return;
-  document.getElementById('modal-termos-title').textContent = c.titulo;
-  document.getElementById('modal-termos-body').innerHTML = c.html;
+  const conteudo = TERMOS_CONTEUDO[tipo];
+  if(!conteudo) return;
+  document.getElementById('modal-termos-title').textContent = conteudo.titulo;
+  document.getElementById('modal-termos-body').innerHTML = conteudo.html;
   document.getElementById('modal-termos').classList.add('show');
 }
 
@@ -1659,12 +1764,12 @@ function requireAccess(fn){
 // ── MODAL DE PLANOS ──────────────────────────────────────────
 function openPlansModal(){
   const m = document.getElementById('modal-plans');
-  if(m){ m.classList.add('open'); loadPlans(); }
+  if(m){ m.classList.add('show'); loadPlans(); }
 }
 
 function closePlansModal(){
   const m = document.getElementById('modal-plans');
-  if(m) m.classList.remove('open');
+  if(m) m.classList.remove('show');
 }
 
 async function loadPlans(){
@@ -2018,18 +2123,35 @@ async function loadFavoritos(){
 
 async function toggleFavInj(){
   if(!_currentInjId) return;
-  const id=String(_currentInjId);
-  const sb=await getSB();
-  const isFav=_favInjetaveis.includes(id);
+  const id = String(_currentInjId);
+  const idNum = parseInt(_currentInjId); // ref_id pode ser integer no banco
+  const sb = await getSB();
+  const isFav = _favInjetaveis.includes(id);
+  const {data:{user}} = await sb.auth.getUser();
+  if(!user) return;
+
   if(isFav){
-    await sb.from('favoritos').delete().eq('user_id',(await sb.auth.getUser()).data.user.id).eq('tipo','injetavel').eq('ref_id',id);
-    _favInjetaveis=_favInjetaveis.filter(x=>x!==id);
+    const {error} = await sb.from('favoritos')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('tipo', 'injetavel')
+      .eq('ref_id', idNum||id);
+    if(error){ toast('Erro ao remover favorito: '+error.message); return; }
+    _favInjetaveis = _favInjetaveis.filter(x=>x!==id);
   } else {
-    const {data:{user}}=await sb.auth.getUser();
-    await sb.from('favoritos').insert({user_id:user.id,tipo:'injetavel',ref_id:id});
+    const {error} = await sb.from('favoritos')
+      .insert({user_id: user.id, tipo: 'injetavel', ref_id: idNum||id});
+    if(error){ toast('Erro ao salvar favorito: '+error.message); return; }
     _favInjetaveis.push(id);
   }
-  document.getElementById('inj-fav-btn').innerHTML=_favInjetaveis.includes(id)?'<svg width="16" height="16" viewBox="0 0 24 24" fill="var(--amber)" stroke="var(--amber)" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+
+  const favBtn = document.getElementById('inj-fav-btn');
+  const starred = _favInjetaveis.includes(id);
+  if(favBtn) favBtn.innerHTML = starred
+    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="var(--amber)" stroke="var(--amber)" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'
+    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+
+  toast(starred ? '⭐ Adicionado aos favoritos' : 'Removido dos favoritos');
   renderFavInjetaveis();
 }
 
@@ -2156,52 +2278,83 @@ function validCPF(cpf){
   return parseInt(cpf[9])===d1&&parseInt(cpf[10])===d2;
 }
 
+// ── TIPO DE PROFISSIONAL ─────────────────────────────────────
+const TIPO_CONFIG = {
+  medico:     { label:'Médico',      conselho:'CRM',   placeholder:'Ex: Pediatria, Clínica Geral' },
+  enfermagem: { label:'Enfermagem',  conselho:'COREN', placeholder:'Ex: Enfermagem Obstétrica' },
+  odonto:     { label:'Odontólogo',  conselho:'CRO',   placeholder:'Ex: Ortodontia, Implantodontia' },
+};
+
+function setTipoProfissional(tipo){
+  document.getElementById('reg-tipo').value = tipo;
+  const cfg = TIPO_CONFIG[tipo] || TIPO_CONFIG.medico;
+
+  // Atualiza labels do conselho
+  document.getElementById('reg-conselho-label').textContent = cfg.conselho;
+  document.getElementById('reg-estado-label').textContent   = `Estado (${cfg.conselho})`;
+  document.getElementById('reg-espec').placeholder          = cfg.placeholder;
+
+  // Visual dos botões
+  ['medico','enfermagem','odonto'].forEach(t=>{
+    const btn = document.getElementById(`tipo-${t}-btn`);
+    if(!btn) return;
+    const active = t === tipo;
+    btn.style.borderColor  = active ? 'var(--teal)'   : 'var(--line)';
+    btn.style.background   = active ? 'var(--teal-light)' : 'var(--card)';
+    btn.style.color        = active ? 'var(--teal)'   : 'var(--ink2)';
+    btn.style.fontWeight   = active ? '600' : '500';
+  });
+}
+
 async function doRegister(){
-  const nome  = document.getElementById('reg-nome').value.trim();
-  const cpf   = document.getElementById('reg-cpf').value.replace(/\D/g,'');
-  const crm   = document.getElementById('reg-crm').value.trim();
-  const estado= document.getElementById('reg-estado').value;
-  const espec = document.getElementById('reg-espec').value.trim();
-  const email = document.getElementById('reg-email').value.trim().toLowerCase();
-  const pass  = document.getElementById('reg-pass').value;
-  const pass2 = document.getElementById('reg-pass2').value;
-  const errEl = document.getElementById('login-err');
-  const okEl  = document.getElementById('login-ok');
+  const nome   = document.getElementById('reg-nome').value.trim();
+  const cpf    = document.getElementById('reg-cpf').value.replace(/\D/g,'');
+  const crm    = document.getElementById('reg-crm').value.trim();
+  const estado = document.getElementById('reg-estado').value;
+  const espec  = document.getElementById('reg-espec').value.trim();
+  const email  = document.getElementById('reg-email').value.trim().toLowerCase();
+  const pass   = document.getElementById('reg-pass').value;
+  const pass2  = document.getElementById('reg-pass2').value;
+  const tipo   = document.getElementById('reg-tipo')?.value || 'medico';
+  const errEl  = document.getElementById('login-err');
+  const okEl   = document.getElementById('login-ok');
   errEl.classList.remove('show'); okEl.style.display='none';
 
   if(!nome||!cpf||!email||!pass){errEl.textContent='Preencha nome, CPF, e-mail e senha.';errEl.classList.add('show');return;}
   if(!validCPF(cpf)){errEl.textContent='CPF inválido.';errEl.classList.add('show');return;}
   if(pass.length<6){errEl.textContent='Senha deve ter pelo menos 6 caracteres.';errEl.classList.add('show');return;}
   if(pass!==pass2){errEl.textContent='Senhas não conferem.';errEl.classList.add('show');return;}
+  if(!document.getElementById('reg-aceite')?.checked){errEl.textContent='Você deve aceitar os Termos de Uso e a Política de Privacidade para continuar.';errEl.classList.add('show');return;}
 
   const btn=document.querySelector('#panel-register .login-btn');
   btn.textContent='Criando conta...'; btn.disabled=true;
   try{
     const sb=await getSB();
-    // Verifica CPF duplicado
     const {data:cpfCheck}=await sb.from('profiles').select('id').eq('cpf',cpf).maybeSingle();
     if(cpfCheck){errEl.textContent='Este CPF já está cadastrado.';errEl.classList.add('show');btn.textContent='Criar conta';btn.disabled=false;return;}
 
-    // Cria usuário
     const {data,error}=await sb.auth.signUp({
       email, password:pass,
-      options:{data:{nome, cpf, crm, estado, espec, role:'user', status:'active'}}
+      options:{data:{nome, cpf, crm, estado, espec, tipo_profissional:tipo, role:'user', status:'active'}}
     });
     if(error) throw error;
 
     if(data.session&&data.user){
-      // Atualiza profile com CPF e nome
-      await sb.from('profiles').update({cpf,nome,status:'active'}).eq('id',data.user.id);
-      // Salva perfil médico completo
+      // Sincroniza profiles
+      await sb.from('profiles').update({
+        cpf, nome, status:'active', tipo_profissional:tipo
+      }).eq('id',data.user.id);
+
+      // Salva perfil profissional completo
       await sb.from('perfil_medico').upsert({
-        user_id:data.user.id, nome, crm, estado, espec, tel:''
+        user_id:data.user.id, nome, crm, estado, espec, tel:'', tipo_profissional:tipo
       },{onConflict:'user_id'});
-      // Popula cache para uso imediato
-      cacheSet('perfil',{nome,crm,estado,espec,tel:''});
+
+      // Popula cache imediatamente
+      cacheSet('perfil',{nome, crm, estado, espec, tel:'', tipo_profissional:tipo});
       await loadProfile(data.user.id);
       applyAuth();
     } else {
-      // Confirmação de e-mail necessária
       okEl.textContent='✓ Conta criada! Verifique seu e-mail para confirmar o cadastro.';
       okEl.style.display='block';
       setTimeout(()=>showPanel('login'),3000);
@@ -3171,13 +3324,14 @@ async function gerarPDF(data, title){
   const fonts=`<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">`;
   const style=`<style>
     *{box-sizing:border-box;font-family:'Outfit',sans-serif;margin:0;padding:0;}
-    body{color:#111;font-size:13px;line-height:1.5;background:#fff;padding:15mm;width:210mm;min-height:270mm;}
+    body{color:#111;font-size:13px;line-height:1.5;background:#fff;padding:0;margin:0;width:210mm;}
+    .page-wrap{padding:20mm 15mm 15mm;width:100%;box-sizing:border-box;}
     .rx-sheet{width:100%;display:flex;flex-direction:column;min-height:240mm;page-break-after:always;}
     .rx-sheet:last-child{page-break-after:auto;}
     .rx-spacer{flex:1;min-height:8px;}
     .rx-sh-head{display:flex;align-items:center;gap:12px;padding-bottom:10px;}
-    .rx-sh-logo{max-width:110px;max-height:60px;display:flex;align-items:center;}
-    .rx-sh-logo img{max-width:110px;max-height:60px;width:auto;height:auto;object-fit:contain;display:block;}
+    .rx-sh-logo{max-width:110px;max-height:60px;display:flex;align-items:center;background:transparent;}
+    .rx-sh-logo img{max-width:110px;max-height:60px;width:auto;height:auto;object-fit:contain;object-position:left center;display:block;}
     .rx-sh-logo-placeholder{font-family:'Lora',serif;font-size:20px;font-weight:700;color:#aaa;}
     .rx-sh-local-info h3{font-size:13px;font-weight:600;margin:0;color:#111;}
     .rx-sh-local-info p{font-size:10.5px;color:#555;margin-top:1px;line-height:1.45;}
@@ -3196,21 +3350,53 @@ async function gerarPDF(data, title){
     .rx-sh-foot-espec,.rx-sh-foot-crm{font-size:11px;color:#555;margin-top:2px;}
     .rx-sh-foot-date{font-size:11px;color:#888;margin-top:2px;}
     .rx-divider-foot{border:none;border-top:1.5px solid #111;margin-top:12px;}
-    .controlado-header{background:#fdeceb;border:1px solid #C0392B;border-radius:5px;padding:6px 11px;margin-bottom:8px;font-size:11px;font-weight:600;color:#C0392B;display:flex;align-items:center;gap:5px;}
-    .controlado-box{border:1.5px solid #C0392B;border-radius:5px;padding:9px 11px;margin-top:8px;font-size:10.5px;color:#444;}
-    .controlado-field{display:inline-block;border-bottom:1px solid #aaa;min-width:80px;flex:1;height:12px;margin:0 3px;}
-    .ctrl-section-title{font-size:9.5px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;border-bottom:1px solid #fdd;padding-bottom:2px;}
-    .cf-field-row{display:flex;align-items:baseline;gap:3px;font-size:10.5px;}
-    .controlado-ficha{border:1px solid #ddd;border-radius:5px;padding:7px 10px;margin:6px 0 8px;font-size:10.5px;background:#fafafa;}
-    .cf-label{font-weight:600;color:#555;white-space:nowrap;}
-    .cf-val{color:#111;margin-left:3px;}
-    .cf-row{display:flex;align-items:baseline;gap:5px;margin-bottom:3px;}
-    .cf-row2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:3px;}
-    .rx-sheet.controlado .rx-divider{border-top-color:#C0392B;}
-    .rx-sheet.controlado .rx-divider-foot{border-top-color:#C0392B;}
+
+    /* ── CONTROLADO ── */
+    .ctrl-sheet{width:100%;display:flex;flex-direction:column;min-height:240mm;border:1px solid #bbb;}
+    .ctrl-spacer{flex:1;min-height:8px;}
+    .ctrl-bar{background:#C0392B;color:#fff;text-align:center;padding:6px 0;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}
+    .ctrl-subbar{background:#fdeceb;text-align:center;padding:3px 0;font-size:8.5px;color:#C0392B;font-weight:600;letter-spacing:.5px;border-bottom:1px solid #C0392B;}
+    .ctrl-head-local{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 14px 8px;border-bottom:0.5px solid #eee;}
+    .ctrl-head-local-inner{display:flex;gap:12px;align-items:center;}
+    .ctrl-logo{min-width:40px;max-width:110px;max-height:56px;background:transparent;display:flex;align-items:center;justify-content:flex-start;flex-shrink:0;}
+    .ctrl-logo img{max-width:46px;max-height:46px;width:auto;height:auto;border-radius:0;object-fit:contain;object-position:left center;display:block;}
+    .ctrl-logo-letter{color:#fff;font-family:'Lora',serif;font-size:20px;font-weight:700;background:#1D9E75;width:46px;height:46px;border-radius:7px;display:flex;align-items:center;justify-content:center;}
+    .ctrl-clinic-name{font-size:13px;font-weight:600;color:#111;margin-bottom:1px;}
+    .ctrl-clinic-sub{font-size:10px;color:#666;line-height:1.5;}
+    .ctrl-via{border:1.5px solid #C0392B;color:#C0392B;font-size:9px;font-weight:700;padding:3px 10px;letter-spacing:.5px;white-space:nowrap;align-self:flex-start;margin-top:2px;}
+    .ctrl-head-medico{padding:8px 14px 10px;border-bottom:1px solid #C0392B;}
+    .ctrl-prescritor-label{font-size:8.5px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}
+    .ctrl-prescritor-row{display:flex;justify-content:space-between;align-items:flex-start;}
+    .ctrl-med-name-big{font-family:'Lora',serif;font-size:13px;font-weight:600;color:#111;}
+    .ctrl-med-sub{font-size:10px;color:#555;margin-top:2px;line-height:1.6;}
+    .ctrl-crm-badge{display:inline-block;background:#e8f7f0;color:#0F6E56;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:3px;vertical-align:middle;margin-left:4px;}
+    .ctrl-date{font-size:9.5px;color:#888;text-align:right;margin-top:2px;}
+    .ctrl-body{padding:10px 14px;}
+    .ctrl-rx-title{font-size:9px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;border-bottom:0.5px solid #fdd;padding-bottom:3px;}
+    .ctrl-patient{font-size:12px;color:#444;margin-bottom:10px;}
+    .ctrl-patient strong{color:#111;font-weight:600;}
+    .ctrl-med{padding:6px 0;border-bottom:1px dashed #ccc;}
+    .ctrl-med:last-child{border-bottom:none;}
+    .ctrl-med-name{font-size:12.5px;font-weight:600;color:#111;}
+    .ctrl-med-posol{font-size:11px;color:#444;margin-top:2px;padding-left:10px;line-height:1.5;}
+    .ctrl-obs{background:#f7f5f0;border-radius:5px;padding:6px 10px;font-size:11px;color:#444;margin-top:8px;}
+    .ctrl-sign{border-top:1px solid #C0392B;padding:10px 14px;text-align:center;}
+    .ctrl-sign-line{border-top:1px solid #111;width:200px;margin:0 auto 4px;}
+    .ctrl-sign-name{font-family:'Lora',serif;font-size:13px;font-weight:600;color:#111;}
+    .ctrl-sign-sub{font-size:10.5px;color:#555;margin-top:1px;}
+    .ctrl-sign-date{font-size:10.5px;color:#888;margin-top:1px;}
+    .ctrl-footer{display:flex;border-top:2px solid #C0392B;}
+    .ctrl-footer-col{flex:1;padding:8px 12px;}
+    .ctrl-footer-col:first-child{border-right:1px solid #C0392B;}
+    .ctrl-footer-title{font-size:8px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;border-bottom:0.5px solid #fdd;padding-bottom:2px;}
+    .ctrl-footer-field{margin-bottom:5px;}
+    .ctrl-footer-label{font-size:8.5px;color:#888;display:block;margin-bottom:1px;}
+    .ctrl-footer-value{display:block;border-bottom:0.5px solid #ccc;min-height:12px;font-size:10px;color:#111;padding-bottom:1px;}
+    .ctrl-footer-row{display:flex;gap:8px;}
+    .ctrl-footer-row .ctrl-footer-field{flex:1;}
   </style>`;
 
-  // --- Build the sheets HTML (same logic as antes) ---
+  // --- Build the sheets HTML ---
   const headHtml = data.local ? `
     <div class="rx-sh-head">
       <div class="rx-sh-logo">${data.local.logo?`<img src="${data.local.logo}" alt="logo">`:`<span class="rx-sh-logo-placeholder">${data.local.nome[0].toUpperCase()}</span>`}</div>
@@ -3221,22 +3407,7 @@ async function gerarPDF(data, title){
       </div>
     </div>` : '';
 
-  const fichaHtml = data.controlado ? `
-    <div class="controlado-ficha">
-      <div class="cf-row"><span class="cf-label">Paciente:</span><span class="cf-val">${data.pac}</span></div>
-      ${data.extra?`<div class="cf-row"><span class="cf-label">Dados:</span><span class="cf-val">${data.extra}</span></div>`:''}
-    </div>` : '';
-
-  const footHtml = data.doctorSignature ? `
-    <div class="rx-sh-foot">
-      <div style="height:40px;"></div>
-      <div style="border-top:1px solid #111;width:260px;margin:0 auto;"></div>
-      <div class="rx-sh-foot-name">${data.perfil.nome||'—'}</div>
-      ${data.perfil.espec?`<div class="rx-sh-foot-espec">${data.perfil.espec}</div>`:''}
-      ${data.crmStr?`<div class="rx-sh-foot-crm">${data.crmStr}</div>`:''}
-      <div class="rx-sh-foot-date">${data.hoje}</div>
-    </div>
-    <hr class="rx-divider-foot">` : `
+  const footHtml = `
     <div class="rx-sh-foot">
       <div class="rx-sh-foot-name">${data.perfil.nome||'—'}</div>
       ${data.perfil.espec?`<div class="rx-sh-foot-espec">${data.perfil.espec}</div>`:''}
@@ -3245,14 +3416,97 @@ async function gerarPDF(data, title){
     </div>
     <hr class="rx-divider-foot">`;
 
-  const ctrlHdr = data.controlado ? `<div class="controlado-header">⚕ RECEITUÁRIO DE CONTROLE ESPECIAL — 2 VIAS</div>` : '';
-  const sheetClass = `rx-sheet${data.controlado?' controlado':''}`;
+  // ── CONTROLADO: cada via como sheet independente ──
+  const localNome = data.local?.nome||'';
+  const localEnd  = [data.local?.endereco,data.local?.cidade].filter(Boolean).join(', ');
+  const localTel  = data.local?.tel||'';
+  const ctrlLogoHtml = data.local?.logo
+    ? `<img src="${data.local.logo}" alt="logo" style="max-width:110px;max-height:56px;width:auto;height:auto;object-fit:contain;display:block;">`
+    : `<span class="ctrl-logo-letter">${(localNome||data.perfil?.nome||'M')[0].toUpperCase()}</span>`;
+
+  function buildControladoSheet(via){
+    const medsHtml=(data.meds||[]).map(m=>`
+      <div class="ctrl-med">
+        <div class="ctrl-med-name">${m.nome}</div>
+        ${m.posol?`<div class="ctrl-med-posol">${m.posol}</div>`:''}
+      </div>`).join('');
+    const obsHtml=data.obs?`<div class="ctrl-obs"><strong>Obs:</strong> ${data.obs}</div>`:'';
+    return `<div class="ctrl-sheet">
+      <div class="ctrl-bar">Receituário de Controle Especial</div>
+      <div class="ctrl-subbar">Portaria SVS/MS nº 344/98 — 2 vias obrigatórias</div>
+      <div class="ctrl-head-local">
+        <div class="ctrl-head-local-inner">
+          <div class="ctrl-logo">${ctrlLogoHtml}</div>
+          <div>
+            <div class="ctrl-clinic-name">${localNome||data.perfil?.nome||'—'}</div>
+            <div class="ctrl-clinic-sub">${localEnd||''}${localEnd&&localTel?' · ':''}${localTel?'Tel: '+localTel:''}</div>
+          </div>
+        </div>
+        <div class="ctrl-via">${via}</div>
+      </div>
+      <div class="ctrl-head-medico">
+        <div class="ctrl-prescritor-label">Identificação do Prescritor</div>
+        <div class="ctrl-prescritor-row">
+          <div>
+            <div class="ctrl-med-name-big">${data.perfil?.nome||'—'}</div>
+            <div class="ctrl-med-sub">
+              ${data.perfil?.espec||''}${data.crmStr?`<span class="ctrl-crm-badge">${data.crmStr}</span>`:''}
+              ${localEnd?`<br>${localEnd}`:''}${localTel?` · Tel: ${localTel}`:''}
+            </div>
+          </div>
+          <div class="ctrl-date">Data: ${data.hoje}</div>
+        </div>
+      </div>
+      <div class="ctrl-body">
+        <hr style="border:none;border-top:1.5px solid #111;margin:0 0 2px;">
+        <hr style="border:none;border-top:1px solid #ccc;margin:0 0 10px;">
+        <div class="ctrl-patient"><strong>Paciente:</strong> ${data.pac}${data.extra?' · '+data.extra:''}</div>
+        <div class="ctrl-rx-title">Prescrição</div>
+        ${medsHtml}${obsHtml}
+      </div>
+      <div class="ctrl-spacer"></div>
+      <div class="ctrl-sign">
+        <div class="ctrl-sign-line"></div>
+        <div class="ctrl-sign-name">${data.perfil?.nome||'—'}</div>
+        ${data.perfil?.espec?`<div class="ctrl-sign-sub">${data.perfil.espec}</div>`:''}
+        ${data.crmStr?`<div class="ctrl-sign-sub">${data.crmStr}</div>`:''}
+        <div class="ctrl-sign-date">${data.hoje}</div>
+      </div>
+      <div class="ctrl-footer">
+        <div class="ctrl-footer-col">
+          <div class="ctrl-footer-title">Identificação do Comprador</div>
+          <div class="ctrl-footer-field"><span class="ctrl-footer-label">Nome completo</span><span class="ctrl-footer-value"></span></div>
+          <div class="ctrl-footer-row">
+            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Documento de identidade</span><span class="ctrl-footer-value"></span></div>
+            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Órgão emissor</span><span class="ctrl-footer-value"></span></div>
+          </div>
+          <div class="ctrl-footer-field"><span class="ctrl-footer-label">Endereço</span><span class="ctrl-footer-value"></span></div>
+          <div class="ctrl-footer-row">
+            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Cidade</span><span class="ctrl-footer-value"></span></div>
+            <div class="ctrl-footer-field" style="max-width:90px;"><span class="ctrl-footer-label">Telefone</span><span class="ctrl-footer-value"></span></div>
+          </div>
+        </div>
+        <div class="ctrl-footer-col">
+          <div class="ctrl-footer-title">Identificação da Farmácia</div>
+          <div class="ctrl-footer-field"><span class="ctrl-footer-label">Nome da farmácia</span><span class="ctrl-footer-value"></span></div>
+          <div class="ctrl-footer-field"><span class="ctrl-footer-label">Endereço</span><span class="ctrl-footer-value"></span></div>
+          <div class="ctrl-footer-row">
+            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Cidade</span><span class="ctrl-footer-value"></span></div>
+            <div class="ctrl-footer-field" style="max-width:90px;"><span class="ctrl-footer-label">Telefone</span><span class="ctrl-footer-value"></span></div>
+          </div>
+          <div class="ctrl-footer-row">
+            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Data da dispensação</span><span class="ctrl-footer-value"></span></div>
+            <div class="ctrl-footer-field"><span class="ctrl-footer-label">Assinatura do farmacêutico</span><span class="ctrl-footer-value" style="min-height:20px;"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
 
   let bodyHtml = '';
 
-  // Document mode (exames, atestados, encaminhamentos)
   if(data.docCorpo!==undefined){
-    bodyHtml = `<div class="${sheetClass}">
+    bodyHtml = `<div class="rx-sheet">
       ${headHtml}
       <hr class="rx-divider">
       <div class="rx-sh-patient"><strong>Paciente:</strong> ${data.pac}</div>
@@ -3262,15 +3516,14 @@ async function gerarPDF(data, title){
       <div class="rx-spacer"></div>
       ${footHtml}
     </div>`;
+  } else if(data.controlado){
+    bodyHtml = buildControladoSheet('1ª VIA — Farmácia') + buildControladoSheet('2ª VIA — Paciente');
   } else {
-    // Prescription mode
-    const medsHtml = (data.meds||[]).map(m=>`<div class="rx-sh-med"><strong>${m.nome}</strong><p>${m.posol||''}</p></div>`).join('');
-    const obsHtml = data.obs?`<div class="rx-sh-obs"><strong>Observações:</strong> ${data.obs}</div>`:'';
-    bodyHtml = `<div class="${sheetClass}">
-      ${ctrlHdr}
+    const medsHtml=(data.meds||[]).map(m=>`<div class="rx-sh-med"><strong>${m.nome}</strong><p>${m.posol||''}</p></div>`).join('');
+    const obsHtml=data.obs?`<div class="rx-sh-obs"><strong>Observações:</strong> ${data.obs}</div>`:'';
+    bodyHtml = `<div class="rx-sheet">
       ${headHtml}
       <hr class="rx-divider">
-      ${fichaHtml}
       <div class="rx-sh-patient"><strong>Paciente:</strong> ${data.pac}${data.extra?' · '+data.extra:''}</div>
       <hr class="rx-divider-light">
       <div class="rx-sh-title">Receituário Médico</div>
@@ -3280,91 +3533,93 @@ async function gerarPDF(data, title){
       ${footHtml}
     </div>`;
   }
+  const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">${fonts}${style}</head><body><div class="page-wrap">${bodyHtml}</div></body></html>`;
 
-  const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">${fonts}${style}</head><body>${bodyHtml}</body></html>`;
-
-  // --- Render to off-screen iframe and capture as canvas ---
+  // --- Render: cada sheet vira uma página independente ---
   const wrapper = document.createElement('div');
-  wrapper.style.cssText='position:fixed;left:-9999px;top:0;width:210mm;background:#fff;z-index:-1;';
+  wrapper.style.cssText='position:fixed;left:-9999px;top:0;width:210mm;background:#fff;z-index:-1;overflow:visible;';
   document.body.appendChild(wrapper);
 
   const iframe = document.createElement('iframe');
-  iframe.style.cssText='width:210mm;min-height:297mm;border:none;background:#fff;';
+  iframe.style.cssText='width:210mm;height:1px;border:none;background:#fff;';
   wrapper.appendChild(iframe);
-
-  // Write content to iframe
   iframe.srcdoc = fullHtml;
 
-  // Wait for iframe to load + fonts
-  await new Promise(resolve=>{
-    iframe.onload = ()=>{
-      // Give fonts time to render
-      setTimeout(resolve, 800);
-    };
-  });
+  await new Promise(resolve=>{ iframe.onload = ()=> setTimeout(resolve, 900); });
 
   try {
-    const contentEl = iframe.contentDocument.body;
+    const iDoc = iframe.contentDocument;
+    const iBody = iDoc.body;
+    const iWrap = iDoc.querySelector('.page-wrap') || iBody;
+    iframe.style.height = iWrap.scrollHeight + 'px';
 
-    // Capture as canvas
-    const canvas = await html2canvas(contentEl, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      windowWidth: contentEl.scrollWidth,
-      windowHeight: contentEl.scrollHeight
-    });
-
-    // Create PDF with jsPDF
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
+    const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const pdfH = pdf.internal.pageSize.getHeight();
 
-    const pdfWidth = pdf.internal.pageSize.getWidth();   // 210mm
-    const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
+    const sheets = iDoc.querySelectorAll('.rx-sheet, .ctrl-sheet');
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.92);
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+    if(sheets.length === 0){
+      const canvas = await html2canvas(iWrap, {
+        scale:2, useCORS:true, backgroundColor:'#ffffff',
+        windowWidth: iWrap.scrollWidth,
+        windowHeight: iWrap.scrollHeight
+      });
+      const imgH = (canvas.height * pdfW) / canvas.width;
+      pdf.addImage(canvas.toDataURL('image/jpeg',0.93), 'JPEG', 0, 0, pdfW, imgH);
+    } else {
+      let firstPage = true;
+      for(const sheet of sheets){
+        // Captura o sheet com contexto do wrapper (preserva margens)
+        const canvas = await html2canvas(sheet, {
+          scale:2, useCORS:true, backgroundColor:'#ffffff',
+          windowWidth: iWrap.scrollWidth,
+          windowHeight: iWrap.scrollHeight,
+          x: 0,
+          y: 0,
+          width: sheet.scrollWidth,
+          height: sheet.scrollHeight,
+          scrollX: 0,
+          scrollY: -sheet.getBoundingClientRect().top
+        });
 
-    let heightLeft = imgHeight;
-    let position = 0;
+        if(!firstPage) pdf.addPage();
+        firstPage = false;
 
-    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-    heightLeft -= pdfHeight;
+        // Calcular margens em pixels para o PDF (20mm topo, 15mm laterais)
+        const mmToPx = canvas.width / sheet.scrollWidth;
+        const marginTopMM = 20, marginSideMM = 15, marginBotMM = 15;
+        const contentW = pdfW - (marginSideMM * 2);
+        const contentH = (canvas.height * contentW) / canvas.width;
+        const totalH = contentH + marginTopMM + marginBotMM;
 
-    while(heightLeft > 0){
-      position -= pdfHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-      heightLeft -= pdfHeight;
+        if(totalH <= pdfH){
+          pdf.addImage(canvas.toDataURL('image/jpeg',0.93), 'JPEG',
+            marginSideMM, marginTopMM, contentW, contentH);
+        } else {
+          // Conteúdo maior que uma página — pagina automaticamente
+          let pos = marginTopMM;
+          let left = contentH;
+          pdf.addImage(canvas.toDataURL('image/jpeg',0.93), 'JPEG',
+            marginSideMM, pos, contentW, contentH);
+          left -= (pdfH - marginTopMM - marginBotMM);
+          while(left > 1){
+            pos -= (pdfH - marginTopMM - marginBotMM);
+            pdf.addPage();
+            pdf.addImage(canvas.toDataURL('image/jpeg',0.93), 'JPEG',
+              marginSideMM, pos + marginTopMM, contentW, contentH);
+            left -= (pdfH - marginTopMM - marginBotMM);
+          }
+        }
+      }
     }
 
-    // If controlado, duplicate all pages (2 vias)
-    if(data.controlado){
-      const totalPages = pdf.internal.getNumberOfPages();
-      for(let i=1;i<=totalPages;i++){
-        pdf.setPage(i);
-      }
-      // Add 2nd via
-      heightLeft = imgHeight;
-      position = 0;
-      pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-      heightLeft -= pdfHeight;
-      while(heightLeft > 0){
-        position -= pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-        heightLeft -= pdfHeight;
-      }
-    }
-
-    // Generate filename
+    // Filename
     const pacName = _sanitizeFilename(data.pac);
-    const prefix = data.docCorpo!==undefined ? (data.tipoLabel||'documento').toLowerCase().replace(/\s+/g,'_') : 'receituario';
+    const prefix = data.docCorpo!==undefined
+      ? (data.tipoLabel||'documento').toLowerCase().replace(/\s+/g,'_')
+      : data.controlado ? 'receituario_controlado' : 'receituario';
     const filename = `${prefix}-${pacName}.pdf`;
 
     // Open in new tab
