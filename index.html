@@ -741,6 +741,16 @@ body.is-admin .admin-only-block{display:block;}
 <!-- ===== EXAMES ===== -->
 <div class="page" id="page-exames">
   <div class="page-head"><h2>Exames / Encaminhamentos</h2><p>Solicitações e encaminhamentos médicos</p></div>
+
+  <!-- Sub-abas principais -->
+  <div class="admin-tabs" style="margin-bottom:16px;">
+    <button class="admin-tab active" id="extab-btn-normal" onclick="switchExMainTab('normal',this)">Solicitação / Encaminhamento</button>
+    <button class="admin-tab" id="extab-btn-apac" onclick="switchExMainTab('apac',this)">APAC Geral</button>
+    <button class="admin-tab" id="extab-btn-mamografia" onclick="switchExMainTab('mamografia',this)">Requisição de Mamografia</button>
+  </div>
+
+  <!-- ── CONTEÚDO: Solicitação / Encaminhamento (original) ── -->
+  <div id="ex-main-normal">
   <div class="card">
     <div class="card-title">Dados do Paciente</div>
     <div class="gr2">
@@ -790,7 +800,207 @@ body.is-admin .admin-only-block{display:block;}
       Gerar Documento
     </button>
   </div>
-</div>
+  </div><!-- /ex-main-normal -->
+
+  <!-- ── CONTEÚDO: APAC GERAL ── -->
+  <div id="ex-main-apac" style="display:none;">
+  <div class="card">
+    <div class="card-title">APAC — Laudo para Solicitação/Autorização de Procedimento Ambulatorial</div>
+    <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;">Campos numerados conforme formulário oficial SIA/SUS · Ministério da Saúde</p>
+
+    <!-- Estabelecimento -->
+    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">Identificação do Estabelecimento</div>
+    <div class="gr2">
+      <div class="fg"><label>1 - CNES do Estabelecimento Solicitante</label><input id="apac-cnes-sol" placeholder="0000000"></div>
+      <div class="fg"><label>2 - Nome do Estabelecimento Solicitante</label><input id="apac-estab-sol" placeholder="Nome da unidade de saúde"></div>
+    </div>
+    <div class="gr2">
+      <div class="fg"><label>3 - CNES do Estabelecimento Executante</label><input id="apac-cnes-exec" placeholder="0000000"></div>
+      <div class="fg"><label>4 - Nome do Estabelecimento Executante</label><input id="apac-estab-exec" placeholder="Nome da unidade executante"></div>
+    </div>
+
+    <!-- Paciente -->
+    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;">Identificação do Paciente</div>
+    <div class="gr2">
+      <div class="fg"><label>5 - Nome do Paciente *</label><input id="apac-pac-nome" placeholder="Nome completo"></div>
+      <div class="fg"><label>6 - Cartão Nacional de Saúde (CNS) *</label><input id="apac-cns" placeholder="000 0000 0000 0000"></div>
+    </div>
+    <div class="gr2">
+      <div class="fg"><label>7 - Data de Nascimento *</label><input type="date" id="apac-nasc"></div>
+      <div class="fg"><label>8 - Sexo *</label>
+        <select id="apac-sexo"><option value="">—</option><option value="M">Masculino</option><option value="F">Feminino</option></select>
+      </div>
+    </div>
+    <div class="fg"><label>9 - Nome da Mãe *</label><input id="apac-mae" placeholder="Nome completo da mãe"></div>
+    <div class="fg"><label>10 - Endereço (Rua, Nº, Bairro)</label><input id="apac-end" placeholder="Rua, número, bairro"></div>
+    <div class="gr2">
+      <div class="fg"><label>11 - Município de Residência</label><input id="apac-municipio" placeholder="Município"></div>
+      <div class="fg"><label>12 - UF</label><select id="apac-uf" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-size:13px;background:var(--card);color:var(--ink);">
+        <option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
+      </select></div>
+    </div>
+    <div class="gr2">
+      <div class="fg"><label>13 - CEP</label><input id="apac-cep" placeholder="00000-000"></div>
+      <div class="fg"><label>14 - DDD + Telefone</label><input id="apac-tel" placeholder="(00) 00000-0000"></div>
+    </div>
+
+    <!-- Procedimento -->
+    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;">Procedimento Solicitado</div>
+    <div class="gr2">
+      <div class="fg"><label>15 - Código do Procedimento (SIGTAP) *</label><input id="apac-proc-cod" placeholder="Ex: 0201010429"></div>
+      <div class="fg"><label>16 - Nome do Procedimento *</label><input id="apac-proc-nome" placeholder="Nome do procedimento SUS"></div>
+    </div>
+    <div class="gr2">
+      <div class="fg"><label>17 - CID Principal *</label><input id="apac-cid" placeholder="Ex: C50.1"></div>
+      <div class="fg"><label>18 - CID Secundário</label><input id="apac-cid2" placeholder="Opcional"></div>
+    </div>
+
+    <!-- Clínico -->
+    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;">Dados Clínicos</div>
+    <div class="fg"><label>19 - Hipótese / Diagnóstico *</label><input id="apac-diag" placeholder="Descrição do diagnóstico ou hipótese diagnóstica"></div>
+    <div class="fg"><label>20 - Motivo do Procedimento *</label><textarea id="apac-motivo" style="min-height:90px;" placeholder="Justificativa clínica para solicitação do procedimento"></textarea></div>
+    <div class="fg"><label>21 - Observações / Dados Complementares</label><textarea id="apac-obs" style="min-height:70px;" placeholder="Informações adicionais relevantes"></textarea></div>
+
+    <!-- Validade -->
+    <div class="gr2">
+      <div class="fg"><label>22 - Início da Validade *</label><input type="date" id="apac-val-ini"></div>
+      <div class="fg"><label>23 - Fim da Validade *</label><input type="date" id="apac-val-fim"></div>
+    </div>
+
+    <!-- Solicitante -->
+    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;">Solicitação</div>
+    <div class="gr2">
+      <div class="fg"><label>41 - Nome do Profissional Solicitante</label><input id="apac-sol-nome" placeholder="Nome do médico/profissional"></div>
+      <div class="fg"><label>42 - Data da Solicitação</label><input type="date" id="apac-sol-data"></div>
+    </div>
+    <div class="gr2">
+      <div class="fg"><label>43 - Tipo de Documento</label>
+        <select id="apac-sol-doc-tipo"><option value="CNS">CNS</option><option value="CPF">CPF</option></select>
+      </div>
+      <div class="fg"><label>44 - Nº do Documento (CNS/CPF)</label><input id="apac-sol-doc-num" placeholder="Número do documento"></div>
+    </div>
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="gerarAPAC()">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h4M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="7" y="2" width="10" height="4" rx="1"/></svg>
+      Gerar PDF da APAC
+    </button>
+  </div>
+  </div><!-- /ex-main-apac -->
+
+  <!-- ── CONTEÚDO: REQUISIÇÃO DE MAMOGRAFIA ── -->
+  <div id="ex-main-mamografia" style="display:none;">
+  <div class="card">
+    <div class="card-title">Requisição de Mamografia — Ministério da Saúde / SUS</div>
+    <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;">Formulário oficial SISCAN · campos obrigatórios marcados com *</p>
+
+    <!-- Unidade solicitante -->
+    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">Unidade de Saúde Solicitante</div>
+    <div class="gr2">
+      <div class="fg"><label>CNES da Unidade *</label><input id="mamo-cnes" placeholder="0000000"></div>
+      <div class="fg"><label>Nome da Unidade *</label><input id="mamo-unidade" placeholder="Nome da unidade de saúde"></div>
+    </div>
+
+    <!-- Dados pessoais -->
+    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;">Informações Pessoais da Paciente</div>
+    <div class="gr2">
+      <div class="fg"><label>Nome Completo *</label><input id="mamo-pac-nome" placeholder="Nome completo"></div>
+      <div class="fg"><label>CNS (Cartão Nacional de Saúde) *</label><input id="mamo-cns" placeholder="000 0000 0000 0000"></div>
+    </div>
+    <div class="gr2">
+      <div class="fg"><label>Data de Nascimento *</label><input type="date" id="mamo-nasc"></div>
+      <div class="fg"><label>Nome Completo da Mãe *</label><input id="mamo-mae" placeholder="Nome da mãe"></div>
+    </div>
+    <div class="fg"><label>Endereço (Rua, Nº, Bairro)</label><input id="mamo-end" placeholder="Rua, número, bairro"></div>
+    <div class="gr2">
+      <div class="fg"><label>Município</label><input id="mamo-municipio" placeholder="Município de residência"></div>
+      <div class="fg"><label>UF</label><select id="mamo-uf" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-size:13px;background:var(--card);color:var(--ink);">
+        <option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
+      </select></div>
+    </div>
+    <div class="fg"><label>Telefone de Contato</label><input id="mamo-tel" placeholder="(00) 00000-0000"></div>
+
+    <!-- Tipo de mamografia -->
+    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;">Tipo de Mamografia</div>
+    <div class="fg"><label>Indicação *</label>
+      <select id="mamo-tipo" onchange="toggleMamoCampos()">
+        <option value="">Selecione…</option>
+        <option value="rastreamento_alvo">8a. Rastreamento — População Alvo (50–69 anos, assintomática)</option>
+        <option value="rastreamento_risco">8b. Rastreamento — Risco Elevado (histórico familiar/pessoal de câncer, >35 anos)</option>
+        <option value="diag_achado">7a. Diagnóstica — Achado no Exame Clínico (sinal/sintoma)</option>
+        <option value="diag_controle3">7b. Diagnóstica — Controle Radiológico BI-RADS 3</option>
+        <option value="diag_controle_biopsia">7c. Diagnóstica — Controle Pós-biópsia</option>
+        <option value="diag_cancer">7d. Diagnóstica — Lesão com Diagnóstico de Câncer</option>
+        <option value="qt_neoadjuvante">7e. Avaliação de Resposta à QT Neoadjuvante</option>
+      </select>
+    </div>
+
+    <!-- Campos diagnóstica (sinais/sintomas) -->
+    <div id="mamo-campos-diag" style="display:none;">
+      <div style="font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.8px;margin:12px 0 8px;">Achados no Exame Clínico</div>
+      <div class="gr2">
+        <div class="fg"><label>Mama Direita — Achados</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
+            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-d-nodulo"> Nódulo</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-d-micro"> Microcalcificação</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-d-assim-focal"> Assimetria focal</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-d-assim-dif"> Assimetria difusa</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-d-distorcao"> Distorção focal</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-d-area-densa"> Área densa</label>
+          </div>
+        </div>
+        <div class="fg"><label>Mama Esquerda — Achados</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
+            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-e-nodulo"> Nódulo</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-e-micro"> Microcalcificação</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-e-assim-focal"> Assimetria focal</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-e-assim-dif"> Assimetria difusa</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-e-distorcao"> Distorção focal</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;"><input type="checkbox" id="mamo-e-area-densa"> Área densa</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Histórico clínico -->
+    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;">Histórico Clínico</div>
+    <div class="gr2">
+      <div class="fg"><label>1 - Apresenta risco elevado para câncer de mama?</label>
+        <select id="mamo-risco"><option value="nao">Não</option><option value="sim">Sim</option></select>
+      </div>
+      <div class="fg"><label>2 - Fez mamografia anteriormente?</label>
+        <select id="mamo-anterior"><option value="nao">Não</option><option value="sim">Sim</option></select>
+      </div>
+    </div>
+    <div class="gr2">
+      <div class="fg"><label>3 - Ano da última mamografia</label><input id="mamo-ano-ant" placeholder="Ex: 2022" type="number" min="2000" max="2026"></div>
+      <div class="fg"><label>4 - Apresenta nódulo/caroço na mama?</label>
+        <select id="mamo-nodulo"><option value="nao">Não</option><option value="sim">Sim</option></select>
+      </div>
+    </div>
+    <div class="gr2">
+      <div class="fg"><label>5 - Data da última menstruação</label><input type="date" id="mamo-menstrua"></div>
+      <div class="fg"><label>6 - Faz reposição hormonal?</label>
+        <select id="mamo-hormonio"><option value="nao">Não</option><option value="sim">Sim</option></select>
+      </div>
+    </div>
+    <div class="fg"><label>7 - Outros dados clínicos relevantes</label><textarea id="mamo-outros" style="min-height:70px;" placeholder="Histórico familiar, cirurgias mamárias, amamentação, outras informações relevantes"></textarea></div>
+
+    <!-- Solicitante -->
+    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;">Dados do Solicitante</div>
+    <div class="gr2">
+      <div class="fg"><label>Nome do Responsável *</label><input id="mamo-sol-nome" placeholder="Nome do médico/enfermeiro"></div>
+      <div class="fg"><label>Data da Solicitação *</label><input type="date" id="mamo-sol-data"></div>
+    </div>
+    <div class="fg"><label>Nº do Exame (preenchido pelo serviço de mamografia)</label><input id="mamo-num-exame" placeholder="Deixar em branco — será preenchido pelo serviço"></div>
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="gerarReqMamografia()">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h4M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="7" y="2" width="10" height="4" rx="1"/></svg>
+      Gerar Requisição de Mamografia
+    </button>
+  </div>
+  </div><!-- /ex-main-mamografia -->
 
 <!-- ===== DOCUMENTOS ===== -->
 <div class="page" id="page-documentos">
@@ -1521,9 +1731,343 @@ let _currentProfile = null;
 let _subscription   = null;   // dados da assinatura atual
 
 function currentUser(){return _currentProfile;}
-function isAdmin(){return _currentProfile?.role==='admin';}
+// ── MÓDULO APAC / MAMOGRAFIA ────────────────────────────────
 
-// ── TERMOS LEGAIS ────────────────────────────────────────────
+function switchExMainTab(tab, btn){
+  ['normal','apac','mamografia'].forEach(t=>{
+    const el = document.getElementById('ex-main-'+t);
+    if(el) el.style.display = t===tab ? '' : 'none';
+  });
+  document.querySelectorAll('#page-exames .admin-tabs:first-of-type .admin-tab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+
+function toggleMamoCampos(){
+  const tipo = document.getElementById('mamo-tipo').value;
+  const diagEl = document.getElementById('mamo-campos-diag');
+  if(diagEl) diagEl.style.display = tipo.startsWith('diag_') ? '' : 'none';
+}
+
+// ── Gerar PDF APAC Geral ──
+function gerarAPAC(){
+  const g = id => (document.getElementById(id)||{value:''}).value.trim();
+  const pac = g('apac-pac-nome');
+  if(!pac){ toast('⚠️ Informe o nome do paciente'); return; }
+  if(!g('apac-proc-nome')){ toast('⚠️ Informe o procedimento'); return; }
+
+  const perfil = ls(KEYS.perfil)||{};
+  const hoje = new Date().toLocaleDateString('pt-BR');
+
+  const f = (label, val, full) => `
+    <div class="apac-field${full?' apac-full':''}">
+      <div class="apac-label">${label}</div>
+      <div class="apac-val">${val||'&nbsp;'}</div>
+    </div>`;
+
+  const html = `
+    <div class="apac-sheet">
+      <!-- Cabeçalho oficial -->
+      <div class="apac-header">
+        <div class="apac-sus-logo">
+          <div class="apac-sus-badge">SUS</div>
+          <div style="font-size:8px;color:#555;line-height:1.3;">Sistema<br>Único de<br>Saúde</div>
+          <div style="font-size:8px;color:#555;line-height:1.3;margin-left:6px;">Ministério<br>da<br>Saúde</div>
+        </div>
+        <div class="apac-header-title">
+          <div class="apac-title">LAUDO PARA SOLICITAÇÃO/AUTORIZAÇÃO DE PROCEDIMENTO AMBULATORIAL</div>
+          <div class="apac-subtitle">SIA/SUS — Sistema de Informações Ambulatoriais</div>
+        </div>
+      </div>
+
+      <!-- Estabelecimento -->
+      <div class="apac-section-title">Identificação do Estabelecimento</div>
+      <div class="apac-row">
+        ${f('1 - CNES Solicitante', g('apac-cnes-sol'))}
+        ${f('2 - Estabelecimento Solicitante', g('apac-estab-sol'))}
+        ${f('3 - CNES Executante', g('apac-cnes-exec'))}
+        ${f('4 - Estabelecimento Executante', g('apac-estab-exec'))}
+      </div>
+
+      <!-- Paciente -->
+      <div class="apac-section-title">Identificação do Paciente</div>
+      <div class="apac-row">
+        ${f('5 - Nome do Paciente', pac, true)}
+        ${f('6 - CNS', g('apac-cns'))}
+        ${f('7 - Data de Nascimento', g('apac-nasc')?new Date(g('apac-nasc')+'T12:00:00').toLocaleDateString('pt-BR'):'')}
+        ${f('8 - Sexo', g('apac-sexo'))}
+      </div>
+      <div class="apac-row">
+        ${f('9 - Nome da Mãe', g('apac-mae'), true)}
+      </div>
+      <div class="apac-row">
+        ${f('10 - Endereço', g('apac-end'), true)}
+      </div>
+      <div class="apac-row">
+        ${f('11 - Município', g('apac-municipio'))}
+        ${f('12 - UF', g('apac-uf'))}
+        ${f('13 - CEP', g('apac-cep'))}
+        ${f('14 - Telefone', g('apac-tel'))}
+      </div>
+
+      <!-- Procedimento -->
+      <div class="apac-section-title">Procedimento Solicitado</div>
+      <div class="apac-row">
+        ${f('15 - Código SIGTAP', g('apac-proc-cod'))}
+        ${f('16 - Nome do Procedimento', g('apac-proc-nome'))}
+        ${f('17 - CID Principal', g('apac-cid'))}
+        ${f('18 - CID Secundário', g('apac-cid2'))}
+      </div>
+
+      <!-- Clínico -->
+      <div class="apac-section-title">Dados Clínicos</div>
+      <div class="apac-row">
+        ${f('19 - Hipótese / Diagnóstico', g('apac-diag'), true)}
+      </div>
+      <div class="apac-row">
+        <div class="apac-field apac-full">
+          <div class="apac-label">20 - Motivo do Procedimento</div>
+          <div class="apac-val apac-textarea">${g('apac-motivo')||'&nbsp;'}</div>
+        </div>
+      </div>
+      ${g('apac-obs')?`<div class="apac-row"><div class="apac-field apac-full"><div class="apac-label">21 - Observações</div><div class="apac-val">${g('apac-obs')}</div></div></div>`:''}
+      <div class="apac-row">
+        ${f('22 - Início da Validade', g('apac-val-ini')?new Date(g('apac-val-ini')+'T12:00:00').toLocaleDateString('pt-BR'):'')}
+        ${f('23 - Fim da Validade', g('apac-val-fim')?new Date(g('apac-val-fim')+'T12:00:00').toLocaleDateString('pt-BR'):'')}
+      </div>
+
+      <!-- Solicitação -->
+      <div class="apac-section-title apac-red">Solicitação</div>
+      <div class="apac-row">
+        ${f('41 - Nome do Profissional Solicitante', g('apac-sol-nome')||perfil.nome||'—')}
+        ${f('42 - Data da Solicitação', g('apac-sol-data')?new Date(g('apac-sol-data')+'T12:00:00').toLocaleDateString('pt-BR'):hoje)}
+        ${f('43 - Tipo Doc', g('apac-sol-doc-tipo'))}
+        ${f('44 - Nº do Documento', g('apac-sol-doc-num')||perfil.crm||'')}
+      </div>
+      <div class="apac-sign-row">
+        <div class="apac-sign-box">
+          <div style="height:40px;"></div>
+          <div class="apac-sign-line"></div>
+          <div style="font-size:9px;color:#555;text-align:center;">45 - Assinatura e Carimbo do Profissional Solicitante<br>(Nº do Registro do Conselho)</div>
+        </div>
+      </div>
+
+      <!-- Autorização (em branco para preenchimento pela gestão) -->
+      <div class="apac-section-title apac-blue">Autorização (preenchimento pela gestão de saúde)</div>
+      <div class="apac-row">
+        ${f('46 - Nome do Profissional Autorizador', '')}
+        ${f('47 - Cód. Órgão Emissor', '')}
+        ${f('48 - Documento', '')}
+        ${f('50 - Data da Autorização', '')}
+      </div>
+      <div class="apac-row">
+        ${f('52 - Nº da Autorização (APAC)', '', true)}
+      </div>
+      <div class="apac-sign-row">
+        <div class="apac-sign-box">
+          <div style="height:40px;"></div>
+          <div class="apac-sign-line"></div>
+          <div style="font-size:9px;color:#555;text-align:center;">51 - Assinatura e Carimbo do Profissional Autorizador</div>
+        </div>
+      </div>
+    </div>`;
+
+  const style = `<style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
+    body{background:#fff;font-size:11px;color:#111;}
+    .apac-sheet{padding:10mm 12mm;width:210mm;}
+    .apac-header{display:flex;align-items:center;gap:14px;padding-bottom:8px;border-bottom:2px solid #1a5276;margin-bottom:8px;}
+    .apac-sus-logo{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+    .apac-sus-badge{background:#1a5276;color:#fff;font-weight:900;font-size:16px;padding:4px 8px;border-radius:3px;}
+    .apac-header-title{flex:1;}
+    .apac-title{font-size:11px;font-weight:700;color:#1a5276;text-transform:uppercase;letter-spacing:.5px;}
+    .apac-subtitle{font-size:9px;color:#777;margin-top:2px;}
+    .apac-section-title{background:#1a5276;color:#fff;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:3px 8px;margin:6px 0 4px;}
+    .apac-section-title.apac-red{background:#C0392B;}
+    .apac-section-title.apac-blue{background:#2471a3;}
+    .apac-row{display:flex;flex-wrap:wrap;gap:0;border:1px solid #ccc;border-top:none;margin-bottom:0;}
+    .apac-row + .apac-row{border-top:none;}
+    .apac-row:first-of-type{border-top:1px solid #ccc;}
+    .apac-field{flex:1;min-width:120px;border-right:1px solid #ccc;padding:3px 5px;}
+    .apac-field:last-child{border-right:none;}
+    .apac-field.apac-full{flex:100%;border-right:none;}
+    .apac-label{font-size:8px;color:#777;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+    .apac-val{font-size:11px;color:#111;min-height:14px;margin-top:1px;}
+    .apac-val.apac-textarea{min-height:36px;white-space:pre-wrap;}
+    .apac-sign-row{display:flex;justify-content:center;border:1px solid #ccc;border-top:none;padding:8px;}
+    .apac-sign-box{width:260px;text-align:center;}
+    .apac-sign-line{border-top:1px solid #555;margin:0 auto 4px;}
+  </style>`;
+
+  const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">${style}</head><body>${html}</body></html>`;
+  const win = window.open('about:blank','_blank');
+  if(win){ win.document.open(); win.document.write(fullHtml); win.document.close(); }
+  else { toast('Permita popups para gerar o PDF'); }
+}
+
+// ── Gerar Requisição de Mamografia ──
+function gerarReqMamografia(){
+  const g = id => (document.getElementById(id)||{value:''}).value.trim();
+  const cb = id => (document.getElementById(id)||{checked:false}).checked;
+  const pac = g('mamo-pac-nome');
+  if(!pac){ toast('⚠️ Informe o nome da paciente'); return; }
+  if(!g('mamo-tipo')){ toast('⚠️ Selecione o tipo de mamografia'); return; }
+
+  const perfil = ls(KEYS.perfil)||{};
+  const hoje = new Date().toLocaleDateString('pt-BR');
+
+  const tipoMap = {
+    'rastreamento_alvo':      '8a. Rastreamento — População Alvo (50–69 anos)',
+    'rastreamento_risco':     '8b. Rastreamento — Risco Elevado',
+    'diag_achado':            '7a. Diagnóstica — Achado no Exame Clínico',
+    'diag_controle3':         '7b. Diagnóstica — Controle BI-RADS 3',
+    'diag_controle_biopsia':  '7c. Diagnóstica — Controle Pós-biópsia',
+    'diag_cancer':            '7d. Diagnóstica — Lesão com Diagnóstico de Câncer',
+    'qt_neoadjuvante':        '7e. Avaliação de Resposta à QT Neoadjuvante',
+  };
+  const tipoLabel = tipoMap[g('mamo-tipo')] || g('mamo-tipo');
+  const isDiag = g('mamo-tipo').startsWith('diag_');
+
+  const achadosMD = [cb('mamo-d-nodulo')&&'Nódulo', cb('mamo-d-micro')&&'Microcalcificação', cb('mamo-d-assim-focal')&&'Assim. focal', cb('mamo-d-assim-dif')&&'Assim. difusa', cb('mamo-d-distorcao')&&'Distorção focal', cb('mamo-d-area-densa')&&'Área densa'].filter(Boolean).join(', ') || '—';
+  const achadosME = [cb('mamo-e-nodulo')&&'Nódulo', cb('mamo-e-micro')&&'Microcalcificação', cb('mamo-e-assim-focal')&&'Assim. focal', cb('mamo-e-assim-dif')&&'Assim. difusa', cb('mamo-e-distorcao')&&'Distorção focal', cb('mamo-e-area-densa')&&'Área densa'].filter(Boolean).join(', ') || '—';
+
+  const simNao = v => v === 'sim' ? 'Sim' : 'Não';
+  const fmtDate = id => { const v = g(id); return v ? new Date(v+'T12:00:00').toLocaleDateString('pt-BR') : ''; };
+
+  const html = `
+    <div class="mamo-sheet">
+      <!-- Cabeçalho -->
+      <div class="mamo-header">
+        <div class="mamo-sus-wrap">
+          <div class="mamo-sus-badge">SUS</div>
+          <div class="mamo-sus-text">Sistema Único de Saúde<br>Ministério da Saúde</div>
+        </div>
+        <div class="mamo-title-wrap">
+          <div class="mamo-title">REQUISIÇÃO DE MAMOGRAFIA</div>
+          <div class="mamo-subtitle">SISCAN — Sistema de Informação do Câncer</div>
+        </div>
+        <div class="mamo-cnes-wrap">
+          <div class="mamo-field-label">Código da Unidade (CNES)</div>
+          <div class="mamo-field-val mamo-cnes-val">${g('mamo-cnes')||'_______'}</div>
+        </div>
+      </div>
+
+      <div class="mamo-unidade">${g('mamo-unidade')||'_________________________________'}</div>
+
+      <!-- Nº do exame -->
+      <div class="mamo-num-row">
+        <div class="mamo-field-label" style="font-size:9px;">Nº DO EXAME (preenchido pelo serviço)</div>
+        <div class="mamo-num-box">${g('mamo-num-exame')||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</div>
+      </div>
+
+      <!-- Dados pessoais -->
+      <div class="mamo-section">INFORMAÇÕES PESSOAIS</div>
+      <div class="mamo-grid2">
+        <div><div class="mamo-field-label">Nome Completo *</div><div class="mamo-field-val">${pac}</div></div>
+        <div><div class="mamo-field-label">CNS *</div><div class="mamo-field-val">${g('mamo-cns')||'&nbsp;'}</div></div>
+      </div>
+      <div class="mamo-grid2">
+        <div><div class="mamo-field-label">Data de Nascimento</div><div class="mamo-field-val">${fmtDate('mamo-nasc')}</div></div>
+        <div><div class="mamo-field-label">Nome da Mãe *</div><div class="mamo-field-val">${g('mamo-mae')||'&nbsp;'}</div></div>
+      </div>
+      <div class="mamo-grid3">
+        <div style="grid-column:1/3"><div class="mamo-field-label">Endereço</div><div class="mamo-field-val">${g('mamo-end')||'&nbsp;'}</div></div>
+        <div><div class="mamo-field-label">Município / UF</div><div class="mamo-field-val">${[g('mamo-municipio'),g('mamo-uf')].filter(Boolean).join(' / ')||'&nbsp;'}</div></div>
+      </div>
+      <div class="mamo-field-row">
+        <div class="mamo-field-label">Telefone</div>
+        <div class="mamo-field-val">${g('mamo-tel')||'&nbsp;'}</div>
+      </div>
+
+      <!-- Tipo de mamografia -->
+      <div class="mamo-section mamo-section-pink">TIPO DE MAMOGRAFIA</div>
+      <div class="mamo-tipo-box">
+        <div class="mamo-tipo-label">${tipoLabel}</div>
+        ${isDiag ? `
+        <div class="mamo-achados-row">
+          <div class="mamo-achados-col"><div class="mamo-achados-title">Mama Direita</div><div>${achadosMD}</div></div>
+          <div class="mamo-achados-col"><div class="mamo-achados-title">Mama Esquerda</div><div>${achadosME}</div></div>
+        </div>` : ''}
+      </div>
+
+      <!-- Histórico clínico -->
+      <div class="mamo-section">HISTÓRICO CLÍNICO</div>
+      <div class="mamo-hx-grid">
+        <div class="mamo-hx-item"><span class="mamo-hx-num">1</span> Risco elevado para câncer de mama? <strong>${simNao(g('mamo-risco'))}</strong></div>
+        <div class="mamo-hx-item"><span class="mamo-hx-num">2</span> Mamografia anterior? <strong>${simNao(g('mamo-anterior'))}</strong>${g('mamo-ano-ant') ? ` (${g('mamo-ano-ant')})` : ''}</div>
+        <div class="mamo-hx-item"><span class="mamo-hx-num">4</span> Nódulo/caroço na mama? <strong>${simNao(g('mamo-nodulo'))}</strong></div>
+        <div class="mamo-hx-item"><span class="mamo-hx-num">5</span> Última menstruação: <strong>${fmtDate('mamo-menstrua')||'—'}</strong></div>
+        <div class="mamo-hx-item"><span class="mamo-hx-num">6</span> Reposição hormonal? <strong>${simNao(g('mamo-hormonio'))}</strong></div>
+      </div>
+      ${g('mamo-outros') ? `<div class="mamo-outros"><span class="mamo-hx-num">7</span> ${g('mamo-outros')}</div>` : ''}
+
+      <!-- Rodapé solicitante -->
+      <div class="mamo-footer">
+        <div class="mamo-footer-data">
+          <div class="mamo-field-label">Data da Solicitação</div>
+          <div class="mamo-field-val">${fmtDate('mamo-sol-data')||hoje}</div>
+        </div>
+        <div class="mamo-footer-sign">
+          <div style="height:36px;"></div>
+          <div class="mamo-sign-line"></div>
+          <div class="mamo-sign-name">${g('mamo-sol-nome')||perfil.nome||'—'}</div>
+          ${perfil.crm ? `<div class="mamo-sign-sub">${perfil.espec||''} · CRM ${perfil.crm}/${perfil.estado||''}</div>` : ''}
+          <div style="font-size:8px;color:#999;margin-top:2px;">Responsável pela Solicitação</div>
+        </div>
+      </div>
+
+      <div class="mamo-atencao">⚠ ATENÇÃO: OS CAMPOS COM ASTERISCO (*) SÃO OBRIGATÓRIOS · MASTALGIA NÃO É SINAL DE CÂNCER DE MAMA</div>
+    </div>`;
+
+  const style = `<style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
+    body{background:#fff;font-size:11px;color:#111;}
+    .mamo-sheet{padding:10mm 12mm;width:210mm;}
+    .mamo-header{display:flex;align-items:flex-start;gap:12px;padding-bottom:8px;border-bottom:2.5px solid #1a5276;margin-bottom:4px;}
+    .mamo-sus-wrap{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+    .mamo-sus-badge{background:#1a5276;color:#fff;font-weight:900;font-size:14px;padding:4px 7px;border-radius:3px;}
+    .mamo-sus-text{font-size:8px;color:#555;line-height:1.4;}
+    .mamo-title-wrap{flex:1;text-align:center;}
+    .mamo-title{font-size:13px;font-weight:700;color:#1a5276;text-transform:uppercase;letter-spacing:.5px;}
+    .mamo-subtitle{font-size:9px;color:#777;margin-top:2px;}
+    .mamo-cnes-wrap{min-width:120px;text-align:right;}
+    .mamo-cnes-val{font-size:13px;font-weight:700;color:#111;border-bottom:1.5px solid #555;min-height:16px;text-align:right;}
+    .mamo-unidade{font-size:11px;font-weight:600;color:#333;border-bottom:1px solid #ccc;padding:3px 0;margin-bottom:6px;}
+    .mamo-num-row{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;}
+    .mamo-num-box{border:1.5px solid #1a5276;padding:2px 8px;font-size:11px;min-width:140px;color:#1a5276;font-weight:600;}
+    .mamo-section{background:#1a5276;color:#fff;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:3px 8px;margin:6px 0 4px;}
+    .mamo-section.mamo-section-pink{background:#C0392B;}
+    .mamo-grid2{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #ccc;border-bottom:none;}
+    .mamo-grid2 > div{padding:3px 6px;border-right:1px solid #ccc;}
+    .mamo-grid2 > div:last-child{border-right:none;}
+    .mamo-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid #ccc;border-top:none;border-bottom:none;}
+    .mamo-grid3 > div{padding:3px 6px;border-right:1px solid #ccc;}
+    .mamo-grid3 > div:last-child{border-right:none;}
+    .mamo-field-row{border:1px solid #ccc;border-top:none;padding:3px 6px;margin-bottom:0;}
+    .mamo-field-label{font-size:8px;color:#777;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+    .mamo-field-val{font-size:11px;color:#111;min-height:14px;margin-top:1px;}
+    .mamo-tipo-box{border:1px solid #C0392B;padding:6px 10px;margin-bottom:0;}
+    .mamo-tipo-label{font-size:11.5px;font-weight:600;color:#C0392B;}
+    .mamo-achados-row{display:flex;gap:16px;margin-top:6px;}
+    .mamo-achados-col{flex:1;font-size:10.5px;color:#444;}
+    .mamo-achados-title{font-size:8.5px;font-weight:700;color:#777;text-transform:uppercase;margin-bottom:2px;}
+    .mamo-hx-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;border:1px solid #ccc;padding:6px 8px;}
+    .mamo-hx-item{font-size:10.5px;color:#333;padding:2px 0;}
+    .mamo-hx-num{display:inline-block;background:#1a5276;color:#fff;border-radius:50%;width:14px;height:14px;text-align:center;line-height:14px;font-size:8px;font-weight:700;margin-right:3px;}
+    .mamo-outros{border:1px solid #ccc;border-top:none;padding:4px 8px;font-size:10.5px;color:#333;}
+    .mamo-footer{display:flex;justify-content:space-between;align-items:flex-end;border-top:1.5px solid #1a5276;margin-top:12px;padding-top:8px;}
+    .mamo-footer-data{min-width:120px;}
+    .mamo-footer-sign{text-align:center;min-width:220px;}
+    .mamo-sign-line{border-top:1px solid #555;margin:0 auto 4px;width:200px;}
+    .mamo-sign-name{font-size:12px;font-weight:600;color:#111;}
+    .mamo-sign-sub{font-size:9.5px;color:#555;margin-top:1px;}
+    .mamo-atencao{font-size:8px;color:#C0392B;font-weight:600;text-align:center;margin-top:8px;border-top:1px solid #fdd;padding-top:5px;}
+  </style>`;
+
+  const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">${style}</head><body>${html}</body></html>`;
+  const win = window.open('about:blank','_blank');
+  if(win){ win.document.open(); win.document.write(fullHtml); win.document.close(); }
+  else { toast('Permita popups para gerar o PDF'); }
+}
 
 const TERMOS_CONTEUDO = {
   uso: {
