@@ -1289,6 +1289,38 @@ body.is-admin .admin-only-block{display:block;}
   </div>
 </div>
 
+<!-- ── MODAL DETALHE DO PACOTE ── -->
+<div class="modal-overlay" id="modal-pack-detail" style="z-index:3060;">
+  <div class="modal" style="max-width:500px;max-height:88vh;display:flex;flex-direction:column;padding:0;overflow:hidden;border-radius:12px;">
+    <!-- Header -->
+    <div style="padding:22px 24px 16px;border-bottom:1px solid var(--line);flex-shrink:0;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+        <div style="flex:1;">
+          <div id="pd-tipo" style="font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;font-weight:700;margin-bottom:5px;"></div>
+          <h2 id="pd-title" style="font-size:19px;font-weight:700;margin:0;color:var(--ink);line-height:1.3;"></h2>
+          <p id="pd-descricao" style="font-size:13px;color:var(--ink2);margin-top:8px;line-height:1.6;"></p>
+        </div>
+        <button onclick="closeModal('modal-pack-detail')" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--ink3);line-height:1;flex-shrink:0;padding:0;margin-top:-4px;">×</button>
+      </div>
+    </div>
+
+    <!-- Lista de modelos -->
+    <div style="flex:1;overflow-y:auto;padding:16px 24px;">
+      <div style="font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px;" id="pd-modelos-count"></div>
+      <div id="pd-modelos-list"></div>
+    </div>
+
+    <!-- Rodapé -->
+    <div style="padding:16px 24px;border-top:1px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg2);">
+      <div>
+        <div style="font-size:10.5px;color:var(--ink3);margin-bottom:1px;">Pagamento único · Acesso permanente</div>
+        <div id="pd-preco" style="font-family:'Lora',serif;font-size:26px;font-weight:700;color:var(--teal);"></div>
+      </div>
+      <button id="pd-action-btn" class="btn btn-primary" style="min-width:150px;padding:12px 20px;">Comprar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── MODAL PACOTE (admin) ── -->
 <div class="modal-overlay" id="modal-pack" style="z-index:3050;">
   <div class="modal" style="max-width:640px;max-height:92vh;overflow-y:auto;">
@@ -1297,36 +1329,107 @@ body.is-admin .admin-only-block{display:block;}
 
     <div class="gr2">
       <div class="fg"><label>Nome do pacote *</label><input id="pk-nome" placeholder="Ex: Pack Pediatria Premium"></div>
-      <div class="fg"><label>Tipo</label>
-        <select id="pk-tipo">
-          <option value="adulto">Adulto</option>
-          <option value="ped">Pediátrico</option>
-          <option value="misto">Misto (Adulto + Pediátrico)</option>
-        </select>
-      </div>
-    </div>
-    <div class="fg"><label>Descrição</label><textarea id="pk-desc" rows="2" placeholder="Descreva o que está incluído no pacote"></textarea></div>
-    <div class="fg"><label>Preço (R$) *</label>
-      <input type="number" id="pk-preco" step="0.01" min="0" placeholder="Ex: 29.90">
-      <p style="font-size:11.5px;color:var(--ink3);margin-top:4px;">O produto será criado automaticamente no Stripe na primeira compra.</p>
+      <div class="fg"><label>Preço (R$) *</label><input type="number" id="pk-preco" step="0.01" min="0" placeholder="Ex: 29.90"></div>
     </div>
 
-    <!-- Modelos inclusos -->
-    <div style="margin-top:8px;">
+    <!-- Tipo como seletor visual -->
+    <div class="fg"><label>Tipo do pacote *</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+        <label id="pk-tipo-adulto-btn" onclick="setPackTipo('adulto')"
+          style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--teal);border-radius:8px;cursor:pointer;background:var(--teal-light);transition:all .15s;">
+          <span style="font-size:20px;">🩺</span>
+          <div><div style="font-size:13px;font-weight:600;color:var(--teal);">Adulto</div>
+          <div style="font-size:11px;color:var(--ink3);">Base de medicamentos adulto</div></div>
+        </label>
+        <label id="pk-tipo-ped-btn" onclick="setPackTipo('ped')"
+          style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--line);border-radius:8px;cursor:pointer;background:var(--card);transition:all .15s;">
+          <span style="font-size:20px;">🧒</span>
+          <div><div style="font-size:13px;font-weight:600;color:var(--ink2);">Pediátrico</div>
+          <div style="font-size:11px;color:var(--ink3);">Base de medicamentos ped.</div></div>
+        </label>
+      </div>
+      <input type="hidden" id="pk-tipo" value="adulto">
+    </div>
+
+    <div class="fg"><label>Descrição</label><textarea id="pk-desc" rows="2" placeholder="Descreva o que está incluído no pacote"></textarea></div>
+
+    <!-- Modelos inclusos — filtra automaticamente pelo tipo selecionado -->
+    <div style="margin-top:4px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <label style="font-weight:600;font-size:13px;">Modelos inclusos no pacote</label>
         <div style="display:flex;gap:6px;">
           <button class="btn btn-sm btn-outline" onclick="openPickModelo()">📋 Da minha base</button>
-          <button class="btn btn-sm btn-soft" onclick="addPackModelo()">+ Novo em branco</button>
+          <button class="btn btn-sm btn-primary" onclick="togglePackRxEditor()">+ Criar modelo</button>
         </div>
       </div>
-      <!-- Seletor de modelos salvos -->
-      <div id="pk-pick-wrap" style="display:none;background:var(--bg2);border:1.5px solid var(--teal);border-radius:8px;padding:10px;margin-bottom:8px;">
-        <div style="font-size:12px;color:var(--ink2);font-weight:600;margin-bottom:6px;">Selecionar da minha base:</div>
-        <div style="display:flex;gap:6px;margin-bottom:8px;">
-          <button class="btn btn-sm" id="pk-pick-tab-adulto" onclick="switchPickTab('adulto')" style="background:var(--teal);color:#fff;border:none;">Adulto</button>
-          <button class="btn btn-sm btn-outline" id="pk-pick-tab-ped" onclick="switchPickTab('ped')">Pediátrico</button>
+
+      <!-- Editor de modelo (mini-receituário) -->
+      <div id="pk-rx-editor" style="display:none;border:1.5px solid var(--teal);border-radius:10px;padding:14px;margin-bottom:12px;background:var(--bg2);">
+        <div style="font-size:12px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">
+          ✏️ Criar novo modelo para o pacote
         </div>
+
+        <!-- Nome do modelo -->
+        <div class="fg" style="margin-bottom:10px;">
+          <label>Nome do modelo *</label>
+          <input id="pk-rx-nome" placeholder="Ex: Infecção de Ouvido Pediátrica">
+        </div>
+
+        <!-- Peso e Idade (só aparece quando tipo=ped) -->
+        <div id="pk-rx-ped-fields" style="display:none;">
+          <div class="gr2" style="margin-bottom:8px;">
+            <div class="fg"><label>Peso (kg)</label>
+              <input type="number" id="pk-rx-peso" step="0.1" placeholder="Ex: 18.5"
+                oninput="pkRecalcPedDose()">
+            </div>
+            <div class="fg"><label>Idade (anos)</label>
+              <input type="number" id="pk-rx-idade" step="0.5" placeholder="Ex: 5"
+                oninput="pkRecalcPedDose()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Busca de medicamento (igual ao receituário) -->
+        <div class="fg">
+          <label>Buscar medicamento</label>
+          <div class="ac-wrap" style="position:relative;">
+            <input class="ac-input" id="ac-pack" placeholder="Digite o nome do medicamento..." autocomplete="off"
+              oninput="acFilterPack()" onfocus="acFilterPack()" onkeydown="acKeyPack(event)">
+            <div class="ac-dropdown" id="ac-pack-drop"></div>
+          </div>
+        </div>
+
+        <!-- Dose calculada (pediátrico) -->
+        <div id="pk-rx-dose-box" style="display:none;background:var(--teal-light);border:1.5px solid var(--teal-mid);border-radius:10px;padding:12px 16px;margin-bottom:8px;">
+          <div style="font-size:10.5px;color:var(--teal);text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Dose calculada</div>
+          <div id="pk-rx-dose-val" style="font-family:'Lora',serif;font-size:22px;font-weight:600;color:var(--teal);"></div>
+          <div id="pk-rx-dose-detail" style="font-size:11px;color:var(--ink2);margin-top:2px;"></div>
+        </div>
+
+        <!-- Posologia / dose -->
+        <div class="fg">
+          <label>Posologia / Descrição</label>
+          <input id="pk-rx-posol" placeholder="Ex: 1 comprimido de 8/8h por 7 dias">
+          <p style="font-size:11.5px;color:var(--ink3);margin-top:4px;">Preenchida automaticamente. Edite livremente antes de adicionar.</p>
+        </div>
+
+        <button class="btn btn-soft" style="width:100%;margin:6px 0;" onclick="addMedToPkRx()">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          Adicionar medicamento
+        </button>
+
+        <!-- Lista de medicamentos do modelo sendo criado -->
+        <div id="pk-rx-med-list" style="margin-top:4px;"></div>
+
+        <div style="display:flex;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);">
+          <button class="btn btn-outline" style="flex:1;" onclick="cancelPackRxEditor()">Cancelar</button>
+          <button class="btn btn-primary" style="flex:1;" onclick="saveModeloNoPacote()">Salvar modelo no pacote</button>
+        </div>
+      </div>
+
+      <!-- Seletor da minha base -->
+      <div id="pk-pick-wrap" style="display:none;background:var(--bg2);border:1.5px solid var(--teal);border-radius:8px;padding:10px;margin-bottom:8px;">
+        <div style="font-size:12px;color:var(--ink2);font-weight:600;margin-bottom:8px;" id="pk-pick-label">Modelos da sua base:</div>
         <div id="pk-pick-list" style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;"></div>
         <button class="btn btn-sm btn-outline" onclick="document.getElementById('pk-pick-wrap').style.display='none'" style="margin-top:8px;width:100%;">Fechar</button>
       </div>
@@ -1650,12 +1753,10 @@ async function loadLoja(){
 }
 
 function renderLoja(){
-  const grid = document.getElementById('loja-grid');
+  const grid    = document.getElementById('loja-grid');
   const paywall = document.getElementById('loja-paywall');
-  const adminSection = document.getElementById('loja-admin-section');
   if(!grid) return;
 
-  // Mostrar aviso se não tem Pro (mas admin sempre vê)
   const proAtivo = hasAccess() || isAdmin();
   if(paywall) paywall.style.display = proAtivo ? 'none' : '';
 
@@ -1665,49 +1766,103 @@ function renderLoja(){
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink3);">
       Nenhum pacote disponível no momento.
     </div>`;
-  } else {
-    grid.innerHTML = visiblePacks.map(p => {
-      const owned = _packOwned.includes(p.id);
-      const mods  = _packModelos[p.id] || [];
-      const preco = (p.preco_cents/100).toFixed(2).replace('.',',');
-
-      return `<div class="card" style="display:flex;flex-direction:column;gap:10px;position:relative;">
-        ${!p.ativo ? `<div style="position:absolute;top:10px;right:10px;background:var(--amber-light);color:var(--amber);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">Inativo</div>` : ''}
-        ${owned ? `<div style="position:absolute;top:10px;right:10px;background:var(--teal-light);color:var(--teal);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">✓ Adquirido</div>` : ''}
-
-        <div>
-          <div style="font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:2px;">${p.tipo === 'adulto' ? 'Adulto' : p.tipo === 'ped' ? 'Pediátrico' : 'Misto'}</div>
-          <div style="font-size:15px;font-weight:700;color:var(--ink);">${p.nome}</div>
-          ${p.descricao ? `<div style="font-size:12.5px;color:var(--ink2);margin-top:4px;">${p.descricao}</div>` : ''}
-        </div>
-
-        ${mods.length ? `<div>
-          <div style="font-size:11px;color:var(--ink3);font-weight:600;margin-bottom:5px;">Modelos inclusos (${mods.length})</div>
-          <div style="display:flex;flex-direction:column;gap:3px;">
-            ${mods.map(m=>`<div style="font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:5px;">
-              <span style="color:var(--teal);">✓</span> ${m.nome}
-              <span style="font-size:10px;color:var(--ink3);">(${m.tipo === 'ped' ? 'Pediátrico' : 'Adulto'})</span>
-            </div>`).join('')}
-          </div>
-        </div>` : ''}
-
-        <div style="margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--line);">
-          <div style="font-family:'Lora',serif;font-size:20px;font-weight:700;color:var(--teal);">R$ ${preco}</div>
-          ${owned
-            ? `<button class="btn btn-soft btn-sm" disabled>Já adquirido</button>`
-            : proAtivo
-              ? `<button class="btn btn-primary btn-sm" onclick="buyPack(${p.id})">Comprar</button>`
-              : `<button class="btn btn-outline btn-sm" onclick="openPlansModal()">Assinar Pro</button>`
-          }
-        </div>
-
-        ${isAdmin() ? `<div style="display:flex;gap:6px;padding-top:6px;border-top:1px solid var(--line);">
-          <button class="btn btn-sm btn-outline" onclick="openPackModal(${p.id})">Editar</button>
-          <button class="btn btn-sm btn-danger" onclick="deletePack(${p.id})">Excluir</button>
-        </div>` : ''}
-      </div>`;
-    }).join('');
+    return;
   }
+
+  grid.innerHTML = visiblePacks.map(p => {
+    const owned = _packOwned.includes(p.id);
+    const mods  = _packModelos[p.id] || [];
+    const preco = (p.preco_cents/100).toFixed(2).replace('.',',');
+    const tipoLabel = p.tipo === 'ped' ? 'Pediátrico' : 'Adulto';
+
+    return `<div class="card" onclick="openPackDetail(${p.id})"
+      style="display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:box-shadow .18s;position:relative;"
+      onmouseover="this.style.boxShadow='0 4px 18px rgba(0,0,0,.1)'"
+      onmouseout="this.style.boxShadow=''">
+
+      <!-- Badges -->
+      <div style="position:absolute;top:12px;right:12px;display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+        ${!p.ativo ? `<span style="background:var(--amber-light);color:var(--amber);font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;">Inativo</span>` : ''}
+        ${owned    ? `<span style="background:var(--teal-light);color:var(--teal);font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;">✓ Adquirido</span>` : ''}
+      </div>
+
+      <!-- Info -->
+      <div style="padding-right:${owned||!p.ativo?'80px':'0'};">
+        <div style="font-size:10.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:3px;">${tipoLabel}</div>
+        <div style="font-size:15px;font-weight:700;color:var(--ink);">${p.nome}</div>
+        ${p.descricao ? `<div style="font-size:12.5px;color:var(--ink2);margin-top:4px;line-height:1.5;">${p.descricao}</div>` : ''}
+      </div>
+
+      <!-- Contagem de modelos -->
+      <div style="font-size:12px;color:var(--ink3);">${mods.length} modelo${mods.length!==1?'s':''} incluído${mods.length!==1?'s':''}</div>
+
+      <!-- Rodapé -->
+      <div style="margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--line);">
+        <div style="font-family:'Lora',serif;font-size:20px;font-weight:700;color:var(--teal);">R$ ${preco}</div>
+        <span style="font-size:12px;color:var(--ink3);">Ver detalhes →</span>
+      </div>
+
+      <!-- Botões admin -->
+      ${isAdmin() ? `<div style="display:flex;gap:6px;padding-top:6px;border-top:1px solid var(--line);" onclick="event.stopPropagation()">
+        <button class="btn btn-sm btn-outline" onclick="openPackModal(${p.id})">Editar</button>
+        <button class="btn btn-sm btn-danger" onclick="deletePack(${p.id})">Excluir</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function openPackDetail(packId){
+  const p = _packs.find(x => x.id === packId);
+  if(!p) return;
+  const owned    = _packOwned.includes(packId);
+  const mods     = _packModelos[packId] || [];
+  const preco    = (p.preco_cents/100).toFixed(2).replace('.',',');
+  const proAtivo = hasAccess() || isAdmin();
+  const tipoLabel = p.tipo === 'ped' ? '🧒 Pediátrico' : '🩺 Adulto';
+
+  document.getElementById('pd-tipo').textContent      = tipoLabel;
+  document.getElementById('pd-title').textContent     = p.nome;
+  document.getElementById('pd-descricao').textContent = p.descricao || '';
+  document.getElementById('pd-preco').textContent     = `R$ ${preco}`;
+
+  // Contagem
+  const countEl = document.getElementById('pd-modelos-count');
+  if(countEl) countEl.textContent = `${mods.length} modelo${mods.length!==1?'s':''} incluído${mods.length!==1?'s':''}`;
+
+  // Lista de modelos — só títulos, limpa e vertical
+  document.getElementById('pd-modelos-list').innerHTML = mods.length
+    ? mods.map((m,i) => `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;${i<mods.length-1?'border-bottom:1px solid var(--line);':''}">
+          <div style="width:22px;height:22px;border-radius:50%;background:var(--teal-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span style="font-size:13.5px;color:var(--ink);font-weight:500;">${m.nome}</span>
+        </div>`).join('')
+    : `<div style="color:var(--ink3);font-size:12.5px;padding:12px 0;">Nenhum modelo listado.</div>`;
+
+  // Botão de ação
+  const btnEl = document.getElementById('pd-action-btn');
+  if(owned){
+    btnEl.innerHTML = '✓ Já adquirido';
+    btnEl.disabled = true;
+    btnEl.className = 'btn btn-soft';
+    btnEl.style.background = 'var(--teal-light)';
+    btnEl.style.color = 'var(--teal)';
+  } else if(!proAtivo){
+    btnEl.innerHTML = 'Assinar Pro para comprar';
+    btnEl.disabled = false;
+    btnEl.className = 'btn btn-outline';
+    btnEl.style = '';
+    btnEl.onclick = ()=>{ closeModal('modal-pack-detail'); openPlansModal(); };
+  } else {
+    btnEl.innerHTML = `Comprar · R$ ${preco}`;
+    btnEl.disabled = false;
+    btnEl.className = 'btn btn-primary';
+    btnEl.style = '';
+    btnEl.onclick = ()=>{ closeModal('modal-pack-detail'); buyPack(packId); };
+  }
+
+  document.getElementById('modal-pack-detail').classList.add('show');
 }
 
 async function buyPack(packId){
@@ -1743,25 +1898,227 @@ function openPackModal(packId){
   if(packId){
     const pack = _packs.find(p => p.id === packId);
     if(!pack) return;
-    document.getElementById('pk-id').value = pack.id;
-    document.getElementById('pk-nome').value = pack.nome;
-    document.getElementById('pk-tipo').value = pack.tipo;
-    document.getElementById('pk-desc').value = pack.descricao||'';
+    document.getElementById('pk-id').value    = pack.id;
+    document.getElementById('pk-nome').value  = pack.nome;
+    document.getElementById('pk-desc').value  = pack.descricao||'';
     document.getElementById('pk-preco').value = (pack.preco_cents/100).toFixed(2);
     document.getElementById('pk-ativo').checked = pack.ativo;
     _editPackModelos = (_packModelos[packId]||[]).map(m=>({...m}));
     document.getElementById('pk-modal-title').textContent = 'Editar Pacote';
+    setPackTipo(pack.tipo||'adulto');
   } else {
-    document.getElementById('pk-id').value = '';
-    document.getElementById('pk-nome').value = '';
-    document.getElementById('pk-tipo').value = 'adulto';
-    document.getElementById('pk-desc').value = '';
+    document.getElementById('pk-id').value    = '';
+    document.getElementById('pk-nome').value  = '';
+    document.getElementById('pk-desc').value  = '';
     document.getElementById('pk-preco').value = '';
     document.getElementById('pk-ativo').checked = true;
     document.getElementById('pk-modal-title').textContent = 'Novo Pacote';
+    setPackTipo('adulto');
   }
+  // Fechar picker se estiver aberto
+  const pickWrap = document.getElementById('pk-pick-wrap');
+  if(pickWrap) pickWrap.style.display = 'none';
+
   renderPackModelosList();
   m.classList.add('show');
+}
+
+// ── MINI-RECEITUÁRIO DO PACOTE ────────────────────────────────
+
+let _pkRxMeds = [];          // medicamentos do modelo sendo criado
+let _pkAcState = { selectedMed: null, custom: null };
+
+function togglePackRxEditor(){
+  const ed = document.getElementById('pk-rx-editor');
+  const isOpen = ed.style.display !== 'none';
+  if(isOpen){ cancelPackRxEditor(); return; }
+  // Resetar editor
+  _pkRxMeds = [];
+  _pkAcState = { selectedMed: null, custom: null };
+  document.getElementById('pk-rx-nome').value  = '';
+  document.getElementById('pk-rx-posol').value = '';
+  document.getElementById('ac-pack').value     = '';
+  document.getElementById('ac-pack-drop').innerHTML = '';
+  document.getElementById('pk-rx-dose-box').style.display = 'none';
+  renderPkRxMedList();
+  ed.style.display = '';
+  // Fechar picker se aberto
+  document.getElementById('pk-pick-wrap').style.display = 'none';
+  // Carregar meds da base correta
+  const tipo = document.getElementById('pk-tipo').value || 'adulto';
+  ensureMedsLoaded(tipo);
+}
+
+function cancelPackRxEditor(){
+  document.getElementById('pk-rx-editor').style.display = 'none';
+  _pkRxMeds = [];
+  _pkAcState = { selectedMed: null, custom: null };
+}
+
+let _pkAcResults = []; // guarda os resultados do autocomplete
+
+function acFilterPack(){
+  const tipo = document.getElementById('pk-tipo').value || 'adulto';
+  const q    = document.getElementById('ac-pack').value.trim().toLowerCase();
+  const drop = document.getElementById('ac-pack-drop');
+
+  if(!q){ drop.innerHTML=''; drop.style.display='none'; return; }
+
+  const all = [...(cacheGet('meds_'+tipo)||[]), ...(cacheGet('meds_custom_'+tipo)||[])];
+  _pkAcResults = all.filter(m => norm(m.nome).includes(norm(q))).slice(0,8);
+
+  if(!_pkAcResults.length){
+    _pkAcState.custom = q;
+    drop.innerHTML = `<div class="ac-item ac-custom" onclick="selectPackMedCustom('${q.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Usar "<strong>${q}</strong>" como personalizado
+    </div>`;
+    drop.style.display='block';
+    return;
+  }
+
+  _pkAcState.custom = null;
+  drop.innerHTML = _pkAcResults.map((m,i) => `
+    <div class="ac-item" onclick="selectPackMedByIdx(${i})">
+      <span class="ac-nome">${m.nome}</span>
+      ${m.apresentacao?`<span class="ac-detail">${m.apresentacao}</span>`:''}
+    </div>`).join('');
+  drop.style.display = 'block';
+}
+
+function selectPackMedByIdx(i){
+  const med = _pkAcResults[i];
+  if(!med) return;
+  selectPackMed(med, null);
+}
+
+function selectPackMedCustom(nome){
+  selectPackMed(null, nome);
+}
+
+function acKeyPack(e){
+  if(e.key==='Escape'){ document.getElementById('ac-pack-drop').style.display='none'; return; }
+  if(e.key==='Enter'){
+    const first = document.getElementById('ac-pack-drop').querySelector('.ac-item');
+    if(first) first.click();
+  }
+}
+
+function selectPackMed(med, customNome){
+  const drop = document.getElementById('ac-pack-drop');
+  drop.innerHTML=''; drop.style.display='none';
+
+  if(customNome){
+    _pkAcState.custom      = customNome;
+    _pkAcState.selectedMed = null;
+    document.getElementById('ac-pack').value = customNome;
+    document.getElementById('pk-rx-dose-box').style.display = 'none';
+    return;
+  }
+
+  _pkAcState.selectedMed = med;
+  _pkAcState.custom      = null;
+  document.getElementById('ac-pack').value = med.nome;
+
+  // Pediátrico: mostrar dose calculada se tiver dose/kg
+  const tipo = document.getElementById('pk-tipo').value;
+  if(tipo === 'ped' && (med.dose_apres_kg || med.tipo_dose)){
+    const doseBox  = document.getElementById('pk-rx-dose-box');
+    const doseInfo = document.getElementById('pk-rx-dose-info');
+    const tipoDose = med.tipo_dose || 'fixo';
+    if(tipoDose === 'peso' && med.dose_apres_kg){
+      doseBox.style.display  = '';
+      doseInfo.textContent   = `${med.dose_apres_kg} por kg${med.dose_max_apres?' (máx '+med.dose_max_apres+')':''}`;
+    } else if(tipoDose === 'fixo' && med.dose_fixa){
+      doseBox.style.display  = '';
+      doseInfo.textContent   = med.dose_fixa;
+      document.getElementById('pk-rx-posol').value = med.dose_fixa;
+    } else {
+      doseBox.style.display = 'none';
+    }
+  } else {
+    document.getElementById('pk-rx-dose-box').style.display = 'none';
+    if(med.posol) document.getElementById('pk-rx-posol').value = med.posol;
+  }
+}
+
+function addMedToPkRx(){
+  const nome  = document.getElementById('ac-pack').value.trim();
+  const posol = document.getElementById('pk-rx-posol').value.trim();
+  const tipo  = document.getElementById('pk-tipo').value;
+  const med   = _pkAcState.selectedMed;
+  if(!nome){ toast('⚠️ Informe o medicamento'); return; }
+  if(tipo === 'adulto' && !posol){ toast('⚠️ Informe a posologia'); return; }
+
+  const entry = {
+    nome, posol,
+    custom: !!_pkAcState.custom,
+    ...(med && tipo==='ped' ? {
+      medId: med.id,
+      tipo_dose: med.tipo_dose || 'fixo',
+      dose_apres_kg: med.dose_apres_kg,
+      dose_max_apres: med.dose_max_apres,
+      dose_fixa: med.dose_fixa,
+      faixas: med.faixas,
+    } : {}),
+  };
+
+  _pkRxMeds.push(entry);
+  renderPkRxMedList();
+
+  // Limpar campos
+  document.getElementById('ac-pack').value = '';
+  document.getElementById('pk-rx-posol').value = '';
+  document.getElementById('pk-rx-dose-box').style.display = 'none';
+  document.getElementById('ac-pack-drop').innerHTML = '';
+  _pkAcState = { selectedMed: null, custom: null };
+  toast('✓ Medicamento adicionado!');
+}
+
+function renderPkRxMedList(){
+  const el = document.getElementById('pk-rx-med-list');
+  if(!el) return;
+  if(!_pkRxMeds.length){ el.innerHTML=''; return; }
+  el.innerHTML = _pkRxMeds.map((m,i)=>`
+    <div class="med-item">
+      <div class="med-dot"></div>
+      <div class="med-info"><strong>${m.nome}</strong><span>${m.posol}</span></div>
+      ${m.custom?'<span class="med-item-badge badge-amber">Personalizado</span>':''}
+      <button class="btn btn-ghost" onclick="_pkRxMeds.splice(${i},1);renderPkRxMedList()" title="Remover">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+function saveModeloNoPacote(){
+  const nome = document.getElementById('pk-rx-nome').value.trim();
+  const tipo = document.getElementById('pk-tipo').value;
+  if(!nome)          { toast('⚠️ Informe o nome do modelo'); return; }
+  if(!_pkRxMeds.length){ toast('⚠️ Adicione pelo menos 1 medicamento'); return; }
+
+  // Adiciona à lista do pacote
+  _editPackModelos.push({ nome, tipo, meds: [..._pkRxMeds] });
+  renderPackModelosList();
+  cancelPackRxEditor();
+  toast(`✓ Modelo "${nome}" adicionado ao pacote!`);
+}
+
+function setPackTipo(tipo){
+  document.getElementById('pk-tipo').value = tipo;
+  ['adulto','ped'].forEach(t=>{
+    const btn = document.getElementById('pk-tipo-'+t+'-btn');
+    if(!btn) return;
+    const active = t === tipo;
+    btn.style.borderColor = active ? 'var(--teal)' : 'var(--line)';
+    btn.style.background  = active ? 'var(--teal-light)' : 'var(--card)';
+    const title = btn.querySelector('div > div:first-child');
+    if(title) title.style.color = active ? 'var(--teal)' : 'var(--ink2)';
+  });
+  // Atualiza label do picker se aberto
+  const label = document.getElementById('pk-pick-label');
+  if(label) label.textContent = `Modelos ${tipo==='ped'?'pediátricos':'adultos'} da sua base:`;
+  const wrap = document.getElementById('pk-pick-wrap');
+  if(wrap && wrap.style.display !== 'none') renderPickList(tipo);
 }
 
 
@@ -1777,23 +2134,51 @@ function addPackModelo(){
 
 let _pickTab = 'adulto';
 
+function onPackTipoChange(){
+  // Quando o tipo muda, reseta os modelos já adicionados e atualiza o seletor
+  const tipo = document.getElementById('pk-tipo').value;
+  _pickTab = tipo;
+  // Avisar se havia modelos do tipo errado
+  const wrongType = _editPackModelos.filter(m => m.tipo !== tipo);
+  if(wrongType.length){
+    if(!confirm(`Você tem ${wrongType.length} modelo(s) do tipo diferente. Eles serão removidos. Continuar?`)){
+      document.getElementById('pk-tipo').value = _pickTab === 'adulto' ? 'adulto' : 'ped';
+      return;
+    }
+    _editPackModelos = _editPackModelos.filter(m => m.tipo === tipo);
+    renderPackModelosList();
+  }
+  // Atualizar abas do seletor se estiver aberto
+  const wrap = document.getElementById('pk-pick-wrap');
+  if(wrap && wrap.style.display !== 'none') renderPickList(tipo);
+}
+
 async function openPickModelo(){
   const wrap = document.getElementById('pk-pick-wrap');
   const isOpen = wrap.style.display !== 'none';
   wrap.style.display = isOpen ? 'none' : '';
   if(!isOpen){
-    // Garante que os modelos estão no cache
-    if(!(cacheGet('modelos_adulto'))||!(cacheGet('modelos_ped'))){
+    // O tipo do pacote define qual base usar
+    const packTipo = document.getElementById('pk-tipo').value;
+    _pickTab = packTipo;
+
+    // Esconder abas — o tipo é fixo pelo pacote
+    const tabAdulto = document.getElementById('pk-pick-tab-adulto');
+    const tabPed    = document.getElementById('pk-pick-tab-ped');
+    if(tabAdulto) tabAdulto.style.display = packTipo === 'adulto' ? '' : 'none';
+    if(tabPed)    tabPed.style.display    = packTipo === 'ped'    ? '' : 'none';
+
+    // Carregar do banco se cache vazio
+    if(!cacheGet('modelos_'+packTipo)){
       const sb = await getSB();
-      const {data:{user}} = await sb.auth.getSession();
-      if(user?.user){
-        const {data:ma} = await sb.from('modelos').select('*').eq('user_id',user.user.id).eq('tipo','adulto');
-        const {data:mp} = await sb.from('modelos').select('*').eq('user_id',user.user.id).eq('tipo','ped');
-        if(ma) cacheSet('modelos_adulto',ma);
-        if(mp) cacheSet('modelos_ped',mp);
+      const {data:{session}} = await sb.auth.getSession();
+      if(session?.user){
+        const {data} = await sb.from('modelos').select('*')
+          .eq('user_id', session.user.id).eq('tipo', packTipo);
+        if(data) cacheSet('modelos_'+packTipo, data);
       }
     }
-    renderPickList(_pickTab);
+    renderPickList(packTipo);
   }
 }
 
