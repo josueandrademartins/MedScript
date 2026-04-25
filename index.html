@@ -1733,6 +1733,8 @@ let _currentProfile = null;
 let _subscription   = null;   // dados da assinatura atual
 
 function currentUser(){return _currentProfile;}
+function isAdmin(){return _currentProfile?.role==='admin';}
+
 function renderPerfilSub(){
   const card = document.getElementById('perfil-sub-card');
   const info = document.getElementById('perfil-sub-info');
@@ -1741,34 +1743,40 @@ function renderPerfilSub(){
 
   card.style.display = '';
   const s = _subscription;
-  const statusLabel = {
-    trialing: '✓ Trial gratuito ativo',
-    active:   '✓ Assinatura ativa',
-    past_due: '⚠️ Pagamento pendente',
-    canceled: 'Cancelada',
-    unpaid:   'Inativa',
-  }[s.status] || s.status;
+  let statusLabel = '', periodLabel = '', color = 'var(--teal)';
 
-  const endDate = s.trial_end || s.current_period_end;
-  const endLabel = endDate
-    ? new Date(endDate).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})
-    : '—';
-
-  const trialNote = s.status==='trialing'
-    ? `<br><span style="font-size:12px;color:var(--ink3);">Período gratuito — nenhuma cobrança até ${endLabel}. Cancele quando quiser antes disso sem pagar nada.</span>`
-    : '';
-
-  const periodLabel = s.status==='trialing'
-    ? `Trial encerra em: <strong>${endLabel}</strong>${trialNote}`
-    : s.cancel_at_period_end
-      ? `Acesso garantido até: <strong>${endLabel}</strong> (não renova)`
-      : `Próxima cobrança: <strong>${endLabel}</strong>`;
+  if(s.source === 'grace_period'){
+    const d = daysLeft();
+    color = d > 0 ? 'var(--amber)' : 'var(--red)';
+    statusLabel = d > 0
+      ? `⏳ Período de avaliação (${d} dia${d!==1?'s':''} restante${d!==1?'s':''})`
+      : '🔒 Período de avaliação encerrado';
+    const graceEnd = s.grace_end ? new Date(s.grace_end).toLocaleDateString('pt-BR') : '—';
+    periodLabel = d > 0
+      ? `Assine antes de <strong>${graceEnd}</strong> para não perder o acesso.`
+      : 'Seu período gratuito encerrou. Assine para continuar usando o MedScript.';
+  } else {
+    const statusMap = {trialing:'✓ Trial gratuito ativo', active:'✓ Assinatura ativa', past_due:'⚠️ Pagamento pendente', canceled:'Cancelada', unpaid:'Inativa'};
+    statusLabel = statusMap[s.status] || s.status;
+    const endDate = s.trial_end || s.current_period_end;
+    const endLabel = endDate ? new Date(endDate).toLocaleDateString('pt-BR') : '—';
+    if(s.status === 'trialing'){
+      color = 'var(--teal)';
+      periodLabel = `Trial encerra em <strong>${endLabel}</strong><br><span style="font-size:12px;color:var(--ink3);">Nenhuma cobrança até lá. Cancele quando quiser sem pagar nada.</span>`;
+    } else if(s.cancel_at_period_end){
+      color = 'var(--ink2)';
+      periodLabel = `Acesso garantido até <strong>${endLabel}</strong> (não renova)`;
+    } else if(s.status === 'active'){
+      color = 'var(--teal)';
+      periodLabel = `Próxima cobrança: <strong>${endLabel}</strong>`;
+    } else {
+      color = 'var(--red)'; periodLabel = 'Assinatura inativa.';
+    }
+  }
 
   info.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-      <span style="font-size:14px;font-weight:700;color:${s.status==='trialing'||s.status==='active'?'var(--teal)':'var(--amber)'};">${statusLabel}</span>
-    </div>
-    <div>${periodLabel}</div>`;
+    <div style="font-size:14px;font-weight:700;color:${color};margin-bottom:6px;">${statusLabel}</div>
+    <div style="font-size:13px;color:var(--ink2);line-height:1.6;">${periodLabel}</div>`;
 }
 
 
@@ -2577,41 +2585,35 @@ function openTermos(tipo){
 
 /** Verifica se o usuário tem acesso ativo (trial, active, carência ou admin) */
 function hasAccess(){
-  if(isAdmin()) return true; // admin sempre tem acesso
+  if(isAdmin()) return true;
   if(!_subscription) return false;
-  const s = _subscription;
-  if(s.status === 'trialing' || s.status === 'active') return true;
-  // Carência: past_due dentro do prazo
-  if(s.status === 'past_due' && s.grace_period_end){
-    return new Date(s.grace_period_end) > new Date();
-  }
-  // Cancelado mas ainda no período pago
-  if(s.status === 'canceled' && s.current_period_end){
-    return new Date(s.current_period_end) > new Date();
-  }
-  return false;
+  return !!_subscription.has_access;
 }
 
 function isOnTrial(){
   return _subscription?.status === 'trialing';
 }
 
-function daysLeft(){
-  if(!_subscription) return 0;
-  const end = _subscription.trial_end || _subscription.current_period_end;
-  if(!end) return 0;
-  const diff = new Date(end) - new Date();
-  return Math.max(0, Math.ceil(diff / 86400000));
+function isInGracePeriod(){
+  return _subscription?.source === 'grace_period' && !!_subscription?.has_access;
 }
 
-/** Carrega assinatura do usuário via RPC (validado no backend) */
+function daysLeft(){
+  if(!_subscription) return 0;
+  const end = _subscription.grace_end
+    || _subscription.trial_end
+    || _subscription.current_period_end;
+  if(!end) return 0;
+  return Math.max(0, Math.ceil((new Date(end) - new Date()) / 86400000));
+}
+
+/** Carrega assinatura + grace period via RPC (validado no backend) */
 async function loadSubscription(){
   if(!_currentProfile) return;
-  if(isAdmin()){ _subscription = {status:'active'}; renderSubscriptionBanner(); return; }
+  if(isAdmin()){ _subscription = {has_access:true, status:'active', source:'admin'}; renderSubscriptionBanner(); return; }
   try{
     const sb = await getSB();
-    const {data, error} = await sb.rpc('check_subscription_access',
-      { p_user_id: _currentProfile.id });
+    const {data, error} = await sb.rpc('check_subscription_access', { p_user_id: _currentProfile.id });
     if(error) throw error;
     _subscription = data;
   } catch(e){
@@ -2631,9 +2633,20 @@ function renderSubscriptionBanner(){
   const s = _subscription;
   let html = '';
 
-  if(s.status === 'trialing'){
+  // Grace period — sem assinatura, dentro dos 7 dias de tolerância
+  if(s.source === 'grace_period' && s.has_access){
     const d = daysLeft();
-    // Trial = já é assinante, período gratuito para testar. NÃO pede para assinar.
+    html = `<div onclick="openPlansModal()" style="cursor:pointer;padding:8px 10px;border-radius:8px;background:rgba(220,150,0,.15);color:#f0c040;font-size:11.5px;text-align:center;">
+      ⏳ ${d} dia${d!==1?'s':''} para assinar<br>
+      <span style="font-size:10px;opacity:.8;">Clique para escolher um plano</span>
+    </div>`;
+  } else if(s.source === 'grace_period' && !s.has_access){
+    html = `<div onclick="openPlansModal()" style="cursor:pointer;padding:8px 10px;border-radius:8px;background:rgba(180,0,0,.15);color:#f08080;font-size:11.5px;text-align:center;">
+      🔒 Acesso expirado<br>
+      <span style="font-size:10px;opacity:.8;">Assine para continuar</span>
+    </div>`;
+  } else if(s.status === 'trialing'){
+    const d = daysLeft();
     html = `<div onclick="openBillingPortal()" style="cursor:pointer;padding:8px 10px;border-radius:8px;background:rgba(32,158,141,.15);color:var(--teal-light,#7ecfc5);font-size:11.5px;text-align:center;">
       ✓ Pro · Trial gratuito<br>
       <span style="font-size:10px;opacity:.8;">${d} dia${d!==1?'s':''} restante${d!==1?'s':''} · Gerenciar</span>
@@ -2641,17 +2654,17 @@ function renderSubscriptionBanner(){
   } else if(s.status === 'past_due'){
     html = `<div onclick="openBillingPortal()" style="cursor:pointer;padding:8px 10px;border-radius:8px;background:rgba(220,150,0,.15);color:#f0c040;font-size:11.5px;text-align:center;">
       ⚠️ Pagamento pendente<br>
-      <span style="font-size:10.5px;opacity:.8;">Clique para resolver</span>
+      <span style="font-size:10px;opacity:.8;">Clique para resolver</span>
     </div>`;
-  } else if(!hasAccess()){
+  } else if(!s.has_access){
     html = `<div onclick="openPlansModal()" style="cursor:pointer;padding:8px 10px;border-radius:8px;background:rgba(180,0,0,.15);color:#f08080;font-size:11.5px;text-align:center;">
       🔒 Assinatura inativa<br>
-      <span style="font-size:10.5px;opacity:.8;">Clique para reativar</span>
+      <span style="font-size:10px;opacity:.8;">Clique para reativar</span>
     </div>`;
   } else if(s.cancel_at_period_end){
     html = `<div onclick="openBillingPortal()" style="cursor:pointer;padding:8px 10px;border-radius:8px;background:rgba(100,100,180,.15);color:#aab;font-size:11.5px;text-align:center;">
       Acesso até ${new Date(s.current_period_end).toLocaleDateString('pt-BR')}<br>
-      <span style="font-size:10.5px;opacity:.8;">Clique para renovar</span>
+      <span style="font-size:10px;opacity:.8;">Clique para renovar</span>
     </div>`;
   } else {
     html = `<div onclick="openBillingPortal()" style="cursor:pointer;padding:6px 10px;border-radius:8px;background:rgba(32,158,141,.1);color:var(--teal-light,#7ecfc5);font-size:10.5px;text-align:center;opacity:.7;">
@@ -2662,13 +2675,24 @@ function renderSubscriptionBanner(){
   el.innerHTML = html;
 }
 
-/** Bloqueia funcionalidades premium se sem acesso */
+
+/** Bloqueia funcionalidades se sem acesso — mostra modal de paywall */
 function enforcePremiumWall(){
   if(hasAccess()) return;
-  // Mostra modal de paywall ao tentar acessar features premium
-  document.querySelectorAll('.premium-feature').forEach(el=>{
-    el.style.pointerEvents='none';
-    el.style.opacity='0.4';
+  // Mostrar modal de bloqueio
+  const d = _subscription?.grace_period_end
+    ? Math.max(0, Math.ceil((new Date(_subscription.grace_period_end) - new Date()) / 86400000))
+    : 0;
+  const msg = d > 0
+    ? `Seu período de avaliação de 7 dias expirou. Assine um plano para continuar usando o MedScript.`
+    : `Seu acesso expirou. Assine um plano para continuar usando o MedScript.`;
+
+  // Bloquear visualmente abas premium
+  document.querySelectorAll('.sb-item').forEach(btn => {
+    const txt = btn.textContent.trim();
+    if(['Receitas Adulto','Receitas Pediátricas','Injetáveis','Modelos','Exames'].some(t => txt.includes(t))){
+      btn.onclick = (e) => { e.stopPropagation(); openPlansModal(); toast('🔒 '+msg); };
+    }
   });
 }
 
