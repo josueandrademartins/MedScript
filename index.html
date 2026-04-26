@@ -1613,6 +1613,10 @@ body.is-admin .admin-only-block{display:block;}
       <div class="card-title" style="margin-top:14px;margin-bottom:10px;">Medicamentos</div>
       <div id="em-meds-list" style="display:flex;flex-direction:column;gap:7px;"></div>
     </div>
+    <div class="fg" style="margin-top:12px;">
+      <label>Orientações / Observações</label>
+      <textarea id="em-obs" rows="3" placeholder="Retorno, cuidados, restrições..."></textarea>
+    </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-edit-modelo')">Cancelar</button>
       <button class="btn btn-primary" onclick="saveEditModelo()">Salvar</button>
@@ -3285,7 +3289,7 @@ async function doRegister(){
     });
     if(error) throw error;
 
-    if(data.session&&data.user){
+    if(data.user){
       // Sincroniza profiles
       await sb.from('profiles').update({
         cpf, nome, status:'active', tipo_profissional:tipo
@@ -3298,12 +3302,18 @@ async function doRegister(){
 
       // Popula cache imediatamente
       cacheSet('perfil',{nome, crm, estado, espec, tel:'', tipo_profissional:tipo});
-      await loadProfile(data.user.id);
-      applyAuth();
-    } else {
-      okEl.textContent='✓ Conta criada! Verifique seu e-mail para confirmar o cadastro.';
-      okEl.style.display='block';
-      setTimeout(()=>showPanel('login'),3000);
+
+      if(data.session){
+        // Login automático (confirmação de email desativada no Supabase)
+        await loadProfile(data.user.id);
+        applyAuth();
+        setTimeout(()=>toast(`🎉 Bem-vindo ao MedScript, ${nome.split(' ')[0]}!`), 500);
+      } else {
+        // Confirmação de email ainda ativa — orientar usuário
+        okEl.textContent='✓ Quase lá! Verifique seu e-mail e clique no link de confirmação.';
+        okEl.style.display='block';
+        setTimeout(()=>showPanel('login'),4000);
+      }
     }
   }catch(err){
     errEl.textContent='Erro: '+(err.message||'Tente novamente');
@@ -4206,7 +4216,8 @@ async function gerarRx(tipo,formato){
   const hoje=new Date().toLocaleDateString('pt-BR');
   const mnKey=tipo==='ped'?'p-model-name':'a-model-name';
   const mn=v(mnKey);
-  if(mn) _salvarModeloNoBanco(tipo, mn, meds).catch(e=>console.warn(e));
+  const obs=v(tipo==='ped'?'p-obs':'a-obs');
+  if(mn) _salvarModeloNoBanco(tipo, mn, meds, obs).catch(e=>console.warn(e));
   const extra=tipo==='ped'?[v('p-idade')?'Idade: '+v('p-idade')+' anos':'',v('p-peso')?'Peso: '+v('p-peso')+' kg':''].filter(Boolean).join(' · '):'';
 
   // Monta CRM
@@ -4223,14 +4234,14 @@ async function gerarRx(tipo,formato){
   gerarPDF(data, title);
 }
 
-async function _salvarModeloNoBanco(tipo, nome, meds){
+async function _salvarModeloNoBanco(tipo, nome, meds, obs){
   const sb=await getSB();
   const {data:{user}}=await sb.auth.getUser();
   const medsToSave=tipo==='ped'
-    ? meds.map(m=>m.medId?{nome:m.nome,medId:m.medId,custom:false}:{...m})
+    ? meds.map(m=>m.medId?{nome:m.nome,medId:m.medId,custom:false,posol:m.posol||''}:{...m})
     : [...meds];
   const {data,error}=await sb.from('modelos').insert({
-    user_id:user.id, nome, tipo, medicamentos:medsToSave, exames:[]
+    user_id:user.id, nome, tipo, medicamentos:medsToSave, exames:[], obs:obs||null
   }).select().single();
   if(error){toast('Erro ao salvar modelo: '+error.message);return;}
   const cacheKey=tipo==='ped'?'modelos_ped':'modelos_adulto';
@@ -4244,13 +4255,15 @@ async function salvarModeloDireto(tipo){
   const meds=tipo==='ped'?pMeds:aMeds;
   if(!meds.length){toast('⚠️ Adicione pelo menos 1 medicamento');return;}
   const mnKey=tipo==='ped'?'p-model-name':'a-model-name';
+  const obsKey=tipo==='ped'?'p-obs':'a-obs';
   let nome=v(mnKey).trim();
+  const obs=v(obsKey).trim();
   if(!nome){
     nome=prompt('Nome do modelo:');
     if(!nome||!nome.trim())return;
     nome=nome.trim();
   }
-  await _salvarModeloNoBanco(tipo, nome, meds);
+  await _salvarModeloNoBanco(tipo, nome, meds, obs);
 }
 
 function openRxModal(html, title){
@@ -4709,64 +4722,102 @@ function renderModelosGrid(tipo){
   }).join('');
 }
 function usarModelo(id,tipo){
-  const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
-  const m=(ls(key)||[]).find(m=>m.id===id);
-  if(!m)return;
-  if(tipo==='ped'){pMeds=[...m.medicamentos];renderMedList('ped');nav('rx-ped',document.querySelectorAll('.sb-item')[2]);recalcPedMeds();}
-  else{aMeds=[...m.medicamentos];renderMedList('adulto');nav('rx-adulto',document.querySelectorAll('.sb-item')[1]);}
+  const cacheKey = tipo==='ped' ? 'modelos_ped' : 'modelos_adulto';
+  const all = cacheGet(cacheKey) || [];
+  const m = all.find(m => String(m.id) === String(id));
+  if(!m) return;
+
+  const obsKey = tipo==='ped' ? 'p-obs' : 'a-obs';
+  const obsEl  = document.getElementById(obsKey);
+  if(obsEl) obsEl.value = m.obs || '';
+
+  if(tipo==='ped'){
+    pMeds = [...(m.medicamentos||[])];
+    renderMedList('ped');
+    nav('rx-ped', document.querySelectorAll('.sb-item')[2]);
+    recalcPedMeds();
+  } else {
+    aMeds = [...(m.medicamentos||[])];
+    renderMedList('adulto');
+    nav('rx-adulto', document.querySelectorAll('.sb-item')[1]);
+  }
   toast('✓ Modelo "'+m.nome+'" carregado!');
 }
 function editModelo(id,tipo){
-  const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
-  const m=(ls(key)||[]).find(m=>m.id===id);
-  if(!m)return;
-  document.getElementById('em-id').value=id;
-  document.getElementById('em-tipo').value=tipo;
-  document.getElementById('em-nome').value=m.nome;
-  // Render editable med list
-  const sec=document.getElementById('em-meds-section');
-  const list=document.getElementById('em-meds-list');
-  if(m.medicamentos&&m.medicamentos.length){
-    sec.style.display='block';
-    list.innerHTML=m.medicamentos.map((med,i)=>`
+  const cacheKey = tipo==='ped' ? 'modelos_ped' : 'modelos_adulto';
+  const all = cacheGet(cacheKey) || [];
+  const m = all.find(m => String(m.id) === String(id));
+  if(!m) return;
+  document.getElementById('em-id').value  = id;
+  document.getElementById('em-tipo').value = tipo;
+  document.getElementById('em-nome').value = m.nome;
+  const obsEl = document.getElementById('em-obs');
+  if(obsEl) obsEl.value = m.obs || '';
+  const sec  = document.getElementById('em-meds-section');
+  const list = document.getElementById('em-meds-list');
+  const meds = m.medicamentos || [];
+  if(meds.length){
+    sec.style.display = 'block';
+    list.innerHTML = meds.map((med,i)=>`
       <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;">
         <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
-          <input data-em-nome="${i}" value="${med.nome.replace(/"/g,'&quot;')}" placeholder="Nome" style="padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;width:100%;">
-          <input data-em-posol="${i}" value="${(med.posol||'').replace(/"/g,'&quot;')}" placeholder="Posologia" style="padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;font-family:'Outfit',sans-serif;font-size:12.5px;outline:none;width:100%;color:var(--ink2);">
+          <input data-em-nome="${i}" value="${(med.nome||'').replace(/"/g,'&quot;')}" placeholder="Nome"
+            style="padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;width:100%;">
+          <input data-em-posol="${i}" value="${(med.posol||'').replace(/"/g,'&quot;')}" placeholder="Posologia"
+            style="padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;font-family:'Outfit',sans-serif;font-size:12.5px;outline:none;width:100%;color:var(--ink2);">
         </div>
         <button onclick="removeEmMed(${i})" style="padding:7px;background:var(--red-light);color:var(--red);border:none;border-radius:8px;cursor:pointer;font-size:16px;line-height:1;flex-shrink:0;">×</button>
       </div>`).join('');
   } else {
-    sec.style.display='none';
+    sec.style.display = 'none';
   }
   openModal('modal-edit-modelo');
 }
+
 function removeEmMed(i){
-  const row=document.querySelector(`[data-em-nome="${i}"]`);
+  const row = document.querySelector(`[data-em-nome="${i}"]`);
   if(row) row.closest('div').parentElement.remove();
-  // re-index
   document.querySelectorAll('[data-em-nome]').forEach((el,idx)=>{el.dataset.emNome=idx;});
   document.querySelectorAll('[data-em-posol]').forEach((el,idx)=>{el.dataset.emPosol=idx;});
 }
-function saveEditModelo(){
-  const id=parseInt(v('em-id'));
-  const tipo=v('em-tipo');
-  const key=tipo==='ped'?KEYS.modelos_ped:KEYS.modelos_adulto;
-  const mods=ls(key)||[];
-  const i=mods.findIndex(m=>m.id===id);
-  if(i<0){closeModal('modal-edit-modelo');return;}
-  mods[i].nome=v('em-nome');
-  // collect edited meds
-  const nomeInputs=document.querySelectorAll('[data-em-nome]');
-  const posolInputs=document.querySelectorAll('[data-em-posol]');
+
+async function saveEditModelo(){
+  const id      = v('em-id');
+  const tipo    = v('em-tipo');
+  const nome    = v('em-nome').trim();
+  if(!nome){ toast('⚠️ Informe o nome do modelo'); return; }
+
+  const cacheKey = tipo==='ped' ? 'modelos_ped' : 'modelos_adulto';
+  const all = cacheGet(cacheKey) || [];
+  const idx = all.findIndex(m => String(m.id) === String(id));
+  if(idx < 0){ closeModal('modal-edit-modelo'); return; }
+
+  // Coletar medicamentos editados
+  const nomeInputs  = document.querySelectorAll('[data-em-nome]');
+  const posolInputs = document.querySelectorAll('[data-em-posol]');
+  let medicamentos  = all[idx].medicamentos || [];
   if(nomeInputs.length){
-    mods[i].medicamentos=Array.from(nomeInputs).map((el,idx)=>({
-      ...( mods[i].medicamentos[idx]||{}),
-      nome:el.value.trim(),
-      posol:(posolInputs[idx]||{value:''}).value.trim(),
+    medicamentos = Array.from(nomeInputs).map((el,i)=>({
+      ...(medicamentos[i]||{}),
+      nome:  el.value.trim(),
+      posol: (posolInputs[i]||{value:''}).value.trim(),
     })).filter(m=>m.nome);
   }
-  ss(key,mods);
+
+  const obs = (document.getElementById('em-obs')?.value||'').trim();
+
+  // Salvar no Supabase
+  const sb = await getSB();
+  const {error} = await sb.from('modelos')
+    .update({ nome, medicamentos, obs: obs||null })
+    .eq('id', id);
+
+  if(error){ toast('Erro ao salvar: '+error.message); return; }
+
+  // Atualizar cache
+  all[idx] = {...all[idx], nome, medicamentos, obs: obs||null};
+  cacheSet(cacheKey, all);
+
   closeModal('modal-edit-modelo');
   renderModelosGrid(tipo);
   toast('✓ Modelo atualizado!');
@@ -4939,12 +4990,34 @@ async function saveMedPed(){
   }
 
   const sb=await getSB();
-  let error;
-  if(editId){({error}=await sb.from('meds_ped').update(item).eq('id',editId));}
-  else{({error}=await sb.from('meds_ped').insert(item));}
-  if(error){toast('Erro: '+error.message);return;}
-  cacheSet('meds_ped',null);
-  closeModal('modal-ped');renderPedTable();toast('✓ Medicamento pediátrico salvo!');
+  const {data:{user}} = await sb.auth.getUser();
+
+  // Admin salva na base global (meds_ped); usuário comum salva na base pessoal (meds_custom)
+  if(isAdmin()){
+    let error;
+    if(editId){({error}=await sb.from('meds_ped').update(item).eq('id',editId));}
+    else{({error}=await sb.from('meds_ped').insert(item));}
+    if(error){toast('Erro: '+error.message);return;}
+    cacheSet('meds_ped',null);
+    closeModal('modal-ped');renderPedTable();toast('✓ Medicamento salvo na base global!');
+  } else {
+    // Base pessoal — salva em meds_custom com tipo='ped'
+    const customItem = {...item, tipo:'ped', user_id: user.id};
+    let error;
+    if(editId){
+      ({error}=await sb.from('meds_custom').update(customItem).eq('id',editId).eq('user_id',user.id));
+    } else {
+      ({error}=await sb.from('meds_custom').insert(customItem));
+    }
+    if(error){toast('Erro: '+error.message);return;}
+    // Recarregar base custom
+    const {data:fresh}=await sb.from('meds_custom').select('*').eq('user_id',user.id).order('nome');
+    if(fresh){
+      cacheSet('meds_custom_adulto',fresh.filter(m=>m.tipo==='adulto'));
+      cacheSet('meds_custom_ped',fresh.filter(m=>m.tipo==='ped'));
+    }
+    closeModal('modal-ped');renderPedTable();toast('✓ Medicamento salvo na sua base pessoal!');
+  }
 }
 
 function editMedPed(id){
